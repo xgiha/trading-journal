@@ -5,7 +5,6 @@ import {
   Lightbulb, 
   LayoutGrid, 
   BookOpen, 
-  Settings, 
   ArrowUpRight,
   ArrowDownRight,
   Sun, 
@@ -13,7 +12,9 @@ import {
   Plus,
   Activity,
   Clock,
-  Zap
+  Zap,
+  MinusCircle,
+  CheckCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -36,6 +37,7 @@ const TABS = [
 const App: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isMarketOpen, setIsMarketOpen] = useState(false);
+  const [marketCountdown, setMarketCountdown] = useState<string>('');
   const [activeTab, setActiveTab] = useState('dashboard');
   
   // Trade State with Persistence
@@ -82,9 +84,11 @@ const App: React.FC = () => {
       const now = new Date();
       setCurrentTime(now);
 
-      // CME Futures Logic
+      // CME Futures Logic (UTC based)
       const day = now.getUTCDay(); // 0 = Sunday, 1 = Mon ... 5 = Fri, 6 = Sat
       const hour = now.getUTCHours();
+      const minute = now.getUTCMinutes();
+      const second = now.getUTCSeconds();
 
       let isOpen = true;
 
@@ -97,6 +101,44 @@ const App: React.FC = () => {
       if ((day >= 1 && day <= 4) && (hour === 22)) isOpen = false;
 
       setIsMarketOpen(isOpen);
+
+      // --- Countdown Logic ---
+      let targetDate = new Date(now);
+      
+      if (isOpen) {
+          // If Open, calculate time to CLOSE (Next 22:00 UTC)
+          targetDate.setUTCHours(22, 0, 0, 0);
+          if (day === 0) {
+              // Sunday -> Monday 22:00
+              targetDate.setUTCDate(targetDate.getUTCDate() + 1);
+          } else if (hour >= 22) {
+              // After 22:00 -> Tomorrow
+              targetDate.setUTCDate(targetDate.getUTCDate() + 1);
+          }
+      } else {
+          // If Closed, calculate time to OPEN
+          if (day === 6 || (day === 5 && hour >= 22) || (day === 0 && hour < 23)) {
+              // Weekend -> Sunday 23:00
+              targetDate.setUTCHours(23, 0, 0, 0);
+              // Find next Sunday
+              const daysUntilSunday = (7 - day) % 7; 
+              if (day === 0) { /* already Sunday, just time check handled by setHours */ }
+              else { targetDate.setUTCDate(targetDate.getUTCDate() + daysUntilSunday); }
+          } else {
+              // Weekday Break -> Today 23:00
+              targetDate.setUTCHours(23, 0, 0, 0);
+          }
+      }
+
+      const diff = targetDate.getTime() - now.getTime();
+      if (diff > 0) {
+          const h = Math.floor(diff / (1000 * 60 * 60));
+          const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const s = Math.floor((diff % (1000 * 60)) / 1000);
+          setMarketCountdown(`${h}h ${m}m ${s}s`);
+      } else {
+          setMarketCountdown("00h 00m 00s");
+      }
     };
 
     updateTimeAndMarketStatus();
@@ -111,6 +153,44 @@ const App: React.FC = () => {
     minute: '2-digit',
     hour12: true
   });
+
+  // Derived State for Tooltip
+  const chicagoTime = new Date(currentTime.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+  const chicagoDayName = chicagoTime.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  const chicagoProgress = ((chicagoTime.getHours() * 60 + chicagoTime.getMinutes()) / (24 * 60)) * 100;
+  
+  const verboseCountdown = useMemo(() => {
+    return marketCountdown
+      .replace(/ \d+s$/, '') // Remove seconds
+      .replace(/(\d+)h/, '$1 hours and')
+      .replace(/(\d+)m/, '$1 minutes');
+  }, [marketCountdown]);
+
+  const renderTimelineSegments = () => {
+    const day = chicagoTime.getDay();
+    // 0=Sun, 1=Mon...6=Sat
+    const OPEN_Start = 70.83; // 17:00
+    const CLOSE_End = 66.66; // 16:00
+    
+    let segments = [];
+    if (day === 0) { // Sunday
+        segments.push({ left: 0, width: OPEN_Start, color: 'bg-[#3f3f46]' }); // Closed
+        segments.push({ left: OPEN_Start, width: 100 - OPEN_Start, color: 'bg-emerald-500' }); // Open
+    } else if (day >= 1 && day <= 4) { // Mon-Thu
+        segments.push({ left: 0, width: CLOSE_End, color: 'bg-emerald-500' }); // Open
+        segments.push({ left: CLOSE_End, width: OPEN_Start - CLOSE_End, color: 'bg-[#3f3f46]' }); // Break
+        segments.push({ left: OPEN_Start, width: 100 - OPEN_Start, color: 'bg-emerald-500' }); // Open
+    } else if (day === 5) { // Friday
+        segments.push({ left: 0, width: CLOSE_End, color: 'bg-emerald-500' }); // Open
+        segments.push({ left: CLOSE_End, width: 100 - CLOSE_End, color: 'bg-[#3f3f46]' }); // Closed
+    } else { // Saturday
+        segments.push({ left: 0, width: 100, color: 'bg-[#3f3f46]' }); // Closed
+    }
+    return segments.map((s, i) => (
+        <div key={i} className={`absolute top-0 bottom-0 h-full ${s.color} rounded-sm`} style={{ left: `${s.left}%`, width: `${s.width}%` }}></div>
+    ));
+  };
+
 
   const formatCurrency = (val: number) => {
     const sign = val < 0 ? '-' : '';
@@ -403,35 +483,65 @@ const App: React.FC = () => {
       <div className="w-full max-w-[1500px] h-auto lg:h-full glass-panel rounded-none md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-4 md:p-6 lg:p-8 transition-all duration-500">
         
         {/* ================= HEADER AREA ================= */}
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6 shrink-0 z-20">
-           {/* Welcome Text */}
-           <div className="flex-1">
+        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-center mb-6 shrink-0 z-20 w-full min-h-[50px]">
+           {/* Welcome Text (Absolute Left on Desktop) */}
+           <div className="mb-4 md:mb-0 md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2">
              <h2 className="text-white font-bold text-lg md:text-xl tracking-tight">Welcome, Gehan</h2>
              <p className="text-xs text-nexus-muted">Good to see you again.</p>
            </div>
            
-           <div className="flex items-center gap-4 self-end md:self-auto">
-             {/* Settings Button */}
-             <button className="w-10 h-10 md:w-12 md:h-12 rounded-full liquid-card flex items-center justify-center hover:bg-white/10 text-nexus-muted hover:text-white transition-all backdrop-blur-md shadow-lg">
-                <Settings size={18} className="md:w-5 md:h-5" />
-             </button>
+           {/* Center: Market Status Card */}
+           <div className="group relative">
+             <div className="liquid-card rounded-full pl-3 pr-5 py-2 flex items-center gap-4 cursor-default transition-transform active:scale-95">
+                <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md">
+                   <div className={`w-2 h-2 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
+                </div>
+                <div className="flex flex-col">
+                  <h1 className="text-xs font-bold tracking-widest uppercase text-white drop-shadow-md">
+                    {isMarketOpen ? 'Market Open' : 'Market Closed'}
+                  </h1>
+                  <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-mono">
+                    CMB {colomboTime}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Hover Menu - Detailed Tooltip */}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto z-50 w-[300px]">
+                  <div className="bg-[#18181b] border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-3 text-left">
+                     {/* Header */}
+                     <div className="flex items-center gap-2 text-nexus-muted">
+                        {isMarketOpen ? <CheckCircle size={16} /> : <MinusCircle size={16} />}
+                        <span className="font-bold text-sm text-[#e4e4e7]">{isMarketOpen ? 'Market open' : 'Market closed'}</span>
+                     </div>
 
-             {/* Market Status Card */}
-             <div className="liquid-card rounded-full pl-3 pr-5 py-2 flex items-center gap-4">
-              <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md">
-                 <div className={`w-2 h-2 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
+                     {/* Message */}
+                     <p className="text-sm text-[#a1a1aa] leading-snug">
+                       {isMarketOpen 
+                         ? <span>Market is active. It'll close in <strong className="text-white">{verboseCountdown}</strong>.</span>
+                         : <span>Time for a walk — this market is closed. It'll open in <strong className="text-white">{verboseCountdown}</strong>.</span>
+                       }
+                     </p>
+
+                     {/* Timeline */}
+                     <div className="mt-2">
+                        <div className="flex justify-between text-[10px] text-[#52525b] mb-1 font-bold tracking-wider">
+                           <span>{chicagoDayName} 00:00</span>
+                           <span>24:00</span>
+                        </div>
+                        <div className="relative h-1.5 bg-[#27272a] rounded-full w-full overflow-hidden">
+                            {/* Render Sessions */}
+                            {renderTimelineSegments()}
+                            {/* Current Time Cursor */}
+                            <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_8px_white] z-20" style={{ left: `${chicagoProgress}%` }}></div>
+                        </div>
+                        <div className="mt-3 text-center">
+                            <span className="text-[10px] text-[#52525b] font-medium">Exchange timezone: Chicago (UTC-6)</span>
+                        </div>
+                     </div>
+                  </div>
               </div>
-              <div className="flex flex-col">
-                <h1 className="text-xs font-bold tracking-widest uppercase text-white drop-shadow-md">
-                  {isMarketOpen ? 'Market Open' : 'Market Closed'}
-                </h1>
-                <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-mono">
-                  CMB {colomboTime}
-                </span>
-              </div>
-            </div>
            </div>
-
         </div>
 
         {/* ================= MAIN CONTENT GRID ================= */}
@@ -531,9 +641,8 @@ const App: React.FC = () => {
                </AnimatePresence>
             </div>
 
-            {/* Floating Menu with Fixed Size & Seamless Animation */}
-            <div className="mb-6 flex items-center gap-4 shrink-0 relative z-30">
-               {/* Menu Pills */}
+            {/* Floating Menu with Integrated Add Trade Button */}
+            <div className="mb-6 relative z-30">
                <div className="liquid-card p-1.5 rounded-full flex items-center justify-center gap-1 shadow-2xl">
                 {TABS.map((tab) => (
                   <button
@@ -556,18 +665,19 @@ const App: React.FC = () => {
                     </span>
                   </button>
                 ))}
+                
+                {/* Vertical Divider */}
+                <div className="w-px h-6 bg-white/10 mx-1"></div>
+                
+                {/* Add Trade Button */}
+                <button 
+                  onClick={handleAddTradeBtnClick}
+                  className="relative px-6 py-2.5 rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white hover:bg-white/10 transition-colors active:scale-95 duration-100 group"
+                >
+                    <Plus size={16} className="group-hover:text-nexus-accent transition-colors" />
+                    <span className="text-xs font-medium whitespace-nowrap">Add Trade</span>
+                </button>
                </div>
-
-               {/* Separate Add Trade Button */}
-               <button 
-                onClick={handleAddTradeBtnClick}
-                className="liquid-card p-1.5 rounded-full h-full aspect-square flex items-center justify-center hover:bg-white/10 text-nexus-muted hover:text-white transition-colors group shadow-2xl relative active:scale-95 duration-100"
-                title="Add Trade"
-               >
-                 <div className="w-10 h-10 rounded-full bg-nexus-accent text-black flex items-center justify-center transition-transform">
-                    <Plus size={20} />
-                 </div>
-               </button>
             </div>
 
           </div>

@@ -13,7 +13,7 @@ const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ data }) => {
           <PolarGrid stroke="rgba(255,255,255,0.2)" />
           <PolarAngleAxis 
             dataKey="subject" 
-            tick={{ fill: '#71717a', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }} 
+            tick={{ fill: '#71717a', fontSize: 10, fontWeight: 600, style: { textTransform: 'uppercase', letterSpacing: '0.05em' } }} 
           />
           <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
           <Radar

@@ -14,7 +14,7 @@ const NewsChart: React.FC<NewsChartProps> = ({ data }) => {
             dataKey="name" 
             axisLine={false} 
             tickLine={false} 
-            tick={{ fill: '#71717a', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }} 
+            tick={{ fill: '#71717a', fontSize: 10, fontWeight: 600, style: { textTransform: 'uppercase', letterSpacing: '0.05em' } }} 
             dy={10}
           />
            <YAxis 
