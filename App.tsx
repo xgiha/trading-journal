@@ -70,8 +70,18 @@ const App: React.FC = () => {
   }, [trades]);
 
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
-  // Initialize with today's date to prevent null rendering issues for modals
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  
+  // Helper to get local date string YYYY-MM-DD
+  const getLocalDateString = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+  };
+
+  // Initialize with local date
+  const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
   const [selectedTrades, setSelectedTrades] = useState<Trade[]>([]);
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -322,8 +332,12 @@ const App: React.FC = () => {
     const weekTrades = trades.filter(t => {
         // Parse date string (YYYY-MM-DD) into a local date object for comparison
         const [y, m, d] = t.date.split('-').map(Number);
+        // Create date object at noon to avoid boundary issues
         const tradeDate = new Date(y, m - 1, d);
-        return tradeDate >= sevenDaysAgo && tradeDate <= today;
+        tradeDate.setHours(12, 0, 0, 0);
+        
+        // Strict timestamp comparison
+        return tradeDate.getTime() >= sevenDaysAgo.getTime() && tradeDate.getTime() <= today.getTime();
     });
 
     const weekPnl = weekTrades.reduce((sum, t) => sum + t.pnl, 0);
@@ -422,8 +436,8 @@ const App: React.FC = () => {
   };
 
   const handleAddTradeBtnClick = () => {
-    const today = new Date();
-    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    // Use local date string instead of UTC
+    const dateStr = getLocalDateString();
     setSelectedDate(dateStr);
     setEditingTrade(undefined); // Reset edit mode
     setIsAddModalOpen(true);

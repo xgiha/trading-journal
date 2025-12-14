@@ -272,6 +272,42 @@ const ScrollableTimeInput = ({
     )
 }
 
+// --- Image Zoom Overlay Component ---
+const ImageZoomOverlay = ({ src, onClose }: { src: string, onClose: () => void }) => {
+    const [scale, setScale] = useState(1);
+    
+    return (
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center touch-none"
+            onClick={onClose}
+            onWheel={(e) => {
+                const delta = -e.deltaY * 0.001;
+                setScale(s => Math.min(Math.max(0.5, s + delta), 5));
+            }}
+        >
+            <button className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full backdrop-blur-md">
+                <X size={24} />
+            </button>
+            <motion.img 
+                src={src} 
+                alt="Zoom View"
+                className="max-w-[95vw] max-h-[95vh] object-contain cursor-grab active:cursor-grabbing"
+                style={{ scale }}
+                drag
+                dragConstraints={{ left: -window.innerWidth/2, right: window.innerWidth/2, top: -window.innerHeight/2, bottom: window.innerHeight/2 }}
+                dragElastic={0.2}
+                onClick={(e) => e.stopPropagation()}
+            />
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 backdrop-blur-md rounded-full border border-white/10 text-white/60 text-xs font-medium pointer-events-none whitespace-nowrap">
+                Scroll to Zoom • Drag to Pan
+            </div>
+        </motion.div>
+    );
+};
+
 interface AddTradeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -308,6 +344,15 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
 
   // Handle Reset & Pre-fill when modal opens (component mounts)
   useEffect(() => {
+    // Helper for local date fallback if date prop is empty
+    const getLocalFallback = () => {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    };
+
     if (tradeToEdit) {
       // Edit Mode
       setIsNewsTrade(!!tradeToEdit.newsEvent);
@@ -340,7 +385,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           symbol: '',
           news: '',
           size: '',
-          date: initialDate || new Date().toISOString().split('T')[0],
+          date: initialDate || getLocalFallback(),
           timeIn: '09:30:00',
           timeOut: '10:00:00',
           priceIn: '',
@@ -739,6 +784,9 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
    // Sort trades by time
    const sortedTrades = [...trades].sort((a, b) => a.entryTime.localeCompare(b.entryTime));
 
+   // State for zoom modal
+   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+
    // Chart Data: Cumulative PnL throughout the day
    const chartData = useMemo(() => {
      let runningPnl = 0;
@@ -755,6 +803,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
    }, [sortedTrades]);
 
    return (
+     <>
      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         {/* Backdrop */}
         <motion.div 
@@ -838,61 +887,77 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                  ) : (
                      sortedTrades.map(trade => {
                          const hasImages = (trade.images && trade.images.length > 0) || trade.image;
-                         const mainImage = trade.images && trade.images.length > 0 ? trade.images[0] : trade.image;
+                         const tradeImages = trade.images && trade.images.length > 0 
+                            ? trade.images 
+                            : (trade.image ? [trade.image] : []);
 
                          return (
-                             <div key={trade.id} className="bg-[#1E1E1E] rounded-xl p-3 border border-white/5 flex items-center gap-3 group hover:border-white/10 transition-colors">
-                                 {/* Icon/Type */}
-                                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center border shrink-0 ${
-                                     trade.type === 'Long' ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-red-500/10 border-red-500/20 text-red-500'
-                                 }`}>
-                                     {trade.type === 'Long' ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
-                                 </div>
-                                 
-                                 {/* Info */}
-                                 <div className="flex-1 min-w-0">
-                                     <div className="flex justify-between items-center mb-0.5">
-                                         <span className="text-white font-mono font-bold text-sm">{trade.pair}</span>
-                                         <span className={`font-mono font-bold text-sm ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                             {trade.pnl >= 0 ? '+' : ''}{trade.pnl}
-                                         </span>
+                             <div key={trade.id} className="bg-[#1E1E1E] rounded-xl p-3 border border-white/5 flex flex-col gap-3 group hover:border-white/10 transition-colors">
+                                 {/* Top Row: Details */}
+                                 <div className="flex items-center gap-3">
+                                     {/* Icon/Type */}
+                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center border shrink-0 ${
+                                         trade.type === 'Long' ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-red-500/10 border-red-500/20 text-red-500'
+                                     }`}>
+                                         {trade.type === 'Long' ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
                                      </div>
-                                     <div className="flex justify-between items-center text-[10px] text-[#888]">
-                                         <div className="flex gap-2">
-                                            <span>{trade.entryTime} - {trade.exitTime}</span>
-                                            {trade.newsEvent && <span className="text-yellow-500 flex items-center gap-0.5"><Zap size={8} /> News</span>}
+                                     
+                                     {/* Info */}
+                                     <div className="flex-1 min-w-0">
+                                         <div className="flex justify-between items-center mb-0.5">
+                                             <span className="text-white font-mono font-bold text-sm">{trade.pair}</span>
+                                             <span className={`font-mono font-bold text-sm ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                 {trade.pnl >= 0 ? '+' : ''}{trade.pnl}
+                                             </span>
                                          </div>
-                                         <span>Qty: {trade.size}</span>
+                                         <div className="flex justify-between items-center text-[10px] text-[#888]">
+                                             <div className="flex gap-2">
+                                                <span>{trade.entryTime} - {trade.exitTime}</span>
+                                                {trade.newsEvent && <span className="text-yellow-500 flex items-center gap-0.5"><Zap size={8} /> News</span>}
+                                             </div>
+                                             <span>Qty: {trade.size}</span>
+                                         </div>
+                                     </div>
+
+                                     {/* Actions */}
+                                     <div className="flex gap-1 pl-2 border-l border-white/5 shrink-0">
+                                         {onEdit && (
+                                             <button 
+                                               onClick={() => {
+                                                   onClose(); // Close day details first to prevent overlap
+                                                   onEdit(trade);
+                                               }}
+                                               className="p-2 text-[#666] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                             >
+                                                 <Edit2 size={14} />
+                                             </button>
+                                         )}
+                                         {onDelete && (
+                                             <button 
+                                               onClick={() => onDelete(trade.id)}
+                                               className="p-2 text-[#666] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                             >
+                                                 <Trash2 size={14} />
+                                             </button>
+                                         )}
                                      </div>
                                  </div>
 
-                                 {/* Image Thumbnail (Restored) */}
-                                 {hasImages && mainImage && (
-                                     <div className="w-10 h-10 rounded-lg border border-white/10 overflow-hidden shrink-0 relative bg-black">
-                                         <img src={mainImage} alt="Trade" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                                 {/* Bottom Row: Images Grid */}
+                                 {tradeImages.length > 0 && (
+                                     <div className="flex gap-2 overflow-x-auto custom-scrollbar pt-1 pb-1">
+                                         {tradeImages.map((img, idx) => (
+                                             <div 
+                                                key={idx} 
+                                                className="relative h-16 w-16 shrink-0 rounded-lg border border-white/10 overflow-hidden cursor-zoom-in group/img bg-black/40"
+                                                onClick={() => setZoomedImage(img)}
+                                             >
+                                                 <img src={img} alt="Evidence" className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-110 opacity-80 group-hover/img:opacity-100" />
+                                                 <div className="absolute inset-0 bg-white/0 group-hover/img:bg-white/5 transition-colors" />
+                                             </div>
+                                         ))}
                                      </div>
                                  )}
-
-                                 {/* Actions */}
-                                 <div className="flex gap-1 pl-2 border-l border-white/5 shrink-0">
-                                     {onEdit && (
-                                         <button 
-                                           onClick={() => onEdit(trade)}
-                                           className="p-2 text-[#666] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                                         >
-                                             <Edit2 size={14} />
-                                         </button>
-                                     )}
-                                     {onDelete && (
-                                         <button 
-                                           onClick={() => onDelete(trade.id)}
-                                           className="p-2 text-[#666] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                         >
-                                             <Trash2 size={14} />
-                                         </button>
-                                     )}
-                                 </div>
                              </div>
                          );
                      })
@@ -910,5 +975,13 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
              </div>
         </motion.div>
      </div>
+
+     {/* Full Screen Image Zoom Overlay */}
+     <AnimatePresence>
+        {zoomedImage && (
+            <ImageZoomOverlay src={zoomedImage} onClose={() => setZoomedImage(null)} />
+        )}
+     </AnimatePresence>
+     </>
    )
 };
