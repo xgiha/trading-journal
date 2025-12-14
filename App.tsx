@@ -438,10 +438,10 @@ const App: React.FC = () => {
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 z-10 pb-4 lg:pb-0">
           
           {/* ================= LEFT COLUMN ================= */}
-          <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full order-1 lg:order-1">
+          <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-1 lg:order-1">
             
             {/* Total P&L Card */}
-            <div className="liquid-card rounded-3xl p-5 relative overflow-hidden flex flex-col group h-auto">
+            <div className="liquid-card rounded-3xl p-5 relative overflow-hidden flex flex-col group h-auto shrink-0">
               {/* Decorative Background */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-nexus-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
@@ -476,15 +476,15 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Consistency / Activity Heatmap (Linked to current month) - Fills the gap */}
+            {/* Consistency / Activity Heatmap (Linked to current month) - Fixed Height */}
             <ActivityHeatmap 
                 trades={trades} 
                 currentDate={currentCalendarDate} 
-                className="flex-1" 
+                className="shrink-0" 
             />
 
-            {/* Performance Radar Chart (Replaces Rooms & Live Markets) */}
-            <div className="liquid-card rounded-3xl p-5 w-full aspect-square flex flex-col group relative overflow-hidden">
+            {/* Performance Radar Chart - Fills remaining space, min-h-0 to avoid overflow */}
+            <div className="liquid-card rounded-3xl p-5 w-full flex-1 min-h-0 flex flex-col group relative overflow-hidden">
                 <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-4 group-hover:text-white transition-colors z-10 relative">Performance Metrics</span>
                 <div className="flex-1 -ml-4 -mr-4 -mb-4 relative z-10">
                    <PerformanceRadar data={radarData} />
@@ -573,10 +573,10 @@ const App: React.FC = () => {
 
 
           {/* ================= RIGHT COLUMN ================= */}
-          <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full order-3 lg:order-3">
+          <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-3 lg:order-3">
             
-            {/* 1. Performance Chart - Bigger: Flex 3, Increased Height */}
-            <div className="liquid-card rounded-3xl p-5 flex-[3] flex flex-col relative overflow-hidden group min-h-[300px]">
+            {/* 1. Performance Chart - Flex 1 fills remaining space */}
+            <div className="liquid-card rounded-3xl p-5 flex-1 min-h-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10">
                  <div>
                     <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">My Performance</span>
@@ -594,12 +594,12 @@ const App: React.FC = () => {
                     <span className="text-[10px] text-nexus-muted">Last 7 Days</span>
                  </div>
               </div>
-              <div className="flex-1 w-full relative min-h-[100px] -mx-2 mt-4">
+              <div className="flex-1 w-full relative min-h-0 -mx-2 mt-4">
                  <EnergyChart data={performanceChartData} />
               </div>
             </div>
 
-            {/* 2. News vs Normal Performance - Smaller: Fixed Height, Shrink-0 */}
+            {/* 2. News vs Normal Performance - Fixed Height */}
             <div className="liquid-card rounded-3xl p-5 h-[160px] shrink-0 flex flex-col relative overflow-hidden group">
                 <div className="flex justify-between items-start shrink-0 z-10">
                     <div>
@@ -615,7 +615,7 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* 3. Stats Card - Compact: Less Padding */}
+            {/* 3. Stats Card - Compact Fixed Height */}
             <div className="liquid-card rounded-3xl p-4 shrink-0 flex flex-col gap-2">
                  <div className="flex justify-between items-center mb-1">
                     <span className="text-[10px] uppercase tracking-widest text-nexus-muted">Session Insights</span>
