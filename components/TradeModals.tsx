@@ -308,6 +308,41 @@ const ImageZoomOverlay = ({ src, onClose }: { src: string, onClose: () => void }
     );
 };
 
+// --- Note Zoom Overlay Component ---
+const NoteZoomOverlay = ({ content, onClose }: { content: string, onClose: () => void }) => {
+    return (
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4"
+            onClick={onClose}
+        >
+            <button 
+                className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full backdrop-blur-md transition-colors"
+                onClick={onClose}
+            >
+                <X size={24} />
+            </button>
+            <motion.div 
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="bg-[#141414] border border-white/10 p-6 md:p-8 rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar shadow-2xl relative"
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5 sticky top-0 bg-[#141414] z-10 -mt-2 pt-2">
+                     <FileText size={18} className="text-nexus-accent" />
+                     <h3 className="text-base font-bold text-white uppercase tracking-widest">Trade Note</h3>
+                </div>
+                <div className="text-[#e4e4e7] text-base leading-relaxed whitespace-pre-wrap font-sans break-words">
+                    {content}
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+};
+
 interface AddTradeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -711,7 +746,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                     <FileText size={10} /> Notes
                 </label>
                 <textarea 
-                    className="w-full h-full bg-transparent text-sm text-white placeholder-white/10 focus:outline-none resize-none custom-scrollbar leading-relaxed"
+                    className="w-full h-full bg-transparent text-sm text-white placeholder-white/10 focus:outline-none resize-none custom-scrollbar leading-relaxed whitespace-pre-wrap break-words"
                     placeholder="Add trading notes, strategy details, or observations..."
                     value={formData.notes}
                     onChange={e => setFormData({...formData, notes: e.target.value})}
@@ -805,6 +840,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
 
    // State for zoom modal
    const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+   const [viewingNote, setViewingNote] = useState<string | null>(null);
 
    // Chart Data: Cumulative PnL throughout the day
    const chartData = useMemo(() => {
@@ -909,6 +945,11 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                          const tradeImages = trade.images && trade.images.length > 0 
                             ? trade.images 
                             : (trade.image ? [trade.image] : []);
+                            
+                         // Notes logic
+                         const NOTE_preview_limit = 60;
+                         const isLongNote = trade.notes && trade.notes.length > NOTE_preview_limit;
+                         const displayNote = isLongNote ? trade.notes!.substring(0, NOTE_preview_limit).trim() + '...' : trade.notes;
 
                          return (
                              <div key={trade.id} className="bg-[#1E1E1E] rounded-xl p-3 border border-white/5 flex flex-col gap-3 group hover:border-white/10 transition-colors">
@@ -964,8 +1005,19 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                                  
                                  {/* Middle Row: Notes */}
                                  {trade.notes && (
-                                     <div className="text-xs text-[#999] bg-black/20 rounded-lg p-2 font-medium leading-relaxed border border-white/5">
-                                         {trade.notes}
+                                     <div className="text-xs text-[#999] bg-black/20 rounded-lg p-2 font-medium leading-relaxed border border-white/5 relative group">
+                                         <span className="text-white/70">{displayNote}</span>
+                                         {isLongNote && (
+                                             <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setViewingNote(trade.notes || '');
+                                                }}
+                                                className="ml-1 text-nexus-accent hover:text-white text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-0.5 cursor-pointer"
+                                             >
+                                                 Read More
+                                             </button>
+                                         )}
                                      </div>
                                  )}
 
@@ -1002,10 +1054,13 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
         </motion.div>
      </div>
 
-     {/* Full Screen Image Zoom Overlay */}
+     {/* Full Screen Image/Note Zoom Overlay */}
      <AnimatePresence>
         {zoomedImage && (
             <ImageZoomOverlay src={zoomedImage} onClose={() => setZoomedImage(null)} />
+        )}
+        {viewingNote && (
+            <NoteZoomOverlay content={viewingNote} onClose={() => setViewingNote(null)} />
         )}
      </AnimatePresence>
      </>
