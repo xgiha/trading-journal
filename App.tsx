@@ -498,17 +498,17 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-0 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
+    <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
       {/* Main Dashboard Card - Responsive Sizing */}
-      <div className="w-full max-w-[1500px] h-auto lg:h-full glass-panel rounded-none md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-4 md:p-6 lg:p-8 transition-all duration-500">
+      <div className="w-full max-w-[1500px] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-8 transition-all duration-500">
         
         {/* ================= HEADER AREA ================= */}
-        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-center mb-6 shrink-0 z-20 w-full min-h-[50px]">
+        <div className="relative flex flex-col md:flex-row items-center justify-center mb-6 shrink-0 z-20 w-full min-h-[50px] gap-4 md:gap-0">
            {/* Welcome Text (Absolute Left on Desktop) */}
-           <div className="mb-4 md:mb-0 md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2">
-             <h2 className="text-white font-bold text-lg md:text-xl tracking-tight">Welcome, Gehan</h2>
+           <div className="md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2 text-center md:text-left">
+             <h2 className="text-white font-bold text-xl md:text-xl tracking-tight">Welcome, Gehan</h2>
              <p className="text-xs text-nexus-muted">Good to see you again.</p>
            </div>
            
@@ -518,7 +518,7 @@ const App: React.FC = () => {
                 <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md">
                    <div className={`w-2 h-2 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col text-left">
                   <h1 className="text-xs font-bold tracking-widest uppercase text-white drop-shadow-md">
                     {isMarketOpen ? 'Market Open' : 'Market Closed'}
                   </h1>
@@ -567,10 +567,10 @@ const App: React.FC = () => {
         </div>
 
         {/* ================= MAIN CONTENT GRID ================= */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 z-10 pb-4 lg:pb-0">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 z-10 pb-4 lg:pb-0">
           
-          {/* ================= LEFT COLUMN ================= */}
-          <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-1 lg:order-1">
+          {/* ================= LEFT COLUMN (Stats) ================= */}
+          <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-2 lg:order-1">
             
             {/* Total P&L Card */}
             <div className="liquid-card rounded-3xl p-5 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
@@ -617,7 +617,7 @@ const App: React.FC = () => {
             />
 
             {/* Performance Radar Chart - Fills remaining space, min-h-0 to avoid overflow */}
-            <div className="liquid-card rounded-3xl p-5 w-full flex-1 min-h-0 flex flex-col group relative overflow-hidden">
+            <div className="liquid-card rounded-3xl p-5 w-full flex-1 min-h-[250px] lg:min-h-0 flex flex-col group relative overflow-hidden">
                 <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-4 group-hover:text-white transition-colors z-10 relative">Performance Metrics</span>
                 <div className="flex-1 -ml-4 -mr-4 -mb-4 relative z-10">
                    <PerformanceRadar data={radarData} />
@@ -630,7 +630,7 @@ const App: React.FC = () => {
 
 
           {/* ================= CENTER COLUMN (CALENDAR / JOURNAL) ================= */}
-          <div className="col-span-1 lg:col-span-6 relative flex flex-col items-center h-[500px] lg:h-full lg:min-h-0 min-h-[600px] order-2 lg:order-2">
+          <div className="col-span-1 lg:col-span-6 relative flex flex-col items-center h-[500px] lg:h-full lg:min-h-0 min-h-[600px] order-1 lg:order-2">
             
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
@@ -664,7 +664,7 @@ const App: React.FC = () => {
             </div>
 
             {/* Floating Menu with Separate Add Trade Button */}
-            <div className="mb-6 relative z-30 flex items-center gap-4">
+            <div className="mb-2 lg:mb-6 relative z-30 flex items-center gap-4">
                {/* Tab Switcher */}
                <div className="liquid-card p-1.5 rounded-full flex items-center justify-center gap-1 shadow-2xl">
                 {TABS.map((tab) => (
@@ -707,7 +707,7 @@ const App: React.FC = () => {
           <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-3 lg:order-3">
             
             {/* 1. Performance Chart - Flex 1 fills remaining space */}
-            <div className="liquid-card rounded-3xl p-5 flex-1 min-h-0 flex flex-col relative overflow-hidden group">
+            <div className="liquid-card rounded-3xl p-5 flex-1 min-h-[300px] lg:min-h-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10">
                  <div>
                     <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">My Performance</span>

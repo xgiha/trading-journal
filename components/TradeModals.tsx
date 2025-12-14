@@ -607,9 +607,9 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
             </div>
 
             {/* 6. Combined Date & Time Section */}
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex items-start gap-4 z-40 relative h-[84px]">
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col md:flex-row items-start gap-4 z-40 relative h-auto md:h-[84px]">
                  {/* Date Block */}
-                 <div className="flex-1 relative group cursor-pointer border-r border-white/5 pr-4 h-full" onClick={() => setShowCalendar(!showCalendar)}>
+                 <div className="w-full md:flex-1 relative group cursor-pointer border-b md:border-b-0 md:border-r border-white/5 pb-3 md:pb-0 pr-0 md:pr-4 h-full" onClick={() => setShowCalendar(!showCalendar)}>
                       <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5 pointer-events-none mb-1.5">
                         <CalendarIcon size={10} /> Date
                       </label>
@@ -618,7 +618,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                       </div>
                       {/* Calendar Dropdown */}
                       {showCalendar && (
-                          <div className="absolute top-full left-0 z-50 mt-2 w-[280px]">
+                          <div className="absolute top-full left-0 z-50 mt-2 w-full md:w-[280px]">
                               <CustomDatePicker 
                                   selectedDate={formData.date || ''} 
                                   onChange={(date) => {
@@ -631,21 +631,23 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                  </div>
 
                  {/* Time Inputs */}
-                 <div className="w-[30%] border-r border-white/5 pr-4">
-                     <ScrollableTimeInput
-                        label="Entry"
-                        type="IN"
-                        value={formData.timeIn || '09:30:00'}
-                        onChange={(val) => setFormData({...formData, timeIn: val})}
-                    />
-                 </div>
-                 <div className="w-[30%]">
-                     <ScrollableTimeInput
-                        label="Exit"
-                        type="OUT"
-                        value={formData.timeOut || '10:00:00'}
-                        onChange={(val) => setFormData({...formData, timeOut: val})}
-                    />
+                 <div className="w-full md:w-[65%] flex gap-2">
+                     <div className="flex-1 border-r border-white/5 pr-2">
+                         <ScrollableTimeInput
+                            label="Entry"
+                            type="IN"
+                            value={formData.timeIn || '09:30:00'}
+                            onChange={(val) => setFormData({...formData, timeIn: val})}
+                        />
+                     </div>
+                     <div className="flex-1">
+                         <ScrollableTimeInput
+                            label="Exit"
+                            type="OUT"
+                            value={formData.timeOut || '10:00:00'}
+                            onChange={(val) => setFormData({...formData, timeOut: val})}
+                        />
+                     </div>
                  </div>
             </div>
 

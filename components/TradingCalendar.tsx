@@ -142,10 +142,10 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
         grid.push(
             <React.Fragment key={`row-${i}`}>
                {currentWeek}
-               {/* Weekly Summary Column */}
+               {/* Weekly Summary Column - Hidden on mobile, shown on md+ */}
                <div 
                 onClick={() => weekTradesCount > 0 && onViewWeekClick(weekTradesList, weekLabel)}
-                className={`rounded-lg md:rounded-xl p-1 md:p-2 flex flex-col items-center justify-center transition-all border border-white/5 relative overflow-hidden aspect-square ${
+                className={`hidden md:flex rounded-lg md:rounded-xl p-1 md:p-2 flex-col items-center justify-center transition-all border border-white/5 relative overflow-hidden aspect-square ${
                     weekTradesCount > 0 
                       ? 'bg-white/10 hover:bg-white/15 cursor-pointer hover:border-nexus-accent/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.05)]' 
                       : 'bg-white/[0.02]'
@@ -222,19 +222,19 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
       {/* Grid Container */}
       <div className="flex-1 flex flex-col min-h-0">
         {/* Grid Header */}
-        <div className="grid grid-cols-8 gap-1 md:gap-2 mb-2 shrink-0 px-1">
+        <div className="grid grid-cols-7 md:grid-cols-8 gap-1 md:gap-2 mb-2 shrink-0 px-1">
             {WEEKDAYS.map(d => (
             <div key={d} className="text-center text-[10px] uppercase tracking-widest text-nexus-muted font-bold opacity-60">
                 {d}
             </div>
             ))}
-            <div className="text-center text-[10px] uppercase tracking-widest text-nexus-accent font-bold opacity-80">
+            <div className="hidden md:block text-center text-[10px] uppercase tracking-widest text-nexus-accent font-bold opacity-80">
             Total
             </div>
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-8 gap-1 md:gap-2 flex-1 auto-rows-min overflow-y-auto custom-scrollbar px-1 content-start">
+        <div className="grid grid-cols-7 md:grid-cols-8 gap-1 md:gap-2 flex-1 auto-rows-min overflow-y-auto custom-scrollbar px-1 content-start">
             {renderCalendarDays()}
         </div>
       </div>
