@@ -396,11 +396,11 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full relative flex items-center justify-center p-0 md:p-4 lg:p-6 overflow-y-auto font-sans selection:bg-nexus-accent selection:text-black">
+    <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-0 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
       {/* Main Dashboard Card - Responsive Sizing */}
-      <div className="w-full max-w-[1500px] h-auto min-h-[calc(100vh-3rem)] glass-panel rounded-none md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-4 md:p-6 lg:p-8 transition-all duration-500">
+      <div className="w-full max-w-[1500px] h-auto lg:h-full glass-panel rounded-none md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-4 md:p-6 lg:p-8 transition-all duration-500">
         
         {/* ================= HEADER AREA ================= */}
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6 shrink-0 z-20">
@@ -435,7 +435,7 @@ const App: React.FC = () => {
         </div>
 
         {/* ================= MAIN CONTENT GRID ================= */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 z-10 pb-4 lg:pb-0">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 z-10 pb-4 lg:pb-0">
           
           {/* ================= LEFT COLUMN ================= */}
           <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full order-1 lg:order-1">
@@ -497,7 +497,7 @@ const App: React.FC = () => {
 
 
           {/* ================= CENTER COLUMN (CALENDAR / JOURNAL) ================= */}
-          <div className="col-span-1 lg:col-span-6 relative flex flex-col items-center h-[500px] lg:h-full min-h-[600px] order-2 lg:order-2">
+          <div className="col-span-1 lg:col-span-6 relative flex flex-col items-center h-[500px] lg:h-full lg:min-h-0 min-h-[600px] order-2 lg:order-2">
             
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
