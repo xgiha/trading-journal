@@ -185,7 +185,7 @@ export default function AsciiPyramid({
   }, []);
 
   return (
-    <div className="w-[160px] h-[140px] flex items-center justify-center relative select-none pointer-events-none overflow-hidden">
+    <div className="w-full h-full flex items-center justify-center relative select-none pointer-events-none overflow-hidden">
         <canvas ref={canvasRef} className="w-full h-full object-contain" />
         {/* Glow effect underneath */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 blur-xl rounded-full pointer-events-none" />

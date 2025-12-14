@@ -441,7 +441,7 @@ const App: React.FC = () => {
           <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-1 lg:order-1">
             
             {/* Total P&L Card */}
-            <div className="liquid-card rounded-3xl p-5 relative overflow-hidden flex flex-col group h-auto shrink-0">
+            <div className="liquid-card rounded-3xl p-5 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
               {/* Decorative Background */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-nexus-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
@@ -453,23 +453,24 @@ const App: React.FC = () => {
               </div>
               
               {/* Bottom Row: Pyramid (Left) and Price (Right) */}
-              <div className="relative z-10 flex items-end justify-between gap-2 mt-4">
+              <div className="relative z-10 flex items-end justify-between gap-1 md:gap-2 mt-4">
                  
-                 {/* Mini Pyramid Visualization */}
-                 <div className="w-40 h-28 relative shrink-0 -ml-4 translate-y-3 mix-blend-screen opacity-100 flex items-end">
+                 {/* Mini Pyramid Visualization - Responsive Size */}
+                 <div className="w-20 h-16 md:w-28 md:h-20 xl:w-40 xl:h-28 relative shrink-0 -ml-2 md:-ml-4 translate-y-2 md:translate-y-3 mix-blend-screen opacity-100 flex items-end transition-all duration-300">
                       <AsciiPyramid fillLevels={rankingStats} />
                  </div>
 
                  {/* Price & Badge */}
-                 <div className="flex flex-col items-end gap-2 flex-1">
-                     <span className={`text-xs font-medium px-2 py-0.5 rounded border ${
+                 <div className="flex flex-col items-end gap-1 md:gap-2 flex-1 min-w-0">
+                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
                          globalStats.totalPnl >= 0 
                          ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
                          : 'text-red-400 bg-red-500/10 border-red-500/20'
                      }`}>
                          {globalStats.totalPnl >= 0 ? '+' : ''}{globalStats.totalPnl >= 0 ? 'Profit' : 'Loss'}
                      </span>
-                     <span className={`text-4xl lg:text-5xl font-light tracking-tighter glow-text ${globalStats.totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
+                     {/* Responsive Font Size */}
+                     <span className={`text-2xl sm:text-3xl xl:text-5xl font-light tracking-tighter glow-text whitespace-nowrap transition-all duration-300 ${globalStats.totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
                         {formatCurrency(globalStats.totalPnl)}
                      </span>
                  </div>
