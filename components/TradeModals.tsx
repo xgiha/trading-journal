@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud, Loader2 } from 'lucide-react';
+import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud, Loader2, Edit2 } from 'lucide-react';
 import { Trade } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -253,7 +253,7 @@ const ScrollableTimeInput = ({
 
             {/* Dropdown Menu */}
             {isOpen && (
-                <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl p-2 shadow-2xl flex gap-1 animate-in fade-in zoom-in-95 duration-200 min-w-[140px]">
+                <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl p-2 shadow-2xl flex gap-1 animate-in fade-in zoom-in-95 duration-200 min-w-full">
                     <div className="flex-1 flex flex-col gap-1">
                         <span className="text-[8px] text-center text-[#555] uppercase">HR</span>
                         <TimeScrollColumn max={24} value={h} onChange={(v) => handleChange('h', v)} />
@@ -460,7 +460,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
         </div>
 
         {/* Form Area - Bento Grid */}
-        <div className="flex-1 overflow-y-auto p-5 custom-scrollbar pb-24 relative">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 custom-scrollbar pb-24 relative">
           <form id="entry-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 relative">
             
             {/* 1. Symbol */}
@@ -724,266 +724,134 @@ interface DayDetailsModalProps {
   date: string;
   trades: Trade[];
   onAddTrade: () => void;
-  onSaveTrade: (trade: Trade) => void;
+  onEdit?: (trade: Trade) => void;
+  onDelete?: (id: string) => void;
 }
 
-const modalVariantsDetails = {
-  hidden: { opacity: 0, scale: 0.95, filter: "blur(10px)" },
-  visible: { opacity: 1, scale: 1, filter: "blur(0px)" },
-  exit: { opacity: 0, scale: 0.95, filter: "blur(10px)" }
-};
+export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ 
+  isOpen, onClose, date, trades, onAddTrade, onEdit, onDelete 
+}) => {
+   
+   // Calculate stats
+   const totalPnl = trades.reduce((acc, t) => acc + t.pnl, 0);
+   const winRate = trades.length > 0 ? (trades.filter(t => t.pnl > 0).length / trades.length) * 100 : 0;
 
-export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClose, date, trades, onAddTrade, onSaveTrade }) => {
-  const [expandedImage, setExpandedImage] = useState<string | null>(null);
-  // We track which trade is currently receiving an upload
-  const [uploadingTradeId, setUploadingTradeId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+   // Sort trades by time
+   const sortedTrades = [...trades].sort((a, b) => a.entryTime.localeCompare(b.entryTime));
 
-  if (!isOpen) return null;
-
-  const totalPnl = trades.reduce((sum, t) => sum + t.pnl, 0);
-
-  // Generate chart data cumulative
-  const chartData = useMemo(() => {
-    // Sort by entryTime
-    const sortedTrades = [...trades].sort((a, b) => a.entryTime.localeCompare(b.entryTime));
-    let runningTotal = 0;
-    const data = [{ name: 'Start', value: 0 }];
-    
-    sortedTrades.forEach((trade, idx) => {
-      runningTotal += trade.pnl;
-      data.push({
-        name: trade.entryTime,
-        value: runningTotal
-      });
-    });
-    return data;
-  }, [trades]);
-
-  const handleAttachImage = (tradeId: string) => {
-      setUploadingTradeId(tradeId);
-      fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file && uploadingTradeId) {
-          try {
-              const url = await uploadImageToBlob(file);
-              const targetTrade = trades.find(t => t.id === uploadingTradeId);
-              if (targetTrade) {
-                  // Merge legacy image field into images array if needed
-                  const currentImages = targetTrade.images || (targetTrade.image ? [targetTrade.image] : []);
-                  const updatedTrade: Trade = {
-                      ...targetTrade,
-                      images: [...currentImages, url],
-                      image: url // Update legacy field to latest just in case
-                  };
-                  onSaveTrade(updatedTrade);
-              }
-          } catch (error) {
-              console.error("Upload failed", error);
-              alert("Processing failed. Check console.");
-          }
-      }
-      setUploadingTradeId(null);
-      // Reset input
-      if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const isWeekLabel = date.includes('Week');
-  const dateDisplay = isWeekLabel ? date : new Date(date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric'});
-
-  return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-      <motion.div 
-        variants={modalVariantsDetails}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className="liquid-card w-full max-w-2xl rounded-[2rem] p-6 relative flex flex-col h-[85vh] md:h-[700px] overflow-hidden"
-      >
-        {/* Hidden File Input for Attaching Images */}
-        <input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
-            accept="image/*"
-            onChange={handleFileChange}
+   return (
+     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        {/* Backdrop */}
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/90 backdrop-blur-md"
+            onClick={onClose}
         />
-
-        {/* Close Button - Top Right Absolute */}
-        <button 
-          onClick={onClose} 
-          className="absolute top-6 right-6 p-2 rounded-full bg-black/20 hover:bg-white/10 text-nexus-muted hover:text-white transition-colors z-50 border border-white/5"
+        
+        {/* Modal */}
+        <motion.div
+            initial={{ y: "100%", opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: "100%", opacity: 0, scale: 0.95 }}
+            className="relative w-[95%] md:max-w-[500px] bg-[#141414] rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
         >
-          <X size={20} />
-        </button>
+             {/* Header */}
+             <div className="px-6 pt-6 pb-4 shrink-0 flex justify-between items-start">
+                 <div>
+                     <h2 className="text-xl font-normal text-white tracking-tight">{date}</h2>
+                     <div className="flex gap-4 mt-2">
+                         <div className="flex flex-col">
+                             <span className="text-[10px] uppercase text-[#888] font-bold">Net P&L</span>
+                             <span className={`text-lg font-mono ${totalPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                 {totalPnl >= 0 ? '+' : ''}{formatNumber(totalPnl.toFixed(2))}
+                             </span>
+                         </div>
+                         <div className="w-px bg-white/10 my-1"></div>
+                         <div className="flex flex-col">
+                             <span className="text-[10px] uppercase text-[#888] font-bold">Win Rate</span>
+                             <span className="text-lg font-mono text-white">
+                                 {winRate.toFixed(0)}%
+                             </span>
+                         </div>
+                     </div>
+                 </div>
+                 <button 
+                    onClick={onClose}
+                    className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-[#888] hover:text-white hover:bg-[#333] transition-all"
+                 >
+                    <X size={18} />
+                 </button>
+             </div>
 
-        {/* Top Section: Header & Chart */}
-        <div className="flex-none flex flex-col h-[60%] min-h-[300px]">
-          <div className="mb-4 pr-12">
-            <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight truncate">{dateDisplay}</h2>
-            <div className={`text-3xl md:text-4xl font-light tracking-tighter mt-1 ${totalPnl >= 0 ? 'text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.4)]' : 'text-red-400 drop-shadow-[0_0_15px_rgba(248,113,113,0.4)]'}`}>
-              {formatNumber(totalPnl.toString())}
-            </div>
-          </div>
-
-          <div className="flex-1 w-full bg-black/20 rounded-2xl border border-white/5 overflow-hidden relative mb-6">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
-                <defs>
-                   <linearGradient id="modalChartColor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#fb923c" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#fb923c" stopOpacity={0}/>
-                   </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="name" hide />
-                <YAxis hide domain={['auto', 'auto']} />
-                <Tooltip 
-                   contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '12px', color: '#fff' }}
-                   itemStyle={{ color: '#fb923c' }}
-                   formatter={(val: number) => [formatNumber(val.toString()), 'Balance']}
-                   cursor={{ stroke: '#fb923c', strokeWidth: 1, strokeDasharray: '4 4' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#fb923c" 
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#modalChartColor)" 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Bottom Section: Trade List */}
-        <div className="flex-1 flex flex-col min-h-0 border-t border-white/10 pt-4">
-           {/* Section Header */}
-           <div className="flex items-center justify-between mb-4 shrink-0">
-              <span className="text-xs uppercase tracking-widest text-nexus-muted">Session Trades ({trades.length})</span>
-              <button 
-                onClick={onAddTrade} 
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-nexus-accent text-black text-xs font-bold hover:bg-white transition-colors shadow-lg shadow-orange-500/20"
-              >
-                 <Plus size={14} />
-                 <span>Add Trade</span>
-              </button>
-           </div>
-           
-           {/* Scrollable List */}
-           <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-             {trades.length === 0 ? (
-               <div className="h-full flex flex-col items-center justify-center text-nexus-muted opacity-50 py-8">
-                  <span className="text-xs">No trades logged for this session</span>
-               </div>
-             ) : (
-               trades.map((trade, i) => {
-                 // Normalize images to array
-                 const tradeImages = trade.images && trade.images.length > 0 
-                     ? trade.images 
-                     : (trade.image ? [trade.image] : []);
-
-                 const isThisTradeUploading = uploadingTradeId === trade.id;
-
-                 return (
-                   <div key={i} className="flex flex-col gap-3 p-3 rounded-xl bg-white/5 border border-white/5 transition-colors group">
-                      
-                      {/* Trade Header Info */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                               trade.type === 'Long' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-red-500/10 border-red-500/20 text-red-500'
-                           }`}>
-                               {trade.type === 'Long' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                           </div>
-                           <div>
-                              <div className="flex items-center gap-2">
-                                 <span className="text-sm font-bold text-white">{trade.pair}</span>
-                                 <span className="text-[10px] text-nexus-muted font-mono">{trade.entryTime}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-[10px] text-nexus-muted">
-                                  <span>{trade.size || '-'} units</span>
-                                  <span>•</span>
-                                  <span>Entry: {trade.entryPrice || '-'}</span>
-                              </div>
-                           </div>
-                        </div>
-                        <span className={`text-sm font-bold ${trade.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                           {formatNumber(trade.pnl.toString())}
-                        </span>
-                      </div>
-
-                      {/* Image Gallery Row */}
-                      <div className="flex items-center gap-2 pl-[44px]"> {/* Indent to align with text */}
-                          
-                          {/* Image Thumbnails */}
-                          {tradeImages.map((img, idx) => (
-                             <div 
-                               key={idx}
-                               onClick={() => setExpandedImage(img)}
-                               className="w-12 h-12 rounded-lg bg-black/40 border border-white/10 overflow-hidden cursor-pointer hover:border-nexus-accent transition-colors relative"
-                             >
-                               <img src={img} alt="Trade Evidence" className="w-full h-full object-cover" />
-                               <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity">
-                                 <Maximize2 size={12} className="text-white" />
-                               </div>
+             {/* List */}
+             <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-20 flex flex-col gap-2">
+                 {sortedTrades.length === 0 ? (
+                     <div className="py-10 text-center text-[#555] text-xs uppercase font-bold tracking-widest">
+                         No trades recorded
+                     </div>
+                 ) : (
+                     sortedTrades.map(trade => (
+                         <div key={trade.id} className="bg-[#1E1E1E] rounded-xl p-3 border border-white/5 flex items-center gap-3">
+                             {/* Icon/Type */}
+                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${
+                                 trade.type === 'Long' ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-red-500/10 border-red-500/20 text-red-500'
+                             }`}>
+                                 {trade.type === 'Long' ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
                              </div>
-                          ))}
+                             
+                             {/* Info */}
+                             <div className="flex-1 min-w-0">
+                                 <div className="flex justify-between items-center mb-0.5">
+                                     <span className="text-white font-mono font-bold text-sm">{trade.pair}</span>
+                                     <span className={`font-mono font-bold text-sm ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                         {trade.pnl >= 0 ? '+' : ''}{trade.pnl}
+                                     </span>
+                                 </div>
+                                 <div className="flex justify-between items-center text-[10px] text-[#888]">
+                                     <div className="flex gap-2">
+                                        <span>{trade.entryTime} - {trade.exitTime}</span>
+                                        {trade.newsEvent && <span className="text-yellow-500 flex items-center gap-0.5"><Zap size={8} /> News</span>}
+                                     </div>
+                                     <span>Qty: {trade.size}</span>
+                                 </div>
+                             </div>
 
-                          {/* Add Image Button for this trade */}
-                          <button 
-                             onClick={() => !isThisTradeUploading && handleAttachImage(trade.id)}
-                             disabled={isThisTradeUploading}
-                             className={`w-12 h-12 rounded-lg border border-dashed border-white/10 flex flex-col items-center justify-center transition-colors ${isThisTradeUploading ? 'cursor-not-allowed bg-white/5' : 'text-nexus-muted hover:text-white hover:border-nexus-accent hover:bg-white/5'}`}
-                             title="Add Image to Trade"
-                          >
-                              {isThisTradeUploading ? <Loader2 size={14} className="animate-spin text-white" /> : (
-                                <>
-                                  <Plus size={14} />
-                                  <span className="text-[8px] mt-0.5">IMG</span>
-                                </>
-                              )}
-                          </button>
-                      </div>
+                             {/* Actions */}
+                             <div className="flex gap-1 pl-2 border-l border-white/5">
+                                 {onEdit && (
+                                     <button 
+                                       onClick={() => onEdit(trade)}
+                                       className="p-2 text-[#666] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                     >
+                                         <Edit2 size={14} />
+                                     </button>
+                                 )}
+                                 {onDelete && (
+                                     <button 
+                                       onClick={() => onDelete(trade.id)}
+                                       className="p-2 text-[#666] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                     >
+                                         <Trash2 size={14} />
+                                     </button>
+                                 )}
+                             </div>
+                         </div>
+                     ))
+                 )}
+             </div>
 
-                   </div>
-                 );
-               })
-             )}
-           </div>
-        </div>
-
-        {/* Image Expansion Overlay */}
-        <AnimatePresence>
-          {expandedImage && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setExpandedImage(null)}
-              className="absolute inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 cursor-pointer"
-            >
-              <motion.img 
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0.9 }}
-                src={expandedImage} 
-                className="max-w-full max-h-full rounded-lg shadow-2xl"
-                alt="Expanded Trade"
-              />
-              <button className="absolute top-4 right-4 text-white/50 hover:text-white">
-                <X size={24} />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-      </motion.div>
-    </div>
-  );
+             {/* Add Button Area */}
+             <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#141414] to-transparent pt-10 pointer-events-none flex justify-center">
+                 <button
+                    onClick={onAddTrade}
+                    className="pointer-events-auto flex items-center gap-2 bg-nexus-accent text-black px-6 py-3 rounded-full font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                 >
+                     <Plus size={16} /> Add Trade
+                 </button>
+             </div>
+        </motion.div>
+     </div>
+   )
 };

@@ -5,16 +5,16 @@ import {
   Lightbulb, 
   LayoutGrid, 
   BookOpen, 
-  ArrowUpRight,
-  ArrowDownRight,
+  ArrowUpRight, 
+  ArrowDownRight, 
   Sun, 
   Droplets, 
-  Plus,
-  Activity,
-  Clock,
-  Zap,
-  MinusCircle,
-  CheckCircle
+  Plus, 
+  Activity, 
+  Clock, 
+  Zap, 
+  MinusCircle, 
+  CheckCircle 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -641,8 +641,9 @@ const App: React.FC = () => {
                </AnimatePresence>
             </div>
 
-            {/* Floating Menu with Integrated Add Trade Button */}
-            <div className="mb-6 relative z-30">
+            {/* Floating Menu with Separate Add Trade Button */}
+            <div className="mb-6 relative z-30 flex items-center gap-4">
+               {/* Tab Switcher */}
                <div className="liquid-card p-1.5 rounded-full flex items-center justify-center gap-1 shadow-2xl">
                 {TABS.map((tab) => (
                   <button
@@ -665,19 +666,16 @@ const App: React.FC = () => {
                     </span>
                   </button>
                 ))}
-                
-                {/* Vertical Divider */}
-                <div className="w-px h-6 bg-white/10 mx-1"></div>
-                
-                {/* Add Trade Button */}
-                <button 
+               </div>
+
+               {/* Add Trade Button */}
+               <button 
                   onClick={handleAddTradeBtnClick}
-                  className="relative px-6 py-2.5 rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white hover:bg-white/10 transition-colors active:scale-95 duration-100 group"
-                >
+                  className="liquid-card px-6 py-3 rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white hover:bg-white/10 transition-all active:scale-95 duration-100 group shadow-2xl"
+               >
                     <Plus size={16} className="group-hover:text-nexus-accent transition-colors" />
                     <span className="text-xs font-medium whitespace-nowrap">Add Trade</span>
-                </button>
-               </div>
+               </button>
             </div>
 
           </div>
@@ -790,7 +788,8 @@ const App: React.FC = () => {
                onClose={() => setIsDetailModalOpen(false)}
                date={selectedDate}
                trades={selectedTrades}
-               onSaveTrade={handleAddOrUpdateTrade}
+               onEdit={handleEditTrade}
+               onDelete={handleDeleteTrade}
                onAddTrade={() => {
                   setIsDetailModalOpen(false);
                   setEditingTrade(undefined);
