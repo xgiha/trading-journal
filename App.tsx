@@ -567,10 +567,12 @@ const App: React.FC = () => {
         </div>
 
         {/* ================= MAIN CONTENT GRID ================= */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 z-10 pb-4 lg:pb-0">
+        {/* Responsive Grid: 1 Col (Mobile), 2 Cols (Tablet), 12 Cols (Desktop) */}
+        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 z-10 pb-4 lg:pb-0">
           
           {/* ================= LEFT COLUMN (Stats) ================= */}
-          <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-2 lg:order-1">
+          {/* Mobile: Order 2. Tablet: Order 2. Desktop: Order 1 */}
+          <div className="col-span-1 md:col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-2 lg:order-1">
             
             {/* Total P&L Card */}
             <div className="liquid-card rounded-3xl p-5 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
@@ -616,8 +618,8 @@ const App: React.FC = () => {
                 className="shrink-0" 
             />
 
-            {/* Performance Radar Chart - Fills remaining space, min-h-0 to avoid overflow */}
-            <div className="liquid-card rounded-3xl p-5 w-full flex-1 min-h-[250px] lg:min-h-0 flex flex-col group relative overflow-hidden">
+            {/* Performance Radar Chart - Fills remaining space or fixed height on mobile */}
+            <div className="liquid-card rounded-3xl p-5 w-full h-[320px] lg:h-auto lg:flex-1 lg:min-h-0 flex flex-col group relative overflow-hidden">
                 <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-4 group-hover:text-white transition-colors z-10 relative">Performance Metrics</span>
                 <div className="flex-1 -ml-4 -mr-4 -mb-4 relative z-10">
                    <PerformanceRadar data={radarData} />
@@ -630,7 +632,8 @@ const App: React.FC = () => {
 
 
           {/* ================= CENTER COLUMN (CALENDAR / JOURNAL) ================= */}
-          <div className="col-span-1 lg:col-span-6 relative flex flex-col items-center h-[500px] lg:h-full lg:min-h-0 min-h-[600px] order-1 lg:order-2">
+          {/* Mobile: Order 1. Tablet: Order 1 (Full Width). Desktop: Order 2 */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-6 relative flex flex-col items-center h-[500px] lg:h-full lg:min-h-0 min-h-[600px] order-1 lg:order-2">
             
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
@@ -704,10 +707,11 @@ const App: React.FC = () => {
 
 
           {/* ================= RIGHT COLUMN ================= */}
-          <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-3 lg:order-3">
+          {/* Mobile: Order 3. Tablet: Order 3. Desktop: Order 3 */}
+          <div className="col-span-1 md:col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-3 lg:order-3">
             
-            {/* 1. Performance Chart - Flex 1 fills remaining space */}
-            <div className="liquid-card rounded-3xl p-5 flex-1 min-h-[300px] lg:min-h-0 flex flex-col relative overflow-hidden group">
+            {/* 1. Performance Chart - Fixed height on mobile to prevent stretching, flex on desktop */}
+            <div className="liquid-card rounded-3xl p-5 h-[320px] lg:h-auto lg:flex-1 lg:min-h-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10">
                  <div>
                     <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">My Performance</span>
