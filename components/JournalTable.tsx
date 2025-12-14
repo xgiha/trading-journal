@@ -6,7 +6,8 @@ import {
   Trash2,
   Edit2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trade } from '../types';
@@ -60,6 +61,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete }) 
     const startX = useRef(0);
     const isDragging = useRef(false);
     const isNewsTrade = !!trade.newsEvent;
+    const hasNotes = !!trade.notes;
 
     const onPointerDown = (e: React.PointerEvent) => {
         isDragging.current = true;
@@ -126,11 +128,14 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete }) 
                 style={{ transform: `translateX(${offset}px)` }}
             >
                 {/* News Icon Area (Matches Header Spacer) */}
-                <div className="w-10 flex justify-center items-center shrink-0 border-r border-white/5 h-full">
+                <div className="w-10 flex flex-col gap-1 justify-center items-center shrink-0 border-r border-white/5 h-full">
                     {isNewsTrade ? (
                         <Zap size={14} className="text-yellow-500 fill-yellow-500" />
                     ) : (
                         <div className="w-1 h-1 rounded-full bg-[#222]"></div>
+                    )}
+                    {hasNotes && (
+                        <FileText size={10} className="text-[#666]" />
                     )}
                 </div>
 

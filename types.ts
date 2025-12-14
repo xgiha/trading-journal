@@ -42,6 +42,8 @@ export interface Trade {
   
   image?: string; // Base64 or URL (Legacy support)
   images?: string[]; // Multiple images support
+  
+  notes?: string; // Free text notes
 }
 
 export interface DayStats {

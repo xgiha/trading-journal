@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud, Loader2, Edit2 } from 'lucide-react';
+import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud, Loader2, Edit2, FileText } from 'lucide-react';
 import { Trade } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -340,6 +340,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
     direction: 'Long',
     pnl: '',
     images: [] as string[],
+    notes: '',
   });
 
   // Handle Reset & Pre-fill when modal opens (component mounts)
@@ -377,6 +378,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           direction: tradeToEdit.type,
           pnl: formatNumber(tradeToEdit.pnl.toString()),
           images: initialImages,
+          notes: tradeToEdit.notes || '',
       });
     } else {
       // New Mode
@@ -394,6 +396,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           direction: 'Long',
           pnl: '',
           images: [],
+          notes: '',
       });
     }
   }, [initialDate, tradeToEdit]);
@@ -419,7 +422,8 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       type: formData.direction as 'Long' | 'Short',
       pnl: isNaN(pnlValue) ? 0 : pnlValue,
       images: formData.images,
-      image: formData.images[0] // Backward compat
+      image: formData.images[0], // Backward compat
+      notes: formData.notes
     };
     onAdd(newTrade);
     onClose();
@@ -701,7 +705,20 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                 </div>
             </div>
 
-            {/* 10. Attachments (Compact Layout) */}
+            {/* 10. Notes (New Field) */}
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-2 h-[120px]">
+                <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText size={10} /> Notes
+                </label>
+                <textarea 
+                    className="w-full h-full bg-transparent text-sm text-white placeholder-white/10 focus:outline-none resize-none custom-scrollbar leading-relaxed"
+                    placeholder="Add trading notes, strategy details, or observations..."
+                    value={formData.notes}
+                    onChange={e => setFormData({...formData, notes: e.target.value})}
+                />
+            </div>
+
+            {/* 11. Attachments (Compact Layout) */}
             <div className="col-span-2 bg-[#1E1E1E] rounded-2xl border border-white/5 p-2 flex items-center gap-3 h-[72px]">
                  <div className="pl-2 pr-3 border-r border-white/5 h-full flex items-center">
                     <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0">
@@ -944,6 +961,13 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                                          )}
                                      </div>
                                  </div>
+                                 
+                                 {/* Middle Row: Notes */}
+                                 {trade.notes && (
+                                     <div className="text-xs text-[#999] bg-black/20 rounded-lg p-2 font-medium leading-relaxed border border-white/5">
+                                         {trade.notes}
+                                     </div>
+                                 )}
 
                                  {/* Bottom Row: Images Grid */}
                                  {tradeImages.length > 0 && (
