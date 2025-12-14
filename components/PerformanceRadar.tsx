@@ -7,9 +7,9 @@ interface PerformanceRadarProps {
 
 const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ data }) => {
   return (
-    <div className="w-full h-full min-h-[250px] flex items-center justify-center relative">
+    <div className="w-full h-full flex items-center justify-center relative min-h-0">
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart cx="50%" cy="50%" outerRadius="60%" data={data}>
+        <RadarChart cx="50%" cy="50%" outerRadius="65%" data={data}>
           <PolarGrid stroke="rgba(255,255,255,0.2)" />
           <PolarAngleAxis 
             dataKey="subject" 
