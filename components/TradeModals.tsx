@@ -739,6 +739,21 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
    // Sort trades by time
    const sortedTrades = [...trades].sort((a, b) => a.entryTime.localeCompare(b.entryTime));
 
+   // Chart Data: Cumulative PnL throughout the day
+   const chartData = useMemo(() => {
+     let runningPnl = 0;
+     const points = sortedTrades.map(t => {
+       runningPnl += t.pnl;
+       return {
+         time: t.exitTime || t.entryTime, // Use exit time for realization, fallback to entry
+         pnl: runningPnl,
+         color: runningPnl >= 0 ? '#10b981' : '#ef4444' // Green or Red based on cumulative
+       };
+     });
+     // Add start point
+     return [{ time: 'Start', pnl: 0, color: '#666' }, ...points];
+   }, [sortedTrades]);
+
    return (
      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         {/* Backdrop */}
@@ -758,7 +773,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
             className="relative w-[95%] md:max-w-[500px] bg-[#141414] rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
         >
              {/* Header */}
-             <div className="px-6 pt-6 pb-4 shrink-0 flex justify-between items-start">
+             <div className="px-6 pt-6 pb-2 shrink-0 flex justify-between items-start">
                  <div>
                      <h2 className="text-xl font-normal text-white tracking-tight">{date}</h2>
                      <div className="flex gap-4 mt-2">
@@ -785,60 +800,102 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                  </button>
              </div>
 
+             {/* Intraday Chart */}
+             {sortedTrades.length > 0 && (
+                <div className="h-32 w-full px-2 mt-2 shrink-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData}>
+                           <defs>
+                              <linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={totalPnl >= 0 ? '#10b981' : '#ef4444'} stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor={totalPnl >= 0 ? '#10b981' : '#ef4444'} stopOpacity={0}/>
+                              </linearGradient>
+                           </defs>
+                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                           <Tooltip 
+                                cursor={{ stroke: 'rgba(255,255,255,0.2)' }}
+                                contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
+                                formatter={(val: number) => [`$${val.toFixed(2)}`, 'PnL']}
+                           />
+                           <Area 
+                                type="monotone" 
+                                dataKey="pnl" 
+                                stroke={totalPnl >= 0 ? '#10b981' : '#ef4444'} 
+                                strokeWidth={2}
+                                fill="url(#pnlGradient)"
+                           />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+             )}
+
              {/* List */}
-             <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-20 flex flex-col gap-2">
+             <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-20 pt-4 flex flex-col gap-2">
                  {sortedTrades.length === 0 ? (
                      <div className="py-10 text-center text-[#555] text-xs uppercase font-bold tracking-widest">
                          No trades recorded
                      </div>
                  ) : (
-                     sortedTrades.map(trade => (
-                         <div key={trade.id} className="bg-[#1E1E1E] rounded-xl p-3 border border-white/5 flex items-center gap-3">
-                             {/* Icon/Type */}
-                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${
-                                 trade.type === 'Long' ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-red-500/10 border-red-500/20 text-red-500'
-                             }`}>
-                                 {trade.type === 'Long' ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
-                             </div>
-                             
-                             {/* Info */}
-                             <div className="flex-1 min-w-0">
-                                 <div className="flex justify-between items-center mb-0.5">
-                                     <span className="text-white font-mono font-bold text-sm">{trade.pair}</span>
-                                     <span className={`font-mono font-bold text-sm ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                         {trade.pnl >= 0 ? '+' : ''}{trade.pnl}
-                                     </span>
-                                 </div>
-                                 <div className="flex justify-between items-center text-[10px] text-[#888]">
-                                     <div className="flex gap-2">
-                                        <span>{trade.entryTime} - {trade.exitTime}</span>
-                                        {trade.newsEvent && <span className="text-yellow-500 flex items-center gap-0.5"><Zap size={8} /> News</span>}
-                                     </div>
-                                     <span>Qty: {trade.size}</span>
-                                 </div>
-                             </div>
+                     sortedTrades.map(trade => {
+                         const hasImages = (trade.images && trade.images.length > 0) || trade.image;
+                         const mainImage = trade.images && trade.images.length > 0 ? trade.images[0] : trade.image;
 
-                             {/* Actions */}
-                             <div className="flex gap-1 pl-2 border-l border-white/5">
-                                 {onEdit && (
-                                     <button 
-                                       onClick={() => onEdit(trade)}
-                                       className="p-2 text-[#666] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                                     >
-                                         <Edit2 size={14} />
-                                     </button>
+                         return (
+                             <div key={trade.id} className="bg-[#1E1E1E] rounded-xl p-3 border border-white/5 flex items-center gap-3 group hover:border-white/10 transition-colors">
+                                 {/* Icon/Type */}
+                                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center border shrink-0 ${
+                                     trade.type === 'Long' ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-red-500/10 border-red-500/20 text-red-500'
+                                 }`}>
+                                     {trade.type === 'Long' ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
+                                 </div>
+                                 
+                                 {/* Info */}
+                                 <div className="flex-1 min-w-0">
+                                     <div className="flex justify-between items-center mb-0.5">
+                                         <span className="text-white font-mono font-bold text-sm">{trade.pair}</span>
+                                         <span className={`font-mono font-bold text-sm ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                             {trade.pnl >= 0 ? '+' : ''}{trade.pnl}
+                                         </span>
+                                     </div>
+                                     <div className="flex justify-between items-center text-[10px] text-[#888]">
+                                         <div className="flex gap-2">
+                                            <span>{trade.entryTime} - {trade.exitTime}</span>
+                                            {trade.newsEvent && <span className="text-yellow-500 flex items-center gap-0.5"><Zap size={8} /> News</span>}
+                                         </div>
+                                         <span>Qty: {trade.size}</span>
+                                     </div>
+                                 </div>
+
+                                 {/* Image Thumbnail (Restored) */}
+                                 {hasImages && mainImage && (
+                                     <div className="w-10 h-10 rounded-lg border border-white/10 overflow-hidden shrink-0 relative bg-black">
+                                         <img src={mainImage} alt="Trade" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                                     </div>
                                  )}
-                                 {onDelete && (
-                                     <button 
-                                       onClick={() => onDelete(trade.id)}
-                                       className="p-2 text-[#666] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                     >
-                                         <Trash2 size={14} />
-                                     </button>
-                                 )}
+
+                                 {/* Actions */}
+                                 <div className="flex gap-1 pl-2 border-l border-white/5 shrink-0">
+                                     {onEdit && (
+                                         <button 
+                                           onClick={() => onEdit(trade)}
+                                           className="p-2 text-[#666] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                         >
+                                             <Edit2 size={14} />
+                                         </button>
+                                     )}
+                                     {onDelete && (
+                                         <button 
+                                           onClick={() => onDelete(trade.id)}
+                                           className="p-2 text-[#666] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                         >
+                                             <Trash2 size={14} />
+                                         </button>
+                                     )}
+                                 </div>
                              </div>
-                         </div>
-                     ))
+                         );
+                     })
                  )}
              </div>
 

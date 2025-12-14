@@ -310,15 +310,23 @@ const App: React.FC = () => {
 
   // Calculate Weekly Stats for Performance Card
   const weeklyPerformance = useMemo(() => {
-    const now = new Date();
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(now.getDate() - 7);
+    // Current day at end of day
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
     
-    // Filter last 7 days
-    const weekTrades = trades.filter(t => new Date(t.date) >= oneWeekAgo);
+    // 7 days ago at start of day
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(today.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+    
+    const weekTrades = trades.filter(t => {
+        // Parse date string (YYYY-MM-DD) into a local date object for comparison
+        const [y, m, d] = t.date.split('-').map(Number);
+        const tradeDate = new Date(y, m - 1, d);
+        return tradeDate >= sevenDaysAgo && tradeDate <= today;
+    });
+
     const weekPnl = weekTrades.reduce((sum, t) => sum + t.pnl, 0);
-    
-    // Calculate simple win rate for "Return" placeholder
     const wins = weekTrades.filter(t => t.pnl > 0).length;
     const rate = weekTrades.length > 0 ? (wins / weekTrades.length) * 100 : 0;
     
