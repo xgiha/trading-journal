@@ -8,6 +8,12 @@ export default function AsciiPyramid({
   fillLevels = { es: 0, nq: 0, gc: 0, other: 0 }
 }: AsciiPyramidProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fillLevelsRef = useRef(fillLevels);
+
+  // Update ref when props change to maintain animation continuity
+  useEffect(() => {
+    fillLevelsRef.current = fillLevels;
+  }, [fillLevels]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -29,7 +35,7 @@ export default function AsciiPyramid({
     ctx.font = `bold ${FONT_SIZE}px monospace`;
     ctx.textBaseline = 'top';
 
-    // Updated Colors: Gold, Red, Blue
+    // Updated Colors: Gold (GC), Red (ES), Blue (NQ)
     const faceColors = [
       '#fbbf24', // Gold
       '#ef4444', // Red
@@ -40,7 +46,6 @@ export default function AsciiPyramid({
 
     // Tetrahedron Geometry - Apex Up (Standard Pyramid)
     // Apex at -SCALE (Top), Base at SCALE (Bottom)
-    // In Canvas coords: Negative Y is Up relative to center.
     const vertices = [
        [0, -SCALE, 0], // 0: Apex (Top)
        [SCALE * Math.cos(0), SCALE, SCALE * Math.sin(0)],           // 1: Right Base (Bottom)
@@ -49,6 +54,9 @@ export default function AsciiPyramid({
     ];
 
     // Faces defined by vertex indices
+    // Face 0: Gold (GC)
+    // Face 1: Red (ES)
+    // Face 2: Blue (NQ)
     const faces = [
       [0, 1, 2],
       [0, 2, 3],
@@ -64,11 +72,15 @@ export default function AsciiPyramid({
 
       // Z-Buffer and Frame Buffer
       const zBuffer = new Float32Array(W * H).fill(-Infinity);
-      const charBuffer = new Int32Array(W * H).fill(-1); // Stores face index
+      const charBuffer = new Int32Array(W * H).fill(-1); // Stores face index or special code
 
       // Rotation Matrix (Y-axis)
       const cosT = Math.cos(theta);
       const sinT = Math.sin(theta);
+
+      // Current Fill Levels
+      const currentLevels = fillLevelsRef.current;
+      const faceFillValues = [currentLevels.gc, currentLevels.es, currentLevels.nq];
 
       // Rasterize Faces
       faces.forEach((face, faceIndex) => {
@@ -76,7 +88,7 @@ export default function AsciiPyramid({
           const v1 = vertices[face[1]];
           const v2 = vertices[face[2]];
 
-          // Sampling density (step size)
+          // Sampling density
           const step = 0.02;
 
           for (let u = 0; u <= 1; u += step) {
@@ -93,11 +105,19 @@ export default function AsciiPyramid({
                  const ry = y;
                  const rz = x * sinT + z * cosT;
 
+                 // Check fill status
+                 // Distance from base (y = SCALE) to top (y = -SCALE)
+                 // dist = SCALE - y; ranges from 0 (base) to 2*SCALE (apex)
+                 const distFromBase = SCALE - y;
+                 const totalHeight = 2 * SCALE;
+                 const threshold = faceFillValues[faceIndex] * totalHeight;
+                 const isFilled = distFromBase <= threshold;
+
                  // Project (Perspective)
                  const camDist = 5;
                  const pz = 1 / (camDist - rz);
                  
-                 const yOffset = 5; // Reduced from 12 to 5 to move it "bit top"
+                 const yOffset = 5;
                  
                  const sx = Math.floor(W/2 + rx * pz * 30);
                  const sy = Math.floor(H/2 + ry * pz * 15 + yOffset);
@@ -106,14 +126,15 @@ export default function AsciiPyramid({
                      const idx = sy * W + sx;
                      if (pz > zBuffer[idx]) {
                          zBuffer[idx] = pz;
-                         charBuffer[idx] = faceIndex;
+                         // Store faceIndex if filled, faceIndex + 3 if empty
+                         charBuffer[idx] = isFilled ? faceIndex : (faceIndex + 3);
                      }
                  }
              }
           }
       });
 
-      // Draw Edges (Optional, for definition)
+      // Draw Edges (for definition)
       faces.forEach((face, faceIndex) => {
          const edges = [[face[0], face[1]], [face[1], face[2]], [face[2], face[0]]];
          edges.forEach(edge => {
@@ -142,7 +163,7 @@ export default function AsciiPyramid({
                     const idx = sy * W + sx;
                     if (pz + 0.01 > zBuffer[idx]) {
                         zBuffer[idx] = pz + 0.01;
-                        charBuffer[idx] = 10 + faceIndex; // Special index for edge
+                        charBuffer[idx] = 10 + faceIndex; // Edge
                     }
                 }
             }
@@ -152,23 +173,27 @@ export default function AsciiPyramid({
 
       // Render Buffer to Canvas
       for (let i = 0; i < W * H; i++) {
-         const faceIdx = charBuffer[i];
-         if (faceIdx !== -1) {
+         const val = charBuffer[i];
+         if (val !== -1) {
              const x = (i % W) * CHAR_WIDTH;
              const y = Math.floor(i / W) * FONT_SIZE;
              
              let char = '';
              let color = '';
 
-             if (faceIdx >= 10) {
+             if (val >= 10) {
                  // Edge
-                 const realFaceIdx = faceIdx - 10;
                  char = '+';
-                 color = '#ffffff'; // White edges
+                 color = '#ffffff'; 
+             } else if (val < 3) {
+                 // Filled Face
+                 char = faceSymbols[val];
+                 color = faceColors[val];
              } else {
-                 // Face
-                 char = faceSymbols[faceIdx];
-                 color = faceColors[faceIdx];
+                 // Empty Face (val 3, 4, 5)
+                 // Use a subtle character and dark color for "empty" scaffold look
+                 char = '·'; 
+                 color = '#333333';
              }
 
              ctx.fillStyle = color;
@@ -182,7 +207,7 @@ export default function AsciiPyramid({
 
     render();
     return () => cancelAnimationFrame(animationId);
-  }, []);
+  }, []); // Run once, use ref for updates
 
   return (
     <div className="w-full h-full flex items-center justify-center relative select-none pointer-events-none overflow-hidden">

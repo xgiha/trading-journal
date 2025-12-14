@@ -3,7 +3,6 @@ import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type,
 import { Trade } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
-import { upload } from '@vercel/blob/client';
 
 // --- Helper: Number Formatter ---
 const formatNumber = (value: string) => {
@@ -20,8 +19,8 @@ const unformatNumber = (value: string) => {
     return value.replace(/,/g, '');
 };
 
-// --- Helper: Image Processor (Resize to Blob) ---
-const processImageFile = (file: File): Promise<Blob> => {
+// --- Helper: Image Processor (Resize to Base64) ---
+const processImageFile = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -53,11 +52,9 @@ const processImageFile = (file: File): Promise<Blob> => {
         const ctx = elem.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
         
-        // Convert to Blob (JPEG 0.8 quality)
-        elem.toBlob((blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error("Image processing failed"));
-        }, 'image/jpeg', 0.8);
+        // Convert to Base64 (JPEG 0.8 quality)
+        const dataUrl = elem.toDataURL('image/jpeg', 0.8);
+        resolve(dataUrl);
       };
       img.onerror = (err) => reject(err);
     };
@@ -65,14 +62,12 @@ const processImageFile = (file: File): Promise<Blob> => {
   });
 };
 
-// --- Helper: Upload Logic ---
+// --- Helper: Upload Logic (Mocked to Base64) ---
 const uploadImageToBlob = async (file: File) => {
-    const resizedBlob = await processImageFile(file);
-    const newBlob = await upload(file.name, resizedBlob, {
-        access: 'public',
-        handleUploadUrl: '/api/upload',
-    });
-    return newBlob.url;
+    // Simulate network delay for UX
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const base64 = await processImageFile(file);
+    return base64;
 };
 
 // --- Custom Calendar Component ---
@@ -400,7 +395,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
               setFormData(prev => ({ ...prev, images: [...prev.images, url] }));
           } catch (error) {
               console.error("Image upload failed", error);
-              alert("Failed to upload image. Please check your network or token configuration.");
+              alert("Failed to process image.");
           } finally {
               setIsUploading(false);
           }
@@ -788,7 +783,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
               }
           } catch (error) {
               console.error("Upload failed", error);
-              alert("Upload failed. Check console.");
+              alert("Processing failed. Check console.");
           }
       }
       setUploadingTradeId(null);
