@@ -1,0 +1,5 @@
+{
+  "name": "Journal",
+  "description": "A futuristic smart home dashboard featuring real-time monitoring, energy visualization, and device control.",
+  "requestFramePermissions": []
+}
