@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud } from 'lucide-react';
+import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud, Loader2 } from 'lucide-react';
 import { Trade } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+import { upload } from '@vercel/blob/client';
 
 // --- Helper: Number Formatter ---
 const formatNumber = (value: string) => {
@@ -19,8 +20,8 @@ const unformatNumber = (value: string) => {
     return value.replace(/,/g, '');
 };
 
-// --- Helper: Image Processor (Resize & Base64) ---
-const processImageFile = (file: File): Promise<string> => {
+// --- Helper: Image Processor (Resize to Blob) ---
+const processImageFile = (file: File): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -30,8 +31,8 @@ const processImageFile = (file: File): Promise<string> => {
       img.onload = () => {
         const elem = document.createElement('canvas');
         // Max dimensions for storage efficiency
-        const maxWidth = 800; 
-        const maxHeight = 800;
+        const maxWidth = 1200; 
+        const maxHeight = 1200;
         let width = img.width;
         let height = img.height;
 
@@ -51,13 +52,27 @@ const processImageFile = (file: File): Promise<string> => {
         elem.height = height;
         const ctx = elem.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        // Compress to JPEG 0.7 quality
-        resolve(elem.toDataURL('image/jpeg', 0.7));
+        
+        // Convert to Blob (JPEG 0.8 quality)
+        elem.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error("Image processing failed"));
+        }, 'image/jpeg', 0.8);
       };
       img.onerror = (err) => reject(err);
     };
     reader.onerror = (err) => reject(err);
   });
+};
+
+// --- Helper: Upload Logic ---
+const uploadImageToBlob = async (file: File) => {
+    const resizedBlob = await processImageFile(file);
+    const newBlob = await upload(file.name, resizedBlob, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+    });
+    return newBlob.url;
 };
 
 // --- Custom Calendar Component ---
@@ -273,6 +288,7 @@ interface AddTradeModalProps {
 export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, date, onAdd, initialData }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [isNewsTrade, setIsNewsTrade] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Use date prop as initialDate, initialData prop as tradeToEdit
@@ -344,6 +360,8 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isUploading) return; // Prevent saving while upload in progress
+
     const pnlValue = parseFloat(unformatNumber(formData.pnl));
     const tradeId = tradeToEdit ? tradeToEdit.id : `T-${Date.now()}`;
 
@@ -377,12 +395,17 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       const file = e.target.files?.[0];
       if (file) {
           try {
-              const base64 = await processImageFile(file);
-              setFormData(prev => ({ ...prev, images: [...prev.images, base64] }));
+              setIsUploading(true);
+              const url = await uploadImageToBlob(file);
+              setFormData(prev => ({ ...prev, images: [...prev.images, url] }));
           } catch (error) {
               console.error("Image upload failed", error);
+              alert("Failed to upload image. Please check your network or token configuration.");
+          } finally {
+              setIsUploading(false);
           }
       }
+      if (fileInputRef.current) fileInputRef.current.value = '';
   };
   
   const removeImage = (index: number) => {
@@ -655,11 +678,11 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                      
                      {/* Compact Upload Button */}
                      <div 
-                         onClick={() => fileInputRef.current?.click()}
-                         className="w-10 h-10 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center text-[#666] hover:text-white hover:border-nexus-accent cursor-pointer transition-colors shrink-0 bg-white/[0.02]"
+                         onClick={() => !isUploading && fileInputRef.current?.click()}
+                         className={`w-10 h-10 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center transition-colors shrink-0 bg-white/[0.02] ${isUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-white hover:border-nexus-accent text-[#666]'}`}
                          title="Add Image"
                      >
-                         <Plus size={14} />
+                         {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
                      </div>
 
                      {/* Thumbnails */}
@@ -688,9 +711,10 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           <button 
             type="submit"
             form="entry-form"
-            className="pointer-events-auto relative px-8 py-[18px] rounded-full text-white group overflow-hidden bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl hover:bg-white/[0.08] hover:border-white/[0.15] active:scale-95 active:bg-white/[0.12] transition-all duration-300 shadow-xl font-bold text-xs uppercase tracking-wider"
+            disabled={isUploading}
+            className="pointer-events-auto relative px-8 py-[18px] rounded-full text-white group overflow-hidden bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl hover:bg-white/[0.08] hover:border-white/[0.15] active:scale-95 active:bg-white/[0.12] transition-all duration-300 shadow-xl font-bold text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save Trade
+            {isUploading ? 'Uploading...' : 'Save Trade'}
           </button>
         </div>
 
@@ -708,7 +732,7 @@ interface DayDetailsModalProps {
   onSaveTrade: (trade: Trade) => void;
 }
 
-const modalVariants = {
+const modalVariantsDetails = {
   hidden: { opacity: 0, scale: 0.95, filter: "blur(10px)" },
   visible: { opacity: 1, scale: 1, filter: "blur(0px)" },
   exit: { opacity: 0, scale: 0.95, filter: "blur(10px)" }
@@ -741,12 +765,6 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
     return data;
   }, [trades]);
 
-  const formatCurrency = (val: number) => {
-    const sign = val < 0 ? '-' : '';
-    const absVal = Math.abs(val);
-    return `${sign}$${absVal.toLocaleString()}`;
-  };
-
   const handleAttachImage = (tradeId: string) => {
       setUploadingTradeId(tradeId);
       fileInputRef.current?.click();
@@ -756,20 +774,21 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
       const file = e.target.files?.[0];
       if (file && uploadingTradeId) {
           try {
-              const base64 = await processImageFile(file);
+              const url = await uploadImageToBlob(file);
               const targetTrade = trades.find(t => t.id === uploadingTradeId);
               if (targetTrade) {
                   // Merge legacy image field into images array if needed
                   const currentImages = targetTrade.images || (targetTrade.image ? [targetTrade.image] : []);
                   const updatedTrade: Trade = {
                       ...targetTrade,
-                      images: [...currentImages, base64],
-                      image: base64 // Update legacy field to latest just in case
+                      images: [...currentImages, url],
+                      image: url // Update legacy field to latest just in case
                   };
                   onSaveTrade(updatedTrade);
               }
           } catch (error) {
               console.error("Upload failed", error);
+              alert("Upload failed. Check console.");
           }
       }
       setUploadingTradeId(null);
@@ -783,7 +802,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
       <motion.div 
-        variants={modalVariants}
+        variants={modalVariantsDetails}
         initial="hidden"
         animate="visible"
         exit="exit"
@@ -812,7 +831,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
           <div className="mb-4 pr-12">
             <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight truncate">{dateDisplay}</h2>
             <div className={`text-3xl md:text-4xl font-light tracking-tighter mt-1 ${totalPnl >= 0 ? 'text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.4)]' : 'text-red-400 drop-shadow-[0_0_15px_rgba(248,113,113,0.4)]'}`}>
-              {formatCurrency(totalPnl)}
+              {formatNumber(totalPnl.toString())}
             </div>
           </div>
 
@@ -831,7 +850,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
                 <Tooltip 
                    contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '12px', color: '#fff' }}
                    itemStyle={{ color: '#fb923c' }}
-                   formatter={(val: number) => [formatCurrency(val), 'Balance']}
+                   formatter={(val: number) => [formatNumber(val.toString()), 'Balance']}
                    cursor={{ stroke: '#fb923c', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
                 <Area 
@@ -874,6 +893,8 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
                      ? trade.images 
                      : (trade.image ? [trade.image] : []);
 
+                 const isThisTradeUploading = uploadingTradeId === trade.id;
+
                  return (
                    <div key={i} className="flex flex-col gap-3 p-3 rounded-xl bg-white/5 border border-white/5 transition-colors group">
                       
@@ -898,7 +919,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
                            </div>
                         </div>
                         <span className={`text-sm font-bold ${trade.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                           {formatCurrency(trade.pnl)}
+                           {formatNumber(trade.pnl.toString())}
                         </span>
                       </div>
 
@@ -921,12 +942,17 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
 
                           {/* Add Image Button for this trade */}
                           <button 
-                             onClick={() => handleAttachImage(trade.id)}
-                             className="w-12 h-12 rounded-lg border border-dashed border-white/10 flex flex-col items-center justify-center text-nexus-muted hover:text-white hover:border-nexus-accent hover:bg-white/5 transition-colors"
+                             onClick={() => !isThisTradeUploading && handleAttachImage(trade.id)}
+                             disabled={isThisTradeUploading}
+                             className={`w-12 h-12 rounded-lg border border-dashed border-white/10 flex flex-col items-center justify-center transition-colors ${isThisTradeUploading ? 'cursor-not-allowed bg-white/5' : 'text-nexus-muted hover:text-white hover:border-nexus-accent hover:bg-white/5'}`}
                              title="Add Image to Trade"
                           >
-                              <Plus size={14} />
-                              <span className="text-[8px] mt-0.5">IMG</span>
+                              {isThisTradeUploading ? <Loader2 size={14} className="animate-spin text-white" /> : (
+                                <>
+                                  <Plus size={14} />
+                                  <span className="text-[8px] mt-0.5">IMG</span>
+                                </>
+                              )}
                           </button>
                       </div>
 
