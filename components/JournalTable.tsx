@@ -16,9 +16,10 @@ interface JournalTableProps {
   trades: Trade[];
   onEdit: (trade: Trade) => void;
   onDelete: (id: string) => void;
+  onViewDay: (date: string) => void;
 }
 
-// Reduced to 4 to ensure it fits comfortably within the card without scrolling or collapsing pagination
+// Items per page for the table
 const ITEMS_PER_PAGE = 4;
 
 // Helper to group trades by date
@@ -52,13 +53,15 @@ interface SwipeableRowProps {
   trade: Trade;
   onEdit: (trade: Trade) => void;
   onDelete: (id: string) => void;
+  onViewDay: (date: string) => void;
 }
 
 // --- Swipeable Row Component ---
-const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete }) => {
+const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, onViewDay }) => {
     const [offset, setOffset] = useState(0);
     const ref = useRef<HTMLDivElement>(null);
     const startX = useRef(0);
+    const dragStartX = useRef(0);
     const isDragging = useRef(false);
     const isNewsTrade = !!trade.newsEvent;
     const hasNotes = !!trade.notes;
@@ -66,12 +69,14 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete }) 
     const onPointerDown = (e: React.PointerEvent) => {
         isDragging.current = true;
         startX.current = e.clientX - offset;
+        dragStartX.current = e.clientX; // Track raw start position to detect clicks
         ref.current?.setPointerCapture(e.pointerId);
     };
 
     const onPointerMove = (e: React.PointerEvent) => {
         if (!isDragging.current) return;
         const x = e.clientX - startX.current;
+        // Limit swipe range
         const newOffset = Math.max(Math.min(x, 120), -120); 
         setOffset(newOffset);
     };
@@ -80,9 +85,24 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete }) 
         isDragging.current = false;
         ref.current?.releasePointerCapture(e.pointerId);
         
-        if (offset > 60) setOffset(100); 
-        else if (offset < -60) setOffset(-100); 
-        else setOffset(0); 
+        // Calculate total movement distance
+        const moveDist = Math.abs(e.clientX - dragStartX.current);
+
+        // If movement is very small (less than 5px), treat as a click
+        if (moveDist < 5) {
+             if (offset !== 0) {
+                 // If currently swiped open, close it on click
+                 setOffset(0);
+             } else {
+                 // If closed, view details (Trigger Modal)
+                 onViewDay(trade.date);
+             }
+        } else {
+            // Handle swipe snap logic (Snap open or closed)
+            if (offset > 60) setOffset(100);       // Snap right (Edit)
+            else if (offset < -60) setOffset(-100); // Snap left (Delete)
+            else setOffset(0);                      // Snap back to close
+        }
     };
 
     return (
@@ -124,8 +144,9 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete }) 
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
                 onPointerLeave={() => { if(isDragging.current) onPointerUp({ pointerId: 0 } as any) }}
-                className="absolute inset-0 bg-[#0F0F0F] border border-white/5 rounded-2xl flex items-center transition-transform duration-300 ease-out cursor-grab active:cursor-grabbing hover:border-white/10 hover:bg-[#121212] z-10"
+                className="absolute inset-0 bg-[#0F0F0F] border border-white/5 rounded-2xl flex items-center transition-transform duration-300 ease-out cursor-pointer active:cursor-grabbing hover:border-white/20 hover:bg-[#141414] z-10"
                 style={{ transform: `translateX(${offset}px)` }}
+                title="Click to view details, swipe to edit/delete"
             >
                 {/* News Icon Area (Matches Header Spacer) */}
                 <div className="w-10 flex flex-col gap-1 justify-center items-center shrink-0 border-r border-white/5 h-full">
@@ -201,7 +222,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete }) 
     );
 };
 
-export const JournalTable = ({ trades, onEdit, onDelete }: JournalTableProps) => {
+export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
 
   // 1. Sort all trades (Date DESC -> Time DESC)
@@ -290,7 +311,7 @@ export const JournalTable = ({ trades, onEdit, onDelete }: JournalTableProps) =>
                       
                       {/* Rows */}
                       {dateTrades.map((trade) => (
-                          <SwipeableRow key={trade.id} trade={trade} onEdit={onEdit} onDelete={onDelete} />
+                          <SwipeableRow key={trade.id} trade={trade} onEdit={onEdit} onDelete={onDelete} onViewDay={onViewDay} />
                       ))}
                     </div>
                   ))

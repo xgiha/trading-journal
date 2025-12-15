@@ -250,7 +250,7 @@ const App: React.FC = () => {
     let timedTradeCount = 0;
 
     if (trades.length === 0) {
-      return { totalPnl: 0, bestTrade: 0, worstTrade: 0, avgTime: '0h 0m' };
+      return { totalPnl: 0, bestTrade: 0, worstTrade: 0, avgTime: '0h 0m', growthPct: 0 };
     }
 
     trades.forEach(t => {
@@ -276,12 +276,17 @@ const App: React.FC = () => {
     const avgH = Math.floor(avgMinutes / 60);
     const avgM = avgMinutes % 60;
     const avgTimeStr = `${avgH}h ${avgM}m`;
+    
+    // Percentage growth based on assumed 50k starting balance
+    const initialBalance = 50000;
+    const growthPct = (totalPnl / initialBalance) * 100;
 
     return {
       totalPnl,
       bestTrade: maxPnl === -Infinity ? 0 : maxPnl,
       worstTrade: minPnl === Infinity ? 0 : minPnl,
-      avgTime: avgTimeStr
+      avgTime: avgTimeStr,
+      growthPct
     };
   }, [trades]);
 
@@ -396,12 +401,23 @@ const App: React.FC = () => {
     });
 
     const weekPnl = weekTrades.reduce((sum, t) => sum + t.pnl, 0);
-    const wins = weekTrades.filter(t => t.pnl > 0).length;
-    const rate = weekTrades.length > 0 ? (wins / weekTrades.length) * 100 : 0;
+    
+    // Profit Factor Calculation
+    const wins = weekTrades.filter(t => t.pnl > 0);
+    const losses = weekTrades.filter(t => t.pnl < 0);
+    const grossProfit = wins.reduce((sum, t) => sum + t.pnl, 0);
+    const grossLoss = Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0));
+    
+    let pf = 0;
+    if (grossLoss === 0) {
+        pf = grossProfit > 0 ? 100 : 0; // Show high value if profitable with no losses
+    } else {
+        pf = grossProfit / grossLoss;
+    }
     
     return {
         pnl: weekPnl,
-        winRate: rate
+        profitFactor: pf
     };
   }, [trades]);
 
@@ -659,11 +675,11 @@ const App: React.FC = () => {
                  {/* Price & Badge */}
                  <div className="flex flex-col items-end gap-1 md:gap-2 flex-1 min-w-0">
                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
-                         globalStats.totalPnl >= 0 
+                         globalStats.growthPct >= 0 
                          ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
                          : 'text-red-400 bg-red-500/10 border-red-500/20'
                      }`}>
-                         {globalStats.totalPnl >= 0 ? '+' : ''}{globalStats.totalPnl >= 0 ? 'Profit' : 'Loss'}
+                         {globalStats.growthPct >= 0 ? '+' : ''}{globalStats.growthPct.toFixed(2)}% Growth
                      </span>
                      {/* Responsive Font Size */}
                      <span className={`text-2xl sm:text-3xl xl:text-5xl font-light tracking-tighter glow-text whitespace-nowrap transition-all duration-300 ${globalStats.totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
@@ -722,6 +738,7 @@ const App: React.FC = () => {
                        trades={trades} 
                        onEdit={handleEditTrade}
                        onDelete={handleDeleteTrade}
+                       onViewDay={handleViewDayClick}
                      />
                    )}
                  </motion.div>
@@ -778,17 +795,9 @@ const App: React.FC = () => {
                  <div>
                     <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">My Performance</span>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-bold text-white">{weeklyPerformance.winRate.toFixed(1)}%</span>
-                      <span className="text-xs text-nexus-muted">Win Rate</span>
+                      <span className="text-2xl font-bold text-white">{weeklyPerformance.profitFactor.toFixed(2)}</span>
+                      <span className="text-xs text-nexus-muted">Profit Factor</span>
                     </div>
-                 </div>
-                 <div className="text-right">
-                    <div className="flex items-baseline gap-1 justify-end">
-                      <span className={`text-2xl font-bold ${weeklyPerformance.pnl >= 0 ? 'text-nexus-accent' : 'text-red-400'}`}>
-                          {formatCurrency(weeklyPerformance.pnl)}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-nexus-muted">Last 7 Days</span>
                  </div>
               </div>
               <div className="flex-1 w-full relative min-h-0 -mx-2 mt-4">
