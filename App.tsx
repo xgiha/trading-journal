@@ -254,38 +254,60 @@ const App: React.FC = () => {
 
   // Calculate Chart Data (Cumulative P&L)
   const performanceChartData = useMemo(() => {
-    // 1. Group by date and sum P&L
-    const dailyMap = new Map<string, number>();
+    // 1. Group by date and separate into Total, Normal, News
+    const dailyMap = new Map<string, { total: number; normal: number; news: number }>();
+    
     trades.forEach(t => {
-      const curr = dailyMap.get(t.date) || 0;
-      dailyMap.set(t.date, curr + t.pnl);
+      const entry = dailyMap.get(t.date) || { total: 0, normal: 0, news: 0 };
+      entry.total += t.pnl;
+      if (t.newsEvent) {
+        entry.news += t.pnl;
+      } else {
+        entry.normal += t.pnl;
+      }
+      dailyMap.set(t.date, entry);
     });
 
-    // 2. Sort dates
+    // 2. Sort dates chronologically
     const sortedDates = Array.from(dailyMap.keys()).sort();
 
-    // 3. Create Cumulative Data Points
-    // Start at 50,000 as base account balance
-    let running = 50000;
-    
-    // We'll take up to the last 14 active days to show a trend
-    const slicedDates = sortedDates.slice(-14); 
-    
-    // If no trades, return at least one point at base
-    if (slicedDates.length === 0) return [{ date: 'Start', price: running }];
+    // 3. Build Full History of Cumulative Data
+    // We assume a base account balance of 50,000 for visualization context
+    let runningTotal = 50000;
+    let runningNormal = 50000;
+    let runningNews = 50000;
 
-    const chartPoints = slicedDates.map(date => {
-      running += dailyMap.get(date)!;
-      return {
-        date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
-        price: running
-      };
+    const fullHistory = sortedDates.map(date => {
+        const stats = dailyMap.get(date)!;
+        runningTotal += stats.total;
+        runningNormal += stats.normal;
+        runningNews += stats.news;
+
+        return {
+            date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+            price: runningTotal,   // Total Balance
+            normal: runningNormal, // Hypothetical Balance (Normal Only)
+            news: runningNews      // Hypothetical Balance (News Only)
+        };
     });
+    
+    // 4. Slice the last 14 active days for the dashboard view
+    // Use fullHistory so values are accurate cumulatively from day 1
+    const sliceIndex = Math.max(0, fullHistory.length - 14);
+    const chartPoints = fullHistory.slice(sliceIndex);
 
-    // Add initial point if only few points to show "growth" from 50k
+    // If no trades or very few, provide a starting point anchor
     if (chartPoints.length < 2) {
-       return [{ date: 'Start', price: 50000 }, ...chartPoints];
+       // Only if history is empty, otherwise we just show the few points we have
+       if (fullHistory.length === 0) {
+           return [{ date: 'Start', price: 50000, normal: 50000, news: 50000 }];
+       }
+       // If we have 1 point, prepend a start point for a line segment
+       if (chartPoints.length === 1) {
+           return [{ date: 'Start', price: 50000, normal: 50000, news: 50000 }, ...chartPoints];
+       }
     }
+    
     return chartPoints;
   }, [trades]);
 
