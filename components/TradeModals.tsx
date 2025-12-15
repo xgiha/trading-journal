@@ -617,10 +617,10 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                 </button>
             </div>
 
-            {/* 4. Size */}
+            {/* 4. Lots (Was Size) */}
             <div className="relative bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-1 focus-within:border-nexus-accent transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
-                    <Hash size={10} /> Size
+                    <Hash size={10} /> Lots
                   </label>
                   <input 
                     type="text" 
@@ -740,13 +740,13 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                 </div>
             </div>
 
-            {/* 10. Notes (New Field) */}
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-2 h-[120px]">
+            {/* 10. Notes (New Field - Compact) */}
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-1 h-[72px]">
                 <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <FileText size={10} /> Notes
                 </label>
                 <textarea 
-                    className="w-full h-full bg-transparent text-sm text-white placeholder-white/10 focus:outline-none resize-none custom-scrollbar leading-relaxed whitespace-pre-wrap break-words"
+                    className="w-full h-full bg-transparent text-sm text-white placeholder-white/10 focus:outline-none resize-none custom-scrollbar leading-relaxed whitespace-pre-wrap break-words pt-1"
                     placeholder="Add trading notes, strategy details, or observations..."
                     value={formData.notes}
                     onChange={e => setFormData({...formData, notes: e.target.value})}
