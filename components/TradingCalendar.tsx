@@ -51,8 +51,17 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
   };
 
   const formatCurrency = (val: number) => {
-    const sign = val < 0 ? '-' : '';
     const absVal = Math.abs(val);
+    const sign = val < 0 ? '-' : '';
+
+    // If magnitude is >= 10,000, show as Xk (e.g. 10.5k)
+    if (absVal >= 10000) {
+        const kVal = absVal / 1000;
+        // toFixed(1) gives 10.5, replace ensures 10.0 becomes 10
+        const formatted = kVal.toFixed(1).replace(/\.0$/, '');
+        return `${sign}$${formatted}k`;
+    }
+
     return `${sign}$${absVal.toLocaleString()}`;
   };
 

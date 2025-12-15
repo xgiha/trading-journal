@@ -51,7 +51,7 @@ const App: React.FC = () => {
       console.error("Failed to load trades", e);
     }
     
-    // Fallback Mock Data if empty
+    // Fallback Mock Data if empty (Will be overwritten by cloud fetch if exists)
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -63,6 +63,39 @@ const App: React.FC = () => {
       { id: '5', date: `${year}-${month}-09`, pair: 'TSLA', pnl: 800, entryTime: '15:45', exitTime: '15:55', type: 'Short', entryPrice: 175.50, exitPrice: 172.00, size: '200 Shares', fee: 4 },
     ];
   });
+
+  // Helper to Sync to Cloud
+  const syncToCloud = async (newTrades: Trade[]) => {
+      try {
+          await fetch('/api/trades', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(newTrades)
+          });
+      } catch (err) {
+          console.error("Failed to sync trades to cloud", err);
+      }
+  };
+
+  // Load from Cloud on Mount (Priority Source)
+  useEffect(() => {
+    const fetchCloudTrades = async () => {
+        try {
+            const res = await fetch('/api/trades');
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    setTrades(data);
+                    // Also update localStorage to stay in sync locally
+                    localStorage.setItem('nexus_trades', JSON.stringify(data));
+                }
+            }
+        } catch (err) {
+            console.error("Failed to fetch from cloud", err);
+        }
+    };
+    fetchCloudTrades();
+  }, []);
 
   // Save to LocalStorage whenever trades change
   useEffect(() => {
@@ -472,7 +505,13 @@ const App: React.FC = () => {
   }
 
   const handleDeleteTrade = (tradeId: string) => {
-    setTrades(prev => prev.filter(t => t.id !== tradeId));
+    let updatedTrades: Trade[] = [];
+    setTrades(prev => {
+        updatedTrades = prev.filter(t => t.id !== tradeId);
+        return updatedTrades;
+    });
+    // Sync to cloud
+    syncToCloud(updatedTrades);
   }
 
   const handleViewDayClick = (date: string) => {
@@ -489,18 +528,19 @@ const App: React.FC = () => {
 
   const handleAddOrUpdateTrade = (tradeData: Trade) => {
     // 1. Update Global Trades State
-    setTrades(prev => {
-        const existingIndex = prev.findIndex(t => t.id === tradeData.id);
-        if (existingIndex >= 0) {
-            // Update existing trade
-            const newTrades = [...prev];
-            newTrades[existingIndex] = tradeData;
-            return newTrades;
-        } else {
-            // Add new trade
-            return [...prev, tradeData];
-        }
-    });
+    const currentTrades = trades;
+    let newTrades: Trade[] = [];
+    
+    const existingIndex = currentTrades.findIndex(t => t.id === tradeData.id);
+    if (existingIndex >= 0) {
+        newTrades = [...currentTrades];
+        newTrades[existingIndex] = tradeData;
+    } else {
+        newTrades = [...currentTrades, tradeData];
+    }
+    
+    setTrades(newTrades);
+    syncToCloud(newTrades);
 
     // 2. Update Selected Trades State (if currently viewing details for this date)
     if (selectedDate === tradeData.date) {
