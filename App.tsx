@@ -315,38 +315,27 @@ const App: React.FC = () => {
     let runningNormal = 50000;
     let runningNews = 50000;
 
-    const fullHistory = sortedDates.map(date => {
+    // Force explicit start point for the chart so all lines originate from 50k
+    const fullHistory = [
+       { date: 'Start', price: 50000, normal: 50000, news: 50000 }
+    ];
+
+    sortedDates.forEach(date => {
         const stats = dailyMap.get(date)!;
         runningTotal += stats.total;
         runningNormal += stats.normal;
         runningNews += stats.news;
 
-        return {
+        fullHistory.push({
             date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
             price: runningTotal,   // Total Balance
             normal: runningNormal, // Hypothetical Balance (Normal Only)
             news: runningNews      // Hypothetical Balance (News Only)
-        };
+        });
     });
     
-    // 4. Slice the last 14 active days for the dashboard view
-    // Use fullHistory so values are accurate cumulatively from day 1
-    const sliceIndex = Math.max(0, fullHistory.length - 14);
-    const chartPoints = fullHistory.slice(sliceIndex);
-
-    // If no trades or very few, provide a starting point anchor
-    if (chartPoints.length < 2) {
-       // Only if history is empty, otherwise we just show the few points we have
-       if (fullHistory.length === 0) {
-           return [{ date: 'Start', price: 50000, normal: 50000, news: 50000 }];
-       }
-       // If we have 1 point, prepend a start point for a line segment
-       if (chartPoints.length === 1) {
-           return [{ date: 'Start', price: 50000, normal: 50000, news: 50000 }, ...chartPoints];
-       }
-    }
-    
-    return chartPoints;
+    // Return full history to ensure chart starts at 50k (no slicing)
+    return fullHistory;
   }, [trades]);
 
   // Calculate News vs Normal Performance
