@@ -24,7 +24,7 @@ import PerformanceRadar from './components/PerformanceRadar';
 import PaperBackground from './components/PaperBackground';
 import { TradingCalendar } from './components/TradingCalendar';
 import { JournalTable } from './components/JournalTable';
-import ActivityHeatmap from './components/ActivityHeatmap';
+import PsychologicalAnalysis from './components/PsychologicalAnalysis';
 import AsciiPyramid from './components/AsciiPyramid';
 import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
 import { Trade } from './types';
@@ -56,11 +56,12 @@ const App: React.FC = () => {
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     return [
-      { id: '1', date: `${year}-${month}-02`, pair: 'XAU/USD', pnl: 450, entryTime: '09:30', exitTime: '10:15', type: 'Long', entryPrice: 2045.50, exitPrice: 2050.00, size: '2.0', fee: 12 },
-      { id: '2', date: `${year}-${month}-02`, pair: 'EUR/USD', pnl: -120, entryTime: '14:15', exitTime: '14:45', type: 'Short', entryPrice: 1.0850, exitPrice: 1.0865, size: '1.5', fee: 5 },
-      { id: '3', date: `${year}-${month}-05`, pair: 'BTC/USD', pnl: 1250, entryTime: '11:00', exitTime: '18:00', type: 'Long', entryPrice: 42100, exitPrice: 43500, size: '0.5', fee: 45, newsEvent: 'ETF Approval' },
-      { id: '4', date: `${year}-${month}-09`, pair: 'NVDA', pnl: -300, entryTime: '10:00', exitTime: '10:30', type: 'Long', entryPrice: 850.20, exitPrice: 845.00, size: '100 Shares', fee: 2 },
-      { id: '5', date: `${year}-${month}-09`, pair: 'TSLA', pnl: 800, entryTime: '15:45', exitTime: '15:55', type: 'Short', entryPrice: 175.50, exitPrice: 172.00, size: '200 Shares', fee: 4 },
+      { id: '1', date: `${year}-${month}-02`, pair: 'XAU/USD', pnl: 450, entryTime: '09:30', exitTime: '10:15', type: 'Long', entryPrice: 2045.50, exitPrice: 2050.00, size: '2.0', fee: 12, notes: 'Stuck to the plan perfectly. Waited for the setup.' },
+      { id: '2', date: `${year}-${month}-02`, pair: 'EUR/USD', pnl: -120, entryTime: '14:15', exitTime: '14:45', type: 'Short', entryPrice: 1.0850, exitPrice: 1.0865, size: '1.5', fee: 5, notes: 'Got nervous and exited early. Should have held.' },
+      { id: '3', date: `${year}-${month}-05`, pair: 'BTC/USD', pnl: 1250, entryTime: '11:00', exitTime: '18:00', type: 'Long', entryPrice: 42100, exitPrice: 43500, size: '0.5', fee: 45, newsEvent: 'ETF Approval', notes: 'Great flow state today. Saw the move coming.' },
+      { id: '4', date: `${year}-${month}-09`, pair: 'NVDA', pnl: -300, entryTime: '10:00', exitTime: '10:30', type: 'Long', entryPrice: 850.20, exitPrice: 845.00, size: '100 Shares', fee: 2, notes: 'FOMO entry. Chased the green candle.' },
+      { id: '5', date: `${year}-${month}-09`, pair: 'TSLA', pnl: 800, entryTime: '15:45', exitTime: '15:55', type: 'Short', entryPrice: 175.50, exitPrice: 172.00, size: '200 Shares', fee: 4, notes: 'Quick scalp, followed rules.' },
+      { id: '6', date: `${year}-${month}-12`, pair: 'ES', pnl: -500, entryTime: '10:00', exitTime: '10:15', type: 'Short', entryPrice: 5100, exitPrice: 5110, size: '1', fee: 5, notes: 'Tried to make back losses. Revenge trading.' },
     ];
   });
 
@@ -704,7 +705,7 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Performance Radar Chart - MOVED HERE */}
+            {/* Performance Radar Chart */}
             <div className="liquid-card rounded-3xl p-5 w-full h-[320px] lg:h-auto lg:flex-1 lg:min-h-0 flex flex-col group relative overflow-hidden">
                 <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors z-10 relative">Performance Metrics</span>
                 <div className="flex-1 w-full relative z-10 flex items-center justify-center">
@@ -714,8 +715,8 @@ const App: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-nexus-accent/5 to-transparent opacity-50 pointer-events-none"></div>
             </div>
 
-            {/* Consistency / Activity Heatmap - MOVED HERE */}
-            <ActivityHeatmap 
+            {/* Psychological Analysis (Replaces Activity Heatmap) */}
+            <PsychologicalAnalysis 
                 trades={trades} 
                 className="shrink-0" 
             />
