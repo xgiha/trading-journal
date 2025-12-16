@@ -1,21 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Wifi, 
-  Thermometer, 
-  Lightbulb, 
   LayoutGrid, 
   BookOpen, 
   ArrowUpRight, 
   ArrowDownRight, 
-  Sun, 
-  Droplets, 
   Plus, 
   Activity, 
   Clock, 
-  Zap, 
   MinusCircle, 
   CheckCircle,
-  TrendingUp
+  TrendingUp,
+  Brain
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -38,7 +33,12 @@ const App: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isMarketOpen, setIsMarketOpen] = useState(false);
   const [marketCountdown, setMarketCountdown] = useState<string>('');
-  const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // Navigation State
+  // 'dashboard' shows the main 3-column grid (which contains Dashboard/Journal inner tabs)
+  // 'psychology' shows the full-screen psychological profile
+  const [currentView, setCurrentView] = useState<'dashboard' | 'psychology'>('dashboard');
+  const [activeTab, setActiveTab] = useState('dashboard'); // Inner tab for the dashboard view
   
   // Trade State with Persistence
   const [trades, setTrades] = useState<Trade[]>(() => {
@@ -51,7 +51,7 @@ const App: React.FC = () => {
       console.error("Failed to load trades", e);
     }
     
-    // Fallback Mock Data if empty (Will be overwritten by cloud fetch if exists)
+    // Fallback Mock Data
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -87,7 +87,6 @@ const App: React.FC = () => {
                 const data = await res.json();
                 if (Array.isArray(data) && data.length > 0) {
                     setTrades(data);
-                    // Also update localStorage to stay in sync locally
                     localStorage.setItem('nexus_trades', JSON.stringify(data));
                 }
             }
@@ -131,45 +130,27 @@ const App: React.FC = () => {
       // CME Futures Logic (UTC based)
       const day = now.getUTCDay(); // 0 = Sunday, 1 = Mon ... 5 = Fri, 6 = Sat
       const hour = now.getUTCHours();
-      const minute = now.getUTCMinutes();
-      const second = now.getUTCSeconds();
-
       let isOpen = true;
 
-      // Weekend Closure
-      if (day === 6) isOpen = false; // Saturday
-      if (day === 5 && hour >= 22) isOpen = false; // Friday after 22:00 UTC
-      if (day === 0 && hour < 23) isOpen = false; // Sunday before 23:00 UTC
-
-      // Daily Break (Mon-Thu)
+      if (day === 6) isOpen = false; 
+      if (day === 5 && hour >= 22) isOpen = false;
+      if (day === 0 && hour < 23) isOpen = false;
       if ((day >= 1 && day <= 4) && (hour === 22)) isOpen = false;
 
       setIsMarketOpen(isOpen);
 
       // --- Countdown Logic ---
       let targetDate = new Date(now);
-      
       if (isOpen) {
-          // If Open, calculate time to CLOSE (Next 22:00 UTC)
           targetDate.setUTCHours(22, 0, 0, 0);
-          if (day === 0) {
-              // Sunday -> Monday 22:00
-              targetDate.setUTCDate(targetDate.getUTCDate() + 1);
-          } else if (hour >= 22) {
-              // After 22:00 -> Tomorrow
-              targetDate.setUTCDate(targetDate.getUTCDate() + 1);
-          }
+          if (day === 0) targetDate.setUTCDate(targetDate.getUTCDate() + 1);
+          else if (hour >= 22) targetDate.setUTCDate(targetDate.getUTCDate() + 1);
       } else {
-          // If Closed, calculate time to OPEN
           if (day === 6 || (day === 5 && hour >= 22) || (day === 0 && hour < 23)) {
-              // Weekend -> Sunday 23:00
               targetDate.setUTCHours(23, 0, 0, 0);
-              // Find next Sunday
               const daysUntilSunday = (7 - day) % 7; 
-              if (day === 0) { /* already Sunday, just time check handled by setHours */ }
-              else { targetDate.setUTCDate(targetDate.getUTCDate() + daysUntilSunday); }
+              if (day !== 0) targetDate.setUTCDate(targetDate.getUTCDate() + daysUntilSunday); 
           } else {
-              // Weekday Break -> Today 23:00
               targetDate.setUTCHours(23, 0, 0, 0);
           }
       }
@@ -190,7 +171,7 @@ const App: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Format Time for Colombo (UTC+5:30)
+  // Format Time for Colombo
   const colomboTime = currentTime.toLocaleTimeString('en-US', {
     timeZone: 'Asia/Colombo',
     hour: '2-digit',
@@ -198,37 +179,35 @@ const App: React.FC = () => {
     hour12: true
   });
 
-  // Derived State for Tooltip
   const chicagoTime = new Date(currentTime.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
   const chicagoDayName = chicagoTime.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
   const chicagoProgress = ((chicagoTime.getHours() * 60 + chicagoTime.getMinutes()) / (24 * 60)) * 100;
   
   const verboseCountdown = useMemo(() => {
     return marketCountdown
-      .replace(/ \d+s$/, '') // Remove seconds
+      .replace(/ \d+s$/, '') 
       .replace(/(\d+)h/, '$1 hours and')
       .replace(/(\d+)m/, '$1 minutes');
   }, [marketCountdown]);
 
   const renderTimelineSegments = () => {
     const day = chicagoTime.getDay();
-    // 0=Sun, 1=Mon...6=Sat
-    const OPEN_Start = 70.83; // 17:00
-    const CLOSE_End = 66.66; // 16:00
+    const OPEN_Start = 70.83; 
+    const CLOSE_End = 66.66; 
     
     let segments = [];
-    if (day === 0) { // Sunday
-        segments.push({ left: 0, width: OPEN_Start, color: 'bg-[#3f3f46]' }); // Closed
-        segments.push({ left: OPEN_Start, width: 100 - OPEN_Start, color: 'bg-emerald-500' }); // Open
-    } else if (day >= 1 && day <= 4) { // Mon-Thu
-        segments.push({ left: 0, width: CLOSE_End, color: 'bg-emerald-500' }); // Open
-        segments.push({ left: CLOSE_End, width: OPEN_Start - CLOSE_End, color: 'bg-[#3f3f46]' }); // Break
-        segments.push({ left: OPEN_Start, width: 100 - OPEN_Start, color: 'bg-emerald-500' }); // Open
-    } else if (day === 5) { // Friday
-        segments.push({ left: 0, width: CLOSE_End, color: 'bg-emerald-500' }); // Open
-        segments.push({ left: CLOSE_End, width: 100 - CLOSE_End, color: 'bg-[#3f3f46]' }); // Closed
-    } else { // Saturday
-        segments.push({ left: 0, width: 100, color: 'bg-[#3f3f46]' }); // Closed
+    if (day === 0) { 
+        segments.push({ left: 0, width: OPEN_Start, color: 'bg-[#3f3f46]' });
+        segments.push({ left: OPEN_Start, width: 100 - OPEN_Start, color: 'bg-emerald-500' }); 
+    } else if (day >= 1 && day <= 4) { 
+        segments.push({ left: 0, width: CLOSE_End, color: 'bg-emerald-500' }); 
+        segments.push({ left: CLOSE_End, width: OPEN_Start - CLOSE_End, color: 'bg-[#3f3f46]' }); 
+        segments.push({ left: OPEN_Start, width: 100 - OPEN_Start, color: 'bg-emerald-500' }); 
+    } else if (day === 5) { 
+        segments.push({ left: 0, width: CLOSE_End, color: 'bg-emerald-500' }); 
+        segments.push({ left: CLOSE_End, width: 100 - CLOSE_End, color: 'bg-[#3f3f46]' }); 
+    } else { 
+        segments.push({ left: 0, width: 100, color: 'bg-[#3f3f46]' }); 
     }
     return segments.map((s, i) => (
         <div key={i} className={`absolute top-0 bottom-0 h-full ${s.color} rounded-sm`} style={{ left: `${s.left}%`, width: `${s.width}%` }}></div>
@@ -254,6 +233,10 @@ const App: React.FC = () => {
     let minDuration = Infinity;
     let maxDuration = 0;
 
+    // News/Normal split
+    let newsCount = 0;
+    let normalCount = 0;
+
     if (trades.length === 0) {
       return { 
           totalPnl: 0, 
@@ -266,7 +249,10 @@ const App: React.FC = () => {
           avgHoldNum: 0,
           shortestHoldNum: 0,
           longestHoldNum: 0,
-          avgTradePnl: 0
+          avgTradePnl: 0,
+          newsCount: 0,
+          normalCount: 0,
+          currentBalance: 50000
       };
     }
 
@@ -275,19 +261,18 @@ const App: React.FC = () => {
       if (t.pnl > maxPnl) maxPnl = t.pnl;
       if (t.pnl < minPnl) minPnl = t.pnl;
 
+      if (t.newsEvent) newsCount++;
+      else normalCount++;
+
       // Ensure we are using the real trades from the journal
       if (t.exitTime && t.entryTime && t.entryTime !== '00:00:00' && t.exitTime !== '00:00:00') {
          const [h1, m1] = t.entryTime.split(':').map(Number);
          const [h2, m2] = t.exitTime.split(':').map(Number);
          let minutes = (h2 * 60 + m2) - (h1 * 60 + m1);
-         // Handle midnight crossing or negative result roughly
          if (minutes < 0) minutes += 24 * 60; 
-         // Filter outliers
          if (minutes > 0 && minutes < 1440) {
             totalDurationMinutes += minutes;
             timedTradeCount++;
-            
-            // Track min/max
             if (minutes < minDuration) minDuration = minutes;
             if (minutes > maxDuration) maxDuration = minutes;
          }
@@ -296,7 +281,6 @@ const App: React.FC = () => {
 
     const avgMinutes = timedTradeCount > 0 ? Math.floor(totalDurationMinutes / timedTradeCount) : 0;
     
-    // Helper to format duration
     const formatDur = (m: number) => {
         if (m === Infinity || m === 0) return '0m';
         const h = Math.floor(m / 60);
@@ -305,34 +289,30 @@ const App: React.FC = () => {
         return `${mins}m`;
     };
 
-    const avgTimeStr = formatDur(avgMinutes);
-    
-    // Percentage growth based on assumed 50k starting balance
     const initialBalance = 50000;
+    const currentBalance = initialBalance + totalPnl;
     const growthPct = (totalPnl / initialBalance) * 100;
-
-    // Average Trade PnL
     const avgTradePnl = trades.length > 0 ? totalPnl / trades.length : 0;
 
     return {
       totalPnl,
       bestTrade: maxPnl === -Infinity ? 0 : maxPnl,
       worstTrade: minPnl === Infinity ? 0 : minPnl,
-      avgTime: avgTimeStr,
+      avgTime: formatDur(avgMinutes),
       growthPct,
-      // New Stats for Holding Time Card
       shortestHold: minDuration === Infinity ? '0m' : formatDur(minDuration),
       longestHold: formatDur(maxDuration),
       shortestHoldNum: minDuration === Infinity ? 0 : minDuration,
       longestHoldNum: maxDuration,
       avgHoldNum: avgMinutes,
-      avgTradePnl
+      avgTradePnl,
+      newsCount,
+      normalCount,
+      currentBalance
     };
   }, [trades]);
 
-  // Calculate Chart Data (Cumulative P&L)
   const performanceChartData = useMemo(() => {
-    // 1. Group by date and separate into Total, Normal, News
     const dailyMap = new Map<string, { total: number; normal: number; news: number }>();
     
     trades.forEach(t => {
@@ -346,16 +326,12 @@ const App: React.FC = () => {
       dailyMap.set(t.date, entry);
     });
 
-    // 2. Sort dates chronologically
     const sortedDates = Array.from(dailyMap.keys()).sort();
 
-    // 3. Build Full History of Cumulative Data
-    // We assume a base account balance of 50,000 for visualization context
     let runningTotal = 50000;
     let runningNormal = 50000;
     let runningNews = 50000;
 
-    // Force explicit start point for the chart so all lines originate from 50k
     const fullHistory = [
        { date: 'Start', price: 50000, normal: 50000, news: 50000 }
     ];
@@ -368,20 +344,17 @@ const App: React.FC = () => {
 
         fullHistory.push({
             date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
-            price: runningTotal,   // Total Balance
-            normal: runningNormal, // Hypothetical Balance (Normal Only)
-            news: runningNews      // Hypothetical Balance (News Only)
+            price: runningTotal, 
+            normal: runningNormal, 
+            news: runningNews
         });
     });
-    
-    // Return full history to ensure chart starts at 50k (no slicing)
     return fullHistory;
   }, [trades]);
 
-  // Calculate Monthly Stats for Calendar
   const monthlyStats = useMemo(() => {
     const year = currentCalendarDate.getFullYear();
-    const month = currentCalendarDate.getMonth() + 1; // 0-index to 1-index
+    const month = currentCalendarDate.getMonth() + 1; 
     const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
     
     const monthTrades = trades.filter(t => t.date.startsWith(monthPrefix));
@@ -394,50 +367,6 @@ const App: React.FC = () => {
     return { totalPnl, count, winRate };
   }, [trades, currentCalendarDate]);
 
-  // Calculate Weekly Stats for Performance Card
-  const weeklyPerformance = useMemo(() => {
-    // Current day at end of day
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    
-    // 7 days ago at start of day
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(today.getDate() - 6);
-    sevenDaysAgo.setHours(0, 0, 0, 0);
-    
-    const weekTrades = trades.filter(t => {
-        // Parse date string (YYYY-MM-DD) into a local date object for comparison
-        const [y, m, d] = t.date.split('-').map(Number);
-        // Create date object at noon to avoid boundary issues
-        const tradeDate = new Date(y, m - 1, d);
-        tradeDate.setHours(12, 0, 0, 0);
-        
-        // Strict timestamp comparison
-        return tradeDate.getTime() >= sevenDaysAgo.getTime() && tradeDate.getTime() <= today.getTime();
-    });
-
-    const weekPnl = weekTrades.reduce((sum, t) => sum + t.pnl, 0);
-    
-    // Profit Factor Calculation
-    const wins = weekTrades.filter(t => t.pnl > 0);
-    const losses = weekTrades.filter(t => t.pnl < 0);
-    const grossProfit = wins.reduce((sum, t) => sum + t.pnl, 0);
-    const grossLoss = Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0));
-    
-    let pf = 0;
-    if (grossLoss === 0) {
-        pf = grossProfit > 0 ? 100 : 0; // Show high value if profitable with no losses
-    } else {
-        pf = grossProfit / grossLoss;
-    }
-    
-    return {
-        pnl: weekPnl,
-        profitFactor: pf
-    };
-  }, [trades]);
-
-  // Calculate Pyramid Ranking Stats for Current Month
   const rankingStats = useMemo(() => {
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth() + 1;
@@ -454,7 +383,6 @@ const App: React.FC = () => {
        else counts.other++;
     });
 
-    // Define a "Target" trade count per month to represent 100% fill
     const TARGET = 20;
 
     return {
@@ -465,7 +393,6 @@ const App: React.FC = () => {
     };
   }, [trades, currentCalendarDate]);
 
-  // Calculate Radar Chart Data
   const radarData = useMemo(() => {
     const totalTrades = trades.length;
     if (totalTrades === 0) {
@@ -477,30 +404,22 @@ const App: React.FC = () => {
             { subject: 'Discipline', A: 0, fullMark: 100 },
         ];
     }
-
-    // 1. Win Rate
     const wins = trades.filter(t => t.pnl > 0);
     const losses = trades.filter(t => t.pnl < 0);
     const winRate = (wins.length / totalTrades) * 100;
 
-    // 2. Profit Factor (Normalized: 3.0 PF = 100 score)
     const grossProfit = wins.reduce((sum, t) => sum + t.pnl, 0);
     const grossLoss = Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0));
     const profitFactor = grossLoss === 0 ? (grossProfit > 0 ? 3 : 0) : grossProfit / grossLoss;
     const pfScore = Math.min((profitFactor / 3) * 100, 100);
 
-    // 3. Consistency (Score based on trade count vs target of 20/mo roughly or just global activity cap)
-    // Let's cap at 50 trades for 100 score global for now
     const consistencyScore = Math.min((totalTrades / 50) * 100, 100);
 
-    // 4. Risk / Reward (Normalized: 2.0 RR = 100 score)
     const avgWin = wins.length > 0 ? grossProfit / wins.length : 0;
-    const avgLoss = losses.length > 0 ? grossLoss / losses.length : 1; // avoid div 0
+    const avgLoss = losses.length > 0 ? grossLoss / losses.length : 1; 
     const rrRatio = avgLoss === 0 ? 0 : avgWin / avgLoss;
     const rrScore = Math.min((rrRatio / 2) * 100, 100);
 
-    // 5. Discipline (Mock Metric - could be based on deviations, but hard to calc without plan data)
-    // We'll set a base score and subtract points for very large losses (> 2x avg loss)
     let disciplineScore = 100;
     losses.forEach(l => {
         if (Math.abs(l.pnl) > avgLoss * 2) disciplineScore -= 10;
@@ -516,6 +435,7 @@ const App: React.FC = () => {
     ];
   }, [trades]);
 
+
   const handleAddTradeClick = (date: string) => {
     setSelectedDate(date);
     setEditingTrade(undefined); // Reset edit mode
@@ -523,7 +443,6 @@ const App: React.FC = () => {
   };
 
   const handleAddTradeBtnClick = () => {
-    // Use local date string instead of UTC
     const dateStr = getLocalDateString();
     setSelectedDate(dateStr);
     setEditingTrade(undefined); // Reset edit mode
@@ -531,7 +450,7 @@ const App: React.FC = () => {
   }
 
   const handleEditTrade = (trade: Trade) => {
-    setSelectedDate(trade.date); // Ensure selectedDate matches the trade so form is correct
+    setSelectedDate(trade.date);
     setEditingTrade(trade);
     setIsAddModalOpen(true);
   }
@@ -542,7 +461,6 @@ const App: React.FC = () => {
         updatedTrades = prev.filter(t => t.id !== tradeId);
         return updatedTrades;
     });
-    // Sync to cloud
     syncToCloud(updatedTrades);
   }
 
@@ -553,13 +471,12 @@ const App: React.FC = () => {
   };
 
   const handleViewWeekClick = (weekTrades: Trade[], weekLabel: string) => {
-    setSelectedDate(weekLabel); // Using date field as label for the modal title
+    setSelectedDate(weekLabel);
     setSelectedTrades(weekTrades);
     setIsDetailModalOpen(true);
   }
 
   const handleAddOrUpdateTrade = (tradeData: Trade) => {
-    // 1. Update Global Trades State
     const currentTrades = trades;
     let newTrades: Trade[] = [];
     
@@ -574,39 +491,46 @@ const App: React.FC = () => {
     setTrades(newTrades);
     syncToCloud(newTrades);
 
-    // 2. Update Selected Trades State (if currently viewing details for this date)
     if (selectedDate === tradeData.date) {
         setSelectedTrades(prev => {
             const existingIndex = prev.findIndex(t => t.id === tradeData.id);
             if (existingIndex >= 0) {
-                // Update
                 const newSelected = [...prev];
                 newSelected[existingIndex] = tradeData;
                 return newSelected;
             } else {
-                // Add
                 return [...prev, tradeData];
             }
         });
     }
   };
 
+  // Switch tabs and view
+  const handleTabChange = (tabId: string) => {
+     setCurrentView('dashboard');
+     setActiveTab(tabId);
+  }
+
+  const handlePsychologyClick = () => {
+     setCurrentView('psychology');
+  }
+
   return (
     <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
-      {/* Main Dashboard Card - Responsive Sizing */}
+      {/* Main Container - Responsive Sizing */}
       <div className="w-full max-w-[1500px] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-8 transition-all duration-500">
         
         {/* ================= HEADER AREA ================= */}
         <div className="relative flex flex-col md:flex-row items-center justify-center mb-6 shrink-0 z-20 w-full min-h-[50px] gap-4 md:gap-0">
-           {/* Welcome Text (Absolute Left on Desktop) */}
+           {/* Welcome Text */}
            <div className="md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2 text-center md:text-left">
              <h2 className="text-white font-bold text-xl md:text-xl tracking-tight">Welcome, Gehan</h2>
              <p className="text-xs text-nexus-muted">Good to see you again.</p>
            </div>
            
-           {/* Center: Market Status Card */}
+           {/* Market Status Card */}
            <div className="group relative">
              <div className="liquid-card rounded-full pl-3 pr-5 py-2 flex items-center gap-4 cursor-default transition-transform active:scale-95">
                 <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md">
@@ -622,33 +546,26 @@ const App: React.FC = () => {
                 </div>
               </div>
               
-              {/* Hover Menu - Detailed Tooltip */}
+              {/* Detailed Tooltip */}
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto z-50 w-[300px]">
                   <div className="bg-[#18181b] border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-3 text-left">
-                     {/* Header */}
                      <div className="flex items-center gap-2 text-nexus-muted">
                         {isMarketOpen ? <CheckCircle size={16} /> : <MinusCircle size={16} />}
                         <span className="font-bold text-sm text-[#e4e4e7]">{isMarketOpen ? 'Market open' : 'Market closed'}</span>
                      </div>
-
-                     {/* Message */}
                      <p className="text-sm text-[#a1a1aa] leading-snug">
                        {isMarketOpen 
                          ? <span>Market is active. It'll close in <strong className="text-white">{verboseCountdown}</strong>.</span>
                          : <span>Time for a walk — this market is closed. It'll open in <strong className="text-white">{verboseCountdown}</strong>.</span>
                        }
                      </p>
-
-                     {/* Timeline */}
                      <div className="mt-2">
                         <div className="flex justify-between text-[10px] text-[#52525b] mb-1 font-bold tracking-wider">
                            <span>{chicagoDayName} 00:00</span>
                            <span>24:00</span>
                         </div>
                         <div className="relative h-1.5 bg-[#27272a] rounded-full w-full overflow-hidden">
-                            {/* Render Sessions */}
                             {renderTimelineSegments()}
-                            {/* Current Time Cursor */}
                             <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_8px_white] z-20" style={{ left: `${chicagoProgress}%` }}></div>
                         </div>
                         <div className="mt-3 text-center">
@@ -660,35 +577,35 @@ const App: React.FC = () => {
            </div>
         </div>
 
-        {/* ================= MAIN CONTENT GRID ================= */}
-        {/* Responsive Grid: 1 Col (Mobile), 2 Cols (Tablet), 12 Cols (Desktop) */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 z-10 pb-4 lg:pb-0">
+        {/* ================= VIEW SWITCHING CONTENT ================= */}
+        <AnimatePresence mode="wait">
+        
+        {currentView === 'dashboard' ? (
+        
+        <motion.div 
+            key="dashboard-grid"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.3 }}
+            className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 z-10 pb-4 lg:pb-0"
+        >
           
           {/* ================= LEFT COLUMN (Stats) ================= */}
-          {/* Mobile: Order 2. Tablet: Order 2. Desktop: Order 1 */}
           <div className="col-span-1 md:col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-2 lg:order-1">
             
             {/* Total P&L Card */}
             <div className="liquid-card rounded-3xl p-5 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
-              {/* Decorative Background */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-nexus-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-
-              {/* Top: Label */}
               <div className="relative z-10 w-full mb-auto">
                 <div className="flex justify-between items-start">
                   <span className="text-[10px] uppercase tracking-widest text-nexus-muted group-hover:text-white transition-colors">Total P&L</span>
                 </div>
               </div>
-              
-              {/* Bottom Row: Pyramid (Left) and Price (Right) */}
               <div className="relative z-10 flex items-end justify-between gap-1 md:gap-2 mt-4">
-                 
-                 {/* Mini Pyramid Visualization - Responsive Size */}
                  <div className="w-20 h-16 md:w-28 md:h-20 xl:w-40 xl:h-28 relative shrink-0 -ml-2 md:-ml-4 translate-y-2 md:translate-y-3 mix-blend-screen opacity-100 flex items-end transition-all duration-300">
                       <AsciiPyramid fillLevels={rankingStats} />
                  </div>
-
-                 {/* Price & Badge */}
                  <div className="flex flex-col items-end gap-1 md:gap-2 flex-1 min-w-0">
                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
                          globalStats.growthPct >= 0 
@@ -697,7 +614,6 @@ const App: React.FC = () => {
                      }`}>
                          {globalStats.growthPct >= 0 ? '+' : ''}{globalStats.growthPct.toFixed(2)}% Growth
                      </span>
-                     {/* Responsive Font Size */}
                      <span className={`text-2xl sm:text-3xl xl:text-5xl font-light tracking-tighter glow-text whitespace-nowrap transition-all duration-300 ${globalStats.totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
                         {formatCurrency(globalStats.totalPnl)}
                      </span>
@@ -705,28 +621,23 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Performance Radar Chart */}
-            <div className="liquid-card rounded-3xl p-5 w-full h-[320px] lg:h-auto lg:flex-1 lg:min-h-0 flex flex-col group relative overflow-hidden">
+            {/* Performance Radar Chart - Fixed Height, doesn't grow */}
+            <div className="liquid-card rounded-3xl p-5 w-full h-[320px] lg:h-[340px] shrink-0 flex flex-col group relative overflow-hidden">
                 <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors z-10 relative">Performance Metrics</span>
                 <div className="flex-1 w-full relative z-10 flex items-center justify-center">
                    <PerformanceRadar data={radarData} />
                 </div>
-                {/* Background Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-nexus-accent/5 to-transparent opacity-50 pointer-events-none"></div>
             </div>
-
-            {/* Psychological Analysis (Replaces Activity Heatmap) */}
-            <PsychologicalAnalysis 
-                trades={trades} 
-                className="shrink-0" 
-            />
             
+            {/* Empty space placeholder - No Card */}
+            <div className="hidden lg:block flex-1 min-h-[50px]"></div>
+
           </div>
 
 
           {/* ================= CENTER COLUMN (CALENDAR / JOURNAL) ================= */}
-          {/* Mobile: Order 1. Tablet: Order 1 (Full Width). Desktop: Order 2 */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-6 relative flex flex-col items-center h-[500px] lg:h-full lg:min-h-0 min-h-[600px] order-1 lg:order-2">
+          <div className="col-span-1 md:col-span-2 lg:col-span-6 relative flex flex-col items-center h-[500px] lg:h-full lg:min-h-0 min-h-[600px] order-1 lg:order-2 pb-24 lg:pb-0">
             
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
@@ -759,63 +670,35 @@ const App: React.FC = () => {
                  </motion.div>
                </AnimatePresence>
             </div>
-
-            {/* Floating Menu with Separate Add Trade Button */}
-            <div className="mb-2 lg:mb-6 relative z-30 flex items-center gap-4">
-               {/* Tab Switcher */}
-               <div className="liquid-card p-1.5 rounded-full flex items-center justify-center gap-1 shadow-2xl">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`relative w-24 md:w-28 py-2.5 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-95 duration-100 z-20 ${
-                      activeTab === tab.id ? 'text-white' : 'text-nexus-muted hover:text-white'
-                    }`}
-                  >
-                    {activeTab === tab.id && (
-                      <motion.div
-                        layoutId="activeTabIndicator"
-                        className="absolute inset-0 bg-white/10 border border-white/10 rounded-full -z-10 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      />
-                    )}
-                    <tab.icon size={16} />
-                    <span className="text-xs font-medium whitespace-nowrap">
-                      {tab.label}
-                    </span>
-                  </button>
-                ))}
-               </div>
-
-               {/* Add Trade Button */}
-               <button 
-                  onClick={handleAddTradeBtnClick}
-                  className="liquid-card px-6 py-3 rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white hover:bg-white/10 transition-all active:scale-95 duration-100 group shadow-2xl"
-               >
-                    <Plus size={16} className="group-hover:text-nexus-accent transition-colors" />
-                    <span className="text-xs font-medium whitespace-nowrap">Add Trade</span>
-               </button>
-            </div>
-
+            {/* Floating Menu is now outside this grid */}
           </div>
 
 
           {/* ================= RIGHT COLUMN ================= */}
-          {/* Mobile: Order 3. Tablet: Order 3. Desktop: Order 3 */}
           <div className="col-span-1 md:col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-3 lg:order-3">
             
-            {/* 1. Performance Chart - Fixed height on mobile to prevent stretching, flex on desktop */}
+            {/* 1. Performance Chart - Modified Header */}
             <div className="liquid-card rounded-3xl p-5 h-[320px] lg:h-auto lg:flex-1 lg:min-h-0 flex flex-col relative overflow-hidden group">
-              <div className="flex justify-between items-start shrink-0 z-10">
-                 <div>
-                    <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">My Performance</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-bold text-white">{weeklyPerformance.profitFactor.toFixed(2)}</span>
-                      <span className="text-xs text-nexus-muted">Profit Factor</span>
+              <div className="flex justify-between items-start shrink-0 z-10 mb-2">
+                 <div className="w-full">
+                    <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors">Performance</span>
+                    <div className="flex justify-between items-center w-full px-1">
+                         <div className="flex flex-col">
+                            <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-60">Balance</span>
+                            <span className="text-sm font-bold text-white tracking-tight">${globalStats.currentBalance.toLocaleString()}</span>
+                         </div>
+                         <div className="flex flex-col items-center">
+                            <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-60">Normal</span>
+                            <span className="text-sm font-bold text-emerald-400">{globalStats.normalCount}</span>
+                         </div>
+                         <div className="flex flex-col items-end">
+                            <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-60">News</span>
+                            <span className="text-sm font-bold text-yellow-500">{globalStats.newsCount}</span>
+                         </div>
                     </div>
                  </div>
               </div>
-              <div className="flex-1 w-full relative min-h-0 -mx-2 mt-4">
+              <div className="flex-1 w-full relative min-h-0 -mx-2 mt-2">
                  <EnergyChart data={performanceChartData} />
               </div>
             </div>
@@ -920,6 +803,81 @@ const App: React.FC = () => {
             
           </div>
 
+        </motion.div>
+        ) : (
+             <motion.div 
+               key="psychology-view"
+               initial={{ opacity: 0, scale: 0.98 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 0.98 }}
+               transition={{ duration: 0.3 }}
+               className="flex-1 w-full h-full flex items-center justify-center"
+             >
+                 <div className="max-w-4xl w-full flex flex-col gap-6 p-4">
+                     <div className="flex flex-col items-center text-center gap-2">
+                        <h1 className="text-3xl font-light text-white tracking-tight">Psychological Profile</h1>
+                        <p className="text-nexus-muted text-sm">AI-driven analysis of your emotional trading patterns.</p>
+                     </div>
+                     <PsychologicalAnalysis trades={trades} className="min-h-[400px]" />
+                 </div>
+             </motion.div>
+        )}
+        </AnimatePresence>
+
+        {/* Floating Menu - Positioned Absolutely at Bottom Center */}
+        <div className="absolute bottom-4 left-0 right-0 z-50 flex justify-center items-center pointer-events-none">
+            <div className="flex items-center gap-4 pointer-events-auto">
+               
+               {/* Psych Analysis Navigation Button */}
+               <button
+                  onClick={handlePsychologyClick}
+                  className={`liquid-card w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group shadow-2xl relative ${currentView === 'psychology' ? 'bg-white/10 text-purple-400' : 'text-nexus-muted hover:text-white hover:bg-white/10'}`}
+                  title="Psychological Analysis"
+               >
+                   <Brain size={20} className="group-hover:text-purple-400 transition-colors" />
+               </button>
+
+               {/* Tab Switcher */}
+               <div className="liquid-card p-1.5 rounded-full flex items-center justify-center gap-1 shadow-2xl">
+                {TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`relative w-24 md:w-28 py-2.5 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-95 duration-100 z-20 ${
+                      activeTab === tab.id && currentView === 'dashboard' ? 'text-white' : 'text-nexus-muted hover:text-white'
+                    }`}
+                  >
+                    {activeTab === tab.id && currentView === 'dashboard' && (
+                      <motion.div
+                        layoutId="activeTabIndicator"
+                        className="absolute inset-0 bg-white/10 border border-white/10 rounded-full -z-10 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+                    <tab.icon size={16} />
+                    <span className="text-xs font-medium whitespace-nowrap">
+                      {tab.label}
+                    </span>
+                  </button>
+                ))}
+               </div>
+
+               {/* Add Trade Button (Hidden in Psychology View) */}
+               <AnimatePresence>
+               {currentView === 'dashboard' && (
+                   <motion.button 
+                      initial={{ width: 0, opacity: 0, padding: 0 }}
+                      animate={{ width: 'auto', opacity: 1, padding: '0.75rem 1.5rem' }}
+                      exit={{ width: 0, opacity: 0, padding: 0 }}
+                      onClick={handleAddTradeBtnClick}
+                      className="liquid-card rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white hover:bg-white/10 transition-all active:scale-95 duration-100 group shadow-2xl overflow-hidden whitespace-nowrap"
+                   >
+                        <Plus size={16} className="group-hover:text-nexus-accent transition-colors" />
+                        <span className="text-xs font-medium">Add Trade</span>
+                   </motion.button>
+               )}
+               </AnimatePresence>
+            </div>
         </div>
 
         {/* MODALS */}
