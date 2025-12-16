@@ -19,10 +19,15 @@ import PerformanceRadar from './components/PerformanceRadar';
 import PaperBackground from './components/PaperBackground';
 import { TradingCalendar } from './components/TradingCalendar';
 import { JournalTable } from './components/JournalTable';
-import PsychologyPage from './components/PsychologyPage'; // Updated import
+import PsychologicalAnalysis from './components/PsychologicalAnalysis';
 import AsciiPyramid from './components/AsciiPyramid';
 import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
 import { Trade } from './types';
+
+const TABS = [
+  { id: 'dashboard', icon: LayoutGrid, label: 'Dashboard' },
+  { id: 'journal', icon: BookOpen, label: 'Journal' },
+];
 
 const App: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -30,6 +35,8 @@ const App: React.FC = () => {
   const [marketCountdown, setMarketCountdown] = useState<string>('');
   
   // Navigation State
+  // 'dashboard' shows the main 3-column grid (which contains Dashboard/Journal inner tabs)
+  // 'psychology' shows the full-screen psychological profile
   const [currentView, setCurrentView] = useState<'dashboard' | 'psychology'>('dashboard');
   const [activeTab, setActiveTab] = useState('dashboard'); // Inner tab for the dashboard view
   
@@ -498,6 +505,16 @@ const App: React.FC = () => {
     }
   };
 
+  // Switch tabs and view
+  const handleTabChange = (tabId: string) => {
+     setCurrentView('dashboard');
+     setActiveTab(tabId);
+  }
+
+  const handlePsychologyClick = () => {
+     setCurrentView('psychology');
+  }
+
   return (
     <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
@@ -794,110 +811,73 @@ const App: React.FC = () => {
                animate={{ opacity: 1, scale: 1 }}
                exit={{ opacity: 0, scale: 0.98 }}
                transition={{ duration: 0.3 }}
-               className="flex-1 w-full h-full flex items-center justify-center overflow-hidden"
+               className="flex-1 w-full h-full flex items-center justify-center"
              >
-                 <PsychologyPage trades={trades} />
+                 <div className="max-w-4xl w-full flex flex-col gap-6 p-4">
+                     <div className="flex flex-col items-center text-center gap-2">
+                        <h1 className="text-3xl font-light text-white tracking-tight">Psychological Profile</h1>
+                        <p className="text-nexus-muted text-sm">AI-driven analysis of your emotional trading patterns.</p>
+                     </div>
+                     <PsychologicalAnalysis trades={trades} className="min-h-[400px]" />
+                 </div>
              </motion.div>
         )}
         </AnimatePresence>
 
-        {/* Floating Menu - New Animated Version */}
-        <div className="absolute bottom-6 left-0 right-0 z-50 flex justify-center items-center pointer-events-none">
-            <motion.div 
-               layout
-               className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-full p-2 flex items-center gap-2 pointer-events-auto shadow-2xl"
-               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-            >
-                {/* Psychology Button */}
-                <motion.button
-                    layout
-                    onClick={() => setCurrentView(currentView === 'psychology' ? 'dashboard' : 'psychology')}
-                    className={`relative flex items-center justify-center gap-2 rounded-full transition-colors overflow-hidden ${
-                        currentView === 'psychology' 
-                        ? 'bg-white/10 text-purple-400 px-6 py-3' 
-                        : 'w-12 h-12 text-nexus-muted hover:text-white hover:bg-white/10'
+        {/* Floating Menu - Positioned Absolutely at Bottom Center */}
+        <div className="absolute bottom-4 left-0 right-0 z-50 flex justify-center items-center pointer-events-none">
+            <div className="flex items-center gap-4 pointer-events-auto">
+               
+               {/* Psych Analysis Navigation Button */}
+               <button
+                  onClick={handlePsychologyClick}
+                  className={`liquid-card w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group shadow-2xl relative ${currentView === 'psychology' ? 'bg-white/10 text-purple-400' : 'text-nexus-muted hover:text-white hover:bg-white/10'}`}
+                  title="Psychological Analysis"
+               >
+                   <Brain size={20} className="group-hover:text-purple-400 transition-colors" />
+               </button>
+
+               {/* Tab Switcher */}
+               <div className="liquid-card p-1.5 rounded-full flex items-center justify-center gap-1 shadow-2xl">
+                {TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`relative w-24 md:w-28 py-2.5 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-95 duration-100 z-20 ${
+                      activeTab === tab.id && currentView === 'dashboard' ? 'text-white' : 'text-nexus-muted hover:text-white'
                     }`}
-                >
-                    <Brain size={20} className="shrink-0" />
-                    <AnimatePresence mode="popLayout">
-                    {currentView === 'psychology' && (
-                        <motion.span 
-                            initial={{ opacity: 0, width: 0 }} 
-                            animate={{ opacity: 1, width: 'auto' }} 
-                            exit={{ opacity: 0, width: 0 }}
-                            className="text-xs font-medium whitespace-nowrap overflow-hidden"
-                        >
-                            Psychology
-                        </motion.span>
+                  >
+                    {activeTab === tab.id && currentView === 'dashboard' && (
+                      <motion.div
+                        layoutId="activeTabIndicator"
+                        className="absolute inset-0 bg-white/10 border border-white/10 rounded-full -z-10 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
                     )}
-                    </AnimatePresence>
-                </motion.button>
+                    <tab.icon size={16} />
+                    <span className="text-xs font-medium whitespace-nowrap">
+                      {tab.label}
+                    </span>
+                  </button>
+                ))}
+               </div>
 
-                {/* Dashboard Tab */}
-                <motion.button
-                    layout
-                    onClick={() => { setCurrentView('dashboard'); setActiveTab('dashboard'); }}
-                    className={`relative flex items-center justify-center gap-2 rounded-full transition-colors overflow-hidden ${
-                        currentView === 'dashboard' && activeTab === 'dashboard'
-                        ? 'bg-white/10 text-white px-6 py-3 shadow-[0_0_15px_rgba(255,255,255,0.1)]'
-                        : currentView === 'psychology'
-                            ? 'w-12 h-12 text-nexus-muted hover:text-white hover:bg-white/10' // Icon mode
-                            : 'w-12 h-12 text-nexus-muted hover:text-white hover:bg-white/10' 
-                    }`}
-                >
-                    <LayoutGrid size={20} className="shrink-0" />
-                    <AnimatePresence mode="popLayout">
-                    {currentView === 'dashboard' && (
-                        <motion.span 
-                            initial={{ opacity: 0, width: 0 }} 
-                            animate={{ opacity: 1, width: 'auto' }} 
-                            exit={{ opacity: 0, width: 0 }}
-                            className="text-xs font-medium whitespace-nowrap overflow-hidden"
-                        >
-                            Dashboard
-                        </motion.span>
-                    )}
-                    </AnimatePresence>
-                </motion.button>
-
-                {/* Journal Tab */}
-                <AnimatePresence mode="popLayout">
-                    {currentView === 'dashboard' && (
-                        <motion.button
-                            layout
-                            initial={{ opacity: 0, width: 0, scale: 0.8 }} 
-                            animate={{ opacity: 1, width: 'auto', scale: 1 }} 
-                            exit={{ opacity: 0, width: 0, scale: 0.8 }}
-                            onClick={() => setActiveTab('journal')}
-                            className={`relative flex items-center justify-center gap-2 rounded-full transition-colors overflow-hidden ${
-                                activeTab === 'journal'
-                                ? 'bg-white/10 text-white px-6 py-3 shadow-[0_0_15px_rgba(255,255,255,0.1)]'
-                                : 'px-6 py-3 text-nexus-muted hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                            <BookOpen size={20} className="shrink-0" />
-                            <span className="text-xs font-medium whitespace-nowrap">Journal</span>
-                        </motion.button>
-                    )}
-                </AnimatePresence>
-
-                {/* Add Trade Button */}
-                <AnimatePresence mode="popLayout">
-                    {currentView === 'dashboard' && (
-                        <motion.button
-                            layout
-                            initial={{ opacity: 0, width: 0, scale: 0.8 }} 
-                            animate={{ opacity: 1, width: 'auto', scale: 1 }} 
-                            exit={{ opacity: 0, width: 0, scale: 0.8 }}
-                            onClick={handleAddTradeBtnClick}
-                            className="bg-nexus-accent text-black px-6 py-3 rounded-full flex items-center gap-2 font-medium text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 shadow-lg whitespace-nowrap overflow-hidden"
-                        >
-                            <Plus size={16} className="shrink-0" />
-                            <span>Add Trade</span>
-                        </motion.button>
-                    )}
-                </AnimatePresence>
-            </motion.div>
+               {/* Add Trade Button (Hidden in Psychology View) */}
+               <AnimatePresence>
+               {currentView === 'dashboard' && (
+                   <motion.button 
+                      initial={{ width: 0, opacity: 0, padding: 0 }}
+                      animate={{ width: 'auto', opacity: 1, padding: '0.75rem 1.5rem' }}
+                      exit={{ width: 0, opacity: 0, padding: 0 }}
+                      onClick={handleAddTradeBtnClick}
+                      className="liquid-card rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white hover:bg-white/10 transition-all active:scale-95 duration-100 group shadow-2xl overflow-hidden whitespace-nowrap"
+                   >
+                        <Plus size={16} className="group-hover:text-nexus-accent transition-colors" />
+                        <span className="text-xs font-medium">Add Trade</span>
+                   </motion.button>
+               )}
+               </AnimatePresence>
+            </div>
         </div>
 
         {/* MODALS */}
