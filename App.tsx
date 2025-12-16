@@ -19,7 +19,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import EnergyChart from './components/EnergyChart';
-import NewsChart from './components/NewsChart';
 import PerformanceRadar from './components/PerformanceRadar';
 import PaperBackground from './components/PaperBackground';
 import { TradingCalendar } from './components/TradingCalendar';
@@ -248,9 +247,24 @@ const App: React.FC = () => {
     let minPnl = Infinity;
     let totalDurationMinutes = 0;
     let timedTradeCount = 0;
+    
+    // Holding Time Tracking
+    let minDuration = Infinity;
+    let maxDuration = 0;
 
     if (trades.length === 0) {
-      return { totalPnl: 0, bestTrade: 0, worstTrade: 0, avgTime: '0h 0m', growthPct: 0 };
+      return { 
+          totalPnl: 0, 
+          bestTrade: 0, 
+          worstTrade: 0, 
+          avgTime: '0m', 
+          growthPct: 0,
+          shortestHold: '0m',
+          longestHold: '0m',
+          avgHoldNum: 0,
+          shortestHoldNum: 0,
+          longestHoldNum: 0
+      };
     }
 
     trades.forEach(t => {
@@ -268,14 +282,26 @@ const App: React.FC = () => {
          if (minutes > 0 && minutes < 1440) {
             totalDurationMinutes += minutes;
             timedTradeCount++;
+            
+            // Track min/max
+            if (minutes < minDuration) minDuration = minutes;
+            if (minutes > maxDuration) maxDuration = minutes;
          }
       }
     });
 
     const avgMinutes = timedTradeCount > 0 ? Math.floor(totalDurationMinutes / timedTradeCount) : 0;
-    const avgH = Math.floor(avgMinutes / 60);
-    const avgM = avgMinutes % 60;
-    const avgTimeStr = `${avgH}h ${avgM}m`;
+    
+    // Helper to format duration
+    const formatDur = (m: number) => {
+        if (m === Infinity || m === 0) return '0m';
+        const h = Math.floor(m / 60);
+        const mins = m % 60;
+        if (h > 0) return `${h}h ${mins}m`;
+        return `${mins}m`;
+    };
+
+    const avgTimeStr = formatDur(avgMinutes);
     
     // Percentage growth based on assumed 50k starting balance
     const initialBalance = 50000;
@@ -286,7 +312,13 @@ const App: React.FC = () => {
       bestTrade: maxPnl === -Infinity ? 0 : maxPnl,
       worstTrade: minPnl === Infinity ? 0 : minPnl,
       avgTime: avgTimeStr,
-      growthPct
+      growthPct,
+      // New Stats for Holding Time Card
+      shortestHold: minDuration === Infinity ? '0m' : formatDur(minDuration),
+      longestHold: formatDur(maxDuration),
+      shortestHoldNum: minDuration === Infinity ? 0 : minDuration,
+      longestHoldNum: maxDuration,
+      avgHoldNum: avgMinutes
     };
   }, [trades]);
 
@@ -336,19 +368,6 @@ const App: React.FC = () => {
     
     // Return full history to ensure chart starts at 50k (no slicing)
     return fullHistory;
-  }, [trades]);
-
-  // Calculate News vs Normal Performance
-  const newsVsNormalData = useMemo(() => {
-      const newsTrades = trades.filter(t => !!t.newsEvent);
-      const normalTrades = trades.filter(t => !t.newsEvent);
-      
-      const calcPnl = (subset: Trade[]) => subset.reduce((sum, t) => sum + t.pnl, 0);
-
-      return [
-        { name: 'Normal', pnl: calcPnl(normalTrades) },
-        { name: 'News', pnl: calcPnl(newsTrades) }
-      ];
   }, [trades]);
 
   // Calculate Monthly Stats for Calendar
@@ -794,19 +813,61 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* 2. News vs Normal Performance - Fixed Height */}
+            {/* 2. Trade Holding Time - Fixed Height */}
             <div className="liquid-card rounded-3xl p-5 h-[160px] shrink-0 flex flex-col relative overflow-hidden group">
                 <div className="flex justify-between items-start shrink-0 z-10">
                     <div>
-                        <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">Trade Types</span>
+                        <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">Efficiency</span>
                         <div className="flex items-center gap-1.5">
-                             <Zap size={14} className="text-nexus-accent" />
-                             <span className="text-xs font-bold text-white">News vs Normal</span>
+                             <Clock size={14} className="text-nexus-accent" />
+                             <span className="text-xs font-bold text-white">Trade Holding Time</span>
                         </div>
                     </div>
                 </div>
-                <div className="flex-1 w-full relative min-h-0 -mx-2 mt-1">
-                    <NewsChart data={newsVsNormalData} />
+                <div className="flex-1 w-full relative min-h-0 mt-3 flex flex-col justify-center gap-3">
+                    
+                    {/* Shortest */}
+                    <div className="flex flex-col gap-1.5">
+                       <div className="flex justify-between items-end">
+                          <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-medium">Shortest</span>
+                          <span className="text-xs font-bold text-white font-mono">{globalStats.shortestHold}</span>
+                       </div>
+                       <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
+                          <div 
+                             className="h-full bg-emerald-500 rounded-full opacity-80" 
+                             style={{ width: `${Math.max(2, (globalStats.shortestHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}
+                          ></div>
+                       </div>
+                    </div>
+
+                    {/* Average */}
+                    <div className="flex flex-col gap-1.5">
+                       <div className="flex justify-between items-end">
+                          <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-medium">Average</span>
+                          <span className="text-xs font-bold text-white font-mono">{globalStats.avgTime}</span>
+                       </div>
+                       <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
+                           <div 
+                             className="h-full bg-nexus-accent rounded-full" 
+                             style={{ width: `${Math.max(2, (globalStats.avgHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}
+                          ></div>
+                       </div>
+                    </div>
+
+                     {/* Longest */}
+                    <div className="flex flex-col gap-1.5">
+                       <div className="flex justify-between items-end">
+                          <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-medium">Longest</span>
+                          <span className="text-xs font-bold text-white font-mono">{globalStats.longestHold}</span>
+                       </div>
+                       <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
+                           <div 
+                             className="h-full bg-blue-500 rounded-full opacity-80" 
+                             style={{ width: '100%' }}
+                          ></div>
+                       </div>
+                    </div>
+
                 </div>
             </div>
 
