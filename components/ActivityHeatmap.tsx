@@ -3,80 +3,58 @@ import { Trade } from '../types';
 
 interface ActivityHeatmapProps {
   trades: Trade[];
-  currentDate: Date; // The month we are currently viewing
+  currentDate?: Date; // Optional, not strictly needed for last 30 days
   className?: string;
 }
 
-const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ trades, currentDate, className = '' }) => {
-  
-  const daysData = useMemo(() => {
-    // 1. Get total days in the current calendar month
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    // 2. Map trade counts for each day of this specific month
-    const tradeCounts: { [key: string]: number } = {};
-    const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
-    
-    trades.forEach(t => {
-      if (t.date.startsWith(monthPrefix)) {
-        tradeCounts[t.date] = (tradeCounts[t.date] || 0) + 1;
-      }
-    });
-
-    // 3. Generate array of days
-    const result = [];
+const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ trades, className = '' }) => {
+  const last30Days = useMemo(() => {
+    const days = [];
     const today = new Date();
+    // Normalize today to midnight to avoid time issues
     today.setHours(0,0,0,0);
 
-    for (let d = 1; d <= daysInMonth; d++) {
-        const dateStr = `${monthPrefix}-${String(d).padStart(2, '0')}`;
-        const count = tradeCounts[dateStr] || 0;
-        
-        // Determine if this day is in the future relative to "Today" (real time)
-        const checkDate = new Date(year, month, d);
-        const isFuture = checkDate > today;
-
-        result.push({ dateStr, count, isFuture, dayNum: d });
+    // Generate last 30 days
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      const count = trades.filter(t => t.date === dateStr).length;
+      days.push({ date: d, dateStr, count });
     }
-    return result;
-
-  }, [trades, currentDate]);
+    return days;
+  }, [trades]);
 
   const getColor = (count: number) => {
-    if (count === 0) return 'bg-white/5';
-    if (count <= 1) return 'bg-emerald-500/30';
-    if (count <= 3) return 'bg-emerald-500/60';
-    return 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]';
+    if (count === 0) return 'bg-[#1a1a1a] border border-white/5';
+    if (count <= 2) return 'bg-emerald-900/50 border border-emerald-500/30';
+    if (count <= 5) return 'bg-emerald-600 border border-emerald-400/50';
+    return 'bg-emerald-400 border border-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.5)]';
   };
 
   return (
-    <div className={`liquid-card rounded-3xl p-4 flex flex-col gap-3 ${className}`}>
-       <div className="flex justify-between items-end mb-1">
-          <span className="text-[10px] uppercase tracking-widest text-nexus-muted">Monthly Consistency</span>
-          <div className="flex gap-1.5 items-center">
-             <div className="w-1.5 h-1.5 rounded-sm bg-white/5"></div>
-             <div className="w-1.5 h-1.5 rounded-sm bg-emerald-500/30"></div>
-             <div className="w-1.5 h-1.5 rounded-sm bg-emerald-500"></div>
-          </div>
-       </div>
-       
-       {/* Monthly Consistency Strip */}
-       <div className="flex flex-wrap gap-1 content-start">
-          {daysData.map((day, i) => (
-             <div 
-               key={i}
-               title={`${day.dateStr}: ${day.count} trades`}
-               className={`w-2 h-4 md:w-2.5 md:h-5 rounded-[2px] transition-all duration-300 ${day.isFuture ? 'opacity-0' : getColor(day.count)}`}
-             ></div>
-          ))}
-       </div>
-       
-       <div className="flex justify-between items-center pt-1 border-t border-white/5 mt-auto">
-          <span className="text-[9px] text-nexus-muted font-mono">{currentDate.toLocaleString('default', { month: 'short' })} 1</span>
-          <span className="text-[9px] text-nexus-muted font-mono">End of Month</span>
-       </div>
+    <div className={`liquid-card rounded-3xl p-5 flex flex-col gap-4 ${className}`}>
+        <div className="flex justify-between items-end">
+            <span className="text-[10px] uppercase tracking-widest text-nexus-muted">30-Day Activity</span>
+             <span className="text-[9px] text-nexus-muted font-mono">
+                {last30Days[0].date.toLocaleDateString('en-US', {month:'short', day:'numeric'})} - Today
+             </span>
+        </div>
+        
+        {/* GitHub Style Grid - Flexible layout mimicking a grid */}
+        <div className="flex flex-wrap gap-1.5 justify-between content-start">
+            {last30Days.map((day, i) => (
+                <div 
+                    key={i}
+                    title={`${day.dateStr}: ${day.count} trades`}
+                    className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md ${getColor(day.count)} transition-all duration-300 hover:scale-110 cursor-help`}
+                ></div>
+            ))}
+        </div>
     </div>
   );
 };

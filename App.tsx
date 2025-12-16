@@ -14,7 +14,8 @@ import {
   Clock, 
   Zap, 
   MinusCircle, 
-  CheckCircle 
+  CheckCircle,
+  TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -263,7 +264,8 @@ const App: React.FC = () => {
           longestHold: '0m',
           avgHoldNum: 0,
           shortestHoldNum: 0,
-          longestHoldNum: 0
+          longestHoldNum: 0,
+          avgTradePnl: 0
       };
     }
 
@@ -272,6 +274,7 @@ const App: React.FC = () => {
       if (t.pnl > maxPnl) maxPnl = t.pnl;
       if (t.pnl < minPnl) minPnl = t.pnl;
 
+      // Ensure we are using the real trades from the journal
       if (t.exitTime && t.entryTime && t.entryTime !== '00:00:00' && t.exitTime !== '00:00:00') {
          const [h1, m1] = t.entryTime.split(':').map(Number);
          const [h2, m2] = t.exitTime.split(':').map(Number);
@@ -307,6 +310,9 @@ const App: React.FC = () => {
     const initialBalance = 50000;
     const growthPct = (totalPnl / initialBalance) * 100;
 
+    // Average Trade PnL
+    const avgTradePnl = trades.length > 0 ? totalPnl / trades.length : 0;
+
     return {
       totalPnl,
       bestTrade: maxPnl === -Infinity ? 0 : maxPnl,
@@ -318,7 +324,8 @@ const App: React.FC = () => {
       longestHold: formatDur(maxDuration),
       shortestHoldNum: minDuration === Infinity ? 0 : minDuration,
       longestHoldNum: maxDuration,
-      avgHoldNum: avgMinutes
+      avgHoldNum: avgMinutes,
+      avgTradePnl
     };
   }, [trades]);
 
@@ -700,7 +707,6 @@ const App: React.FC = () => {
             {/* Consistency / Activity Heatmap (Linked to current month) - Fixed Height */}
             <ActivityHeatmap 
                 trades={trades} 
-                currentDate={currentCalendarDate} 
                 className="shrink-0" 
             />
 
@@ -902,11 +908,11 @@ const App: React.FC = () => {
                     <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                          <div className="flex items-center gap-2">
                            <div className="p-1 rounded-full bg-blue-500/20 text-blue-500">
-                             <Clock size={10} />
+                             <TrendingUp size={10} />
                            </div>
-                           <span className="text-[10px] text-nexus-muted">Avg Hold Time</span>
+                           <span className="text-[10px] text-nexus-muted">Avg Trade</span>
                         </div>
-                        <span className="text-xs font-bold text-white">{globalStats.avgTime}</span>
+                        <span className="text-xs font-bold text-white">{formatCurrency(globalStats.avgTradePnl)}</span>
                     </div>
                  </div>
             </div>
