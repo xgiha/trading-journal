@@ -704,21 +704,21 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Consistency / Activity Heatmap (Linked to current month) - Fixed Height */}
-            <ActivityHeatmap 
-                trades={trades} 
-                className="shrink-0" 
-            />
-
-            {/* Performance Radar Chart - Fills remaining space or fixed height on mobile */}
+            {/* Performance Radar Chart - MOVED HERE */}
             <div className="liquid-card rounded-3xl p-5 w-full h-[320px] lg:h-auto lg:flex-1 lg:min-h-0 flex flex-col group relative overflow-hidden">
-                <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-4 group-hover:text-white transition-colors z-10 relative">Performance Metrics</span>
-                <div className="flex-1 -ml-4 -mr-4 -mb-4 relative z-10">
+                <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors z-10 relative">Performance Metrics</span>
+                <div className="flex-1 w-full relative z-10 flex items-center justify-center">
                    <PerformanceRadar data={radarData} />
                 </div>
                 {/* Background Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-nexus-accent/5 to-transparent opacity-50 pointer-events-none"></div>
             </div>
+
+            {/* Consistency / Activity Heatmap - MOVED HERE */}
+            <ActivityHeatmap 
+                trades={trades} 
+                className="shrink-0" 
+            />
             
           </div>
 

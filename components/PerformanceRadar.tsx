@@ -50,8 +50,7 @@ const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ data }) => {
   // Configuration
   const size = 300;
   const center = size / 2;
-  // Reduced radius to ensure labels don't get cut off
-  const radius = 75; 
+  const radius = 80; // Slightly increased from 75 since we handle scaling better now, but kept safe for labels.
   
   const processedData = useMemo(() => {
     const count = data.length || 5;
@@ -93,7 +92,11 @@ const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ data }) => {
 
   return (
     <div className="w-full h-full flex items-center justify-center relative select-none">
-      <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full max-w-[320px] max-h-[320px] filter drop-shadow-2xl overflow-visible">
+      <svg 
+        viewBox={`0 0 ${size} ${size}`} 
+        className="w-full h-full filter drop-shadow-2xl overflow-visible"
+        preserveAspectRatio="xMidYMid meet"
+      >
         <defs>
             <filter id="glow-orange" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
