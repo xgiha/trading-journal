@@ -511,7 +511,7 @@ const App: React.FC = () => {
                <button
                   onClick={handlePsychologyClick}
                   className={`liquid-card w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group shadow-2xl relative ${currentView === 'psychology' ? 'bg-white/10 text-purple-400' : 'text-nexus-muted hover:text-white hover:bg-white/10'}`}
-                  title="Psychological Analysis"
+                  title="Psychology"
                >
                    <Brain size={20} className="group-hover:text-purple-400 transition-colors" />
                </button>
