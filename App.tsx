@@ -22,6 +22,7 @@ import { JournalTable } from './components/JournalTable';
 import PsychologicalAnalysis from './components/PsychologicalAnalysis';
 import AsciiPyramid from './components/AsciiPyramid';
 import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
+import PsychologyPage from './components/PsychologyPage';
 import { Trade } from './types';
 
 const TABS = [
@@ -637,7 +638,7 @@ const App: React.FC = () => {
 
 
           {/* ================= CENTER COLUMN (CALENDAR / JOURNAL) ================= */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-6 relative flex flex-col items-center h-[500px] lg:h-full lg:min-h-0 min-h-[600px] order-1 lg:order-2 pb-24 lg:pb-0">
+          <div className="col-span-1 md:col-span-2 lg:col-span-6 relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-2 pb-24 lg:pb-20">
             
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
@@ -811,15 +812,9 @@ const App: React.FC = () => {
                animate={{ opacity: 1, scale: 1 }}
                exit={{ opacity: 0, scale: 0.98 }}
                transition={{ duration: 0.3 }}
-               className="flex-1 w-full h-full flex items-center justify-center"
+               className="flex-1 w-full h-full flex items-center justify-center overflow-hidden"
              >
-                 <div className="max-w-4xl w-full flex flex-col gap-6 p-4">
-                     <div className="flex flex-col items-center text-center gap-2">
-                        <h1 className="text-3xl font-light text-white tracking-tight">Psychological Profile</h1>
-                        <p className="text-nexus-muted text-sm">AI-driven analysis of your emotional trading patterns.</p>
-                     </div>
-                     <PsychologicalAnalysis trades={trades} className="min-h-[400px]" />
-                 </div>
+                 <PsychologyPage trades={trades} onBack={() => setCurrentView('dashboard')} />
              </motion.div>
         )}
         </AnimatePresence>

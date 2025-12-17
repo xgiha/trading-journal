@@ -50,7 +50,7 @@ const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ data }) => {
   // Configuration
   const size = 300;
   const center = size / 2;
-  const radius = 80; // Slightly increased from 75 since we handle scaling better now, but kept safe for labels.
+  const radius = 80; 
   
   const processedData = useMemo(() => {
     const count = data.length || 5;
@@ -74,7 +74,6 @@ const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ data }) => {
             yA: center + rA * Math.sin(angle),
             xB: center + rB * Math.cos(angle),
             yB: center + rB * Math.sin(angle),
-            // Push labels out further but within viewbox thanks to smaller radius
             xLabel: center + (radius + 35) * Math.cos(angle),
             yLabel: center + (radius + 35) * Math.sin(angle),
             xAxis: center + radius * Math.cos(angle),
@@ -99,14 +98,14 @@ const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ data }) => {
       >
         <defs>
             <filter id="glow-orange" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
                 <feMerge>
                     <feMergeNode in="coloredBlur"/>
                     <feMergeNode in="SourceGraphic"/>
                 </feMerge>
             </filter>
              <filter id="glow-purple" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+                <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
                 <feMerge>
                     <feMergeNode in="coloredBlur"/>
                     <feMergeNode in="SourceGraphic"/>
@@ -158,10 +157,23 @@ const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ data }) => {
             ))}
         </g>
 
+        {/* 1. Base Layer: Solid, Static Data Shape (Orange) */}
+        <path
+            d={pathA}
+            fill="url(#grad-orange)"
+            stroke="url(#stroke-orange)"
+            strokeWidth="3"
+            filter="url(#glow-orange)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mix-blend-screen opacity-80"
+        />
+
+        {/* 2. Base Layer: Background Swirl (Purple) - Slow Breathing */}
         <motion.path
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
+            initial={{ opacity: 0.2, scale: 0.95 }}
+            animate={{ opacity: [0.2, 0.4, 0.2], scale: [0.95, 1.05, 0.95] }}
+            transition={{ duration: 6, ease: "easeInOut", repeat: Infinity }}
             d={pathB}
             fill="url(#grad-purple)"
             stroke="url(#stroke-purple)"
@@ -170,20 +182,7 @@ const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ data }) => {
             strokeLinecap="round"
             strokeLinejoin="round"
             className="mix-blend-screen"
-        />
-
-        <motion.path
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 1.5, ease: "easeInOut", delay: 0.2 }}
-            d={pathA}
-            fill="url(#grad-orange)"
-            stroke="url(#stroke-orange)"
-            strokeWidth="3"
-            filter="url(#glow-orange)"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mix-blend-screen"
+            style={{ transformOrigin: 'center' }}
         />
         
         {processedData.map((d, i) => (

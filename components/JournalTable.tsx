@@ -285,9 +285,9 @@ export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTab
       </div>
 
       {/* Main Content - Horizontal Scroll for Mobile */}
-      <div className="flex-1 relative w-full overflow-hidden mt-2">
-        {/* Added no-scrollbar classes to hide the scrollbar visually */}
-        <div className="absolute inset-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="flex-1 relative w-full mt-2">
+        {/* Added no-scrollbar classes to hide the scrollbar visually. Added overflow-y-hidden to prevent vertical scroll. */}
+        <div className="absolute inset-0 overflow-y-hidden overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="min-w-[600px] w-full pb-4">
              <AnimatePresence mode="wait">
               <motion.div
