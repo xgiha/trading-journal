@@ -2,21 +2,24 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   TrendingUp, 
+  ChevronDown, 
   ArrowUpRight, 
-  ArrowDownRight, 
+  MoreVertical, 
   Zap, 
   History, 
   Activity, 
+  ArrowRight, 
+  ArrowLeft, 
   Brain, 
   Sparkles, 
   Loader2, 
+  AlertCircle, 
   TrendingDown, 
   Target,
   FileText,
   Stethoscope,
   Activity as Pulse,
-  UserCheck,
-  ArrowLeft
+  UserCheck
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { Trade } from '../types';
@@ -95,7 +98,7 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
         - Emotional Cost: $${stats.emotionalCost.toFixed(2)}
         - Disciplined P&L: $${stats.disciplinedPnl.toFixed(2)}
 
-        Provide a psychological profile structured exactly as follows:
+        Provide a psychological profile structured exactly as follows (use simple plain text with capital headers):
         
         DIAGNOSIS
         [Provide a one-sentence professional clinical diagnosis of their mental state]
@@ -106,7 +109,7 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
         COGNITIVE PRESCRIPTION
         [One specific actionable exercise to implement immediately]
 
-        Keep the tone professional, authoritative, and clinical. Max 130 words.`;
+        Keep the tone professional, authoritative, and clinical. Avoid using markdown code blocks or excessive symbols. Max 130 words.`;
 
         const response = await ai.models.generateContent({
           model: 'gemini-3-flash-preview',
@@ -151,7 +154,7 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
             return (
               <p key={i} className={`
                 ${isDiagnosis ? 'text-xl md:text-2xl font-light text-white tracking-tight leading-tight' : ''}
-                ${isImpact ? 'text-[13px] text-white/90 font-medium leading-relaxed bg-white/5 p-4 rounded-xl border border-white/5' : ''}
+                ${isImpact ? 'text-[13px] text-white/90 font-medium leading-relaxed bg-white/5 p-3 rounded-xl border border-white/5' : ''}
                 ${!isDiagnosis && !isImpact ? 'text-xs text-nexus-muted leading-relaxed opacity-80' : ''}
               `}>
                 {trimmed}
@@ -168,12 +171,13 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
     <div className="w-full h-full flex flex-col bg-transparent pb-32 md:pb-28 lg:pb-24 overflow-y-auto lg:overflow-hidden custom-scrollbar">
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 min-h-0 w-full">
         
-        {/* LEFT COLUMN - Wider analytics and roadmap */}
+        {/* LEFT COLUMN */}
         <div className="lg:col-span-7 flex flex-col gap-4 md:gap-6 min-h-0">
           
-          {/* Top Card: Behavioral DNA (Financial Impact) */}
+          {/* Top Card: Behavioral DNA */}
           <div className="h-auto md:h-80 bg-[#111111] rounded-[2rem] p-6 border border-white/5 flex flex-col min-h-0 relative overflow-hidden shadow-2xl shrink-0">
             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+            
             <div className="flex justify-between items-start mb-6 z-10">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
@@ -184,10 +188,10 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
                   <p className="text-nexus-muted text-[10px] uppercase tracking-widest mt-0.5">Behavioral Impact metrics</p>
                 </div>
               </div>
-              <button onClick={onBack} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-nexus-muted hover:text-white transition-colors"><ArrowLeft size={14}/></button>
             </div>
+
             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-2 z-10">
-              <div className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-5 relative group">
+              <div className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-5 relative group hover:border-red-500/30 transition-colors">
                  <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] text-nexus-muted uppercase tracking-widest font-bold">Emotional Cost</span>
                     <TrendingDown size={14} className="text-red-500 opacity-50" />
@@ -195,9 +199,9 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
                  <span className={`text-4xl font-light tracking-tighter leading-none ${stats.emotionalCost < 0 ? 'text-red-400' : 'text-white/60'}`}>
                     {formatCurrency(stats.emotionalCost)}
                  </span>
-                 <p className="text-[9px] text-nexus-muted mt-3 font-medium opacity-60 leading-tight">PnL leaked during negative psychological states.</p>
+                 <p className="text-[9px] text-nexus-muted mt-3 font-medium opacity-60 leading-tight">Total PnL leaked during negative psychological states.</p>
               </div>
-              <div className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-5 relative group">
+              <div className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-5 relative group hover:border-emerald-500/30 transition-colors">
                  <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] text-nexus-muted uppercase tracking-widest font-bold">Disciplined P&L</span>
                     <TrendingUp size={14} className="text-emerald-500 opacity-50" />
@@ -208,194 +212,205 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
                  <p className="text-[9px] text-nexus-muted mt-3 font-medium opacity-60 leading-tight">Net gains captured while strictly following execution rules.</p>
               </div>
             </div>
+
             <div className="mt-4 z-10">
                 <div className="flex justify-between items-end mb-2">
                     <span className="text-[9px] text-nexus-muted uppercase font-bold tracking-widest">Emotion Distribution</span>
-                    <span className="text-[9px] text-nexus-muted font-mono">{trades.length} Samples</span>
+                    <span className="text-[9px] text-nexus-muted font-mono">{trades.length} Observations</span>
                 </div>
                 <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-white/5">
                   {Object.entries(stats.breakdown).map(([name, data]) => {
                       const pct = (data.count / (trades.length || 1)) * 100;
                       if (pct === 0) return null;
-                      return <div key={name} className={`${data.color} h-full transition-all duration-700`} style={{ width: `${pct}%` }} />
+                      return <div key={name} className={`${data.color} h-full transition-all duration-700`} style={{ width: `${pct}%` }} title={`${name}: ${data.count}`} />
                   })}
                 </div>
             </div>
           </div>
 
-          {/* Bottom Card: Growth Roadmap (Moved from Right) */}
-          <div className="flex-1 bg-[#111111] rounded-[2rem] p-6 border border-white/5 flex flex-col min-h-0 shadow-2xl overflow-hidden relative">
-            <div className="flex items-start gap-3 mb-8">
-              <div className="w-10 h-10 rounded-full bg-[#A7F3D0]/10 flex items-center justify-center text-[#A7F3D0] border border-[#A7F3D0]/20">
-                <Activity size={20} />
-              </div>
-              <div>
-                 <h3 className="text-lg font-medium text-white tracking-tight">Growth Roadmap</h3>
-                 <p className="text-nexus-muted text-[10px] uppercase tracking-widest mt-0.5">Developmental Path to Mastery</p>
-              </div>
-            </div>
-
-            <div className="flex-1 flex flex-col md:flex-row gap-8 min-h-0">
-               <div className="w-32 flex flex-col items-center relative h-full shrink-0">
-                  <div className="absolute top-0 bottom-0 w-px bg-white/5 left-1"></div>
-                  <div className="flex flex-col gap-8 relative z-10 h-full justify-between items-start py-2">
-                    {[2023, 2024, 2025, 2027].map((year, i) => (
-                      <div key={year} className="flex items-start gap-3 relative">
-                        <div className={`w-3 h-3 mt-0.5 rounded-full border-2 border-[#111] ${i === 3 ? 'bg-white shadow-[0_0_12px_rgba(255,255,255,0.4)]' : 'bg-[#333]'}`}></div>
-                        <div className="flex flex-col">
-                          <span className={`text-[11px] font-bold ${i === 3 ? 'text-white' : 'text-nexus-muted'}`}>{year}</span>
-                          <p className="text-[8px] text-nexus-muted max-w-[80px] leading-tight mt-0.5 opacity-60">
-                             {i === 0 ? 'Strategy Foundation' : i === 1 ? 'Rule Adherence' : i === 2 ? 'Capital Scaling' : 'Market Mastery'}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+          {/* Bottom Card: Clinical Mindset Assessment */}
+          <div className="flex-1 bg-[#111111] rounded-[2rem] p-6 border border-white/5 flex flex-col min-h-0 shadow-xl overflow-hidden relative">
+            <div className="flex justify-between items-start mb-6 z-10 shrink-0">
+               <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]">
+                    <Brain size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-white tracking-tight">Clinical Assessment</h3>
+                    <p className="text-nexus-muted text-[10px] uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
+                      {isAnalyzing ? <Loader2 size={10} className="animate-spin text-purple-400" /> : <Sparkles size={10} className="text-purple-400" />}
+                      {isAnalyzing ? 'Synthesizing Neural Patterns' : 'Diagnosis Complete'}
+                    </p>
                   </div>
                </div>
+               {/* Arrows removed from here as per request */}
+            </div>
 
-               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 min-h-0">
-                  <div className="bg-[#A7F3D0] rounded-[2rem] p-6 relative overflow-hidden flex flex-col justify-between group shadow-lg">
-                    <ArrowUpRight size={16} className="absolute top-6 right-6 text-black opacity-30" />
-                    <div>
-                      <span className="text-[10px] font-bold text-black/60 uppercase tracking-widest">Regulatory Status</span>
-                      <span className="text-3xl font-bold text-black mt-2 block leading-none">{stats.score}% Accuracy</span>
-                    </div>
-                    <div>
-                       <span className="text-[9px] font-bold text-black/40 uppercase">Target Consistency: 95%</span>
-                       <div className="w-full h-2 bg-black/10 rounded-full mt-2 overflow-hidden">
-                          <div className="h-full bg-black/30 transition-all duration-1000" style={{ width: `${stats.score}%` }}></div>
-                       </div>
-                    </div>
+            <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 z-10">
+               {/* Left: AI Clinical Report */}
+               <div className="flex-1 bg-gradient-to-b from-[#0a0a0a] to-[#070707] rounded-3xl p-6 md:p-8 border border-white/5 overflow-y-auto custom-scrollbar shadow-inner relative group">
+                  <div className="flex items-center gap-2 mb-8">
+                      <FileText size={14} className="text-purple-400" />
+                      <span className="text-[10px] text-white uppercase tracking-widest font-bold">Psychological Diagnosis</span>
+                      <div className="ml-auto px-2 py-0.5 bg-purple-500/10 rounded-md border border-purple-500/20 text-[8px] text-purple-400 font-bold uppercase tracking-widest">Confidential</div>
                   </div>
+                  {isAnalyzing && !aiAnalysis ? (
+                    <div className="flex flex-col gap-6 mt-4">
+                      <div className="h-4 w-3/4 bg-white/5 rounded animate-pulse"></div>
+                      <div className="h-3 w-1/2 bg-white/5 rounded animate-pulse"></div>
+                      <div className="h-3 w-2/3 bg-white/5 rounded animate-pulse"></div>
+                      <div className="h-3 w-4/5 bg-white/5 rounded animate-pulse"></div>
+                    </div>
+                  ) : (
+                    <div className="selection:bg-purple-500/30">
+                        {aiAnalysis ? renderFormattedReport(aiAnalysis) : (
+                          <div className="flex flex-col items-center justify-center h-full text-center py-10 opacity-40">
+                             <UserCheck size={32} className="mb-4" />
+                             <p className="text-xs uppercase tracking-widest font-bold">Awaiting Data Streams</p>
+                             <p className="text-[10px] mt-2">Document your mental state in trade notes to activate diagnostic AI.</p>
+                          </div>
+                        )}
+                    </div>
+                  )}
+               </div>
 
-                  <div className="bg-[#C4B5FD] rounded-[2rem] p-6 relative overflow-hidden flex flex-col justify-between group shadow-lg">
-                    <ArrowUpRight size={16} className="absolute top-6 right-6 text-black opacity-30" />
-                    <div>
-                      <span className="text-[10px] font-bold text-black/60 uppercase tracking-widest">Risk Tolerance</span>
-                      <div className="flex items-center gap-2 mt-2">
-                          <Target size={18} className="text-black/40" />
-                          <span className="text-3xl font-bold text-black leading-none">Optimal</span>
+               {/* Right: Neural Stability Hub (Redesigned & Smaller) */}
+               <div className="w-full md:w-56 shrink-0 flex flex-col items-center justify-start pt-12">
+                  <div className="flex items-center gap-2 mb-8">
+                      <Pulse size={12} className="text-purple-400 opacity-50" />
+                      <span className="text-[10px] text-nexus-muted uppercase tracking-widest font-bold">Neural Stability</span>
+                  </div>
+                  
+                  <div className="relative w-36 aspect-square flex items-center justify-center group">
+                      <div className="absolute inset-4 rounded-full bg-emerald-500/5 blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
+                      
+                      <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_15px_rgba(167,243,208,0.1)]" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" strokeDasharray="2 2" />
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#18181b" strokeWidth="8" />
+                        <circle 
+                            cx="50" cy="50" r="40" 
+                            fill="none" 
+                            stroke="#A7F3D0" 
+                            strokeWidth="8" 
+                            strokeLinecap="round" 
+                            strokeDasharray={`${(stats.score / 100) * 251.32} 251.32`} 
+                            className="transition-all duration-1000 ease-out"
+                        />
+                      </svg>
+                      
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-3xl font-light text-white tracking-tighter leading-none">{stats.score}%</span>
+                        <span className="text-[7px] text-nexus-muted uppercase font-bold tracking-widest mt-1">Alignment</span>
                       </div>
-                    </div>
-                    <div className="h-16 w-full mt-auto">
-                        <svg viewBox="0 0 100 40" className="w-full h-full stroke-black/20 fill-none">
-                          <path d="M0,35 Q25,30 50,15 T100,5" strokeWidth="4" strokeLinecap="round" />
-                          <circle cx="85" cy="10" r="3" fill="black/40" />
-                        </svg>
-                    </div>
+                  </div>
+                  
+                  <div className="mt-8 w-full flex flex-col items-center gap-2">
+                     <div className={`px-4 py-1 rounded-full border bg-white/5 flex items-center gap-2 transition-colors ${
+                         stats.score > 70 ? 'border-emerald-500/20 text-emerald-400' : stats.score > 40 ? 'border-yellow-500/20 text-yellow-400' : 'border-red-500/20 text-red-400'
+                     }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                            stats.score > 70 ? 'bg-emerald-400' : stats.score > 40 ? 'bg-yellow-400' : 'bg-red-400'
+                        }`} />
+                        <span className="text-[9px] uppercase font-bold tracking-widest">
+                           {stats.score > 70 ? 'Stable' : stats.score > 40 ? 'Variable' : 'Degraded'}
+                        </span>
+                     </div>
                   </div>
                </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN - Clinical Diagnostic Suite */}
+        {/* RIGHT COLUMN */}
         <div className="lg:col-span-5 flex flex-col gap-4 md:gap-6 min-h-0">
           
-          {/* Top: Behavioral Log */}
           <div className="h-32 bg-[#111111] rounded-[2rem] p-5 border border-white/5 flex flex-col justify-center shrink-0 shadow-lg">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center text-white border border-white/10">
-                <History size={18} />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-white tracking-tight">Behavioral Log</h3>
-                <p className="text-nexus-muted text-[8px] uppercase tracking-widest font-bold">State detection stream</p>
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center text-white border border-white/10 shadow-inner">
+                  <History size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-white tracking-tight">Behavioral Log</h3>
+                  <p className="text-nexus-muted text-[8px] uppercase tracking-widest font-bold">Real-time state detection</p>
+                </div>
               </div>
             </div>
-            <div className="flex flex-col gap-1.5 overflow-hidden">
-                {trades.slice(-2).reverse().map((t, i) => (
-                    <div key={i} className="bg-[#1a1a1a] rounded-xl p-2.5 flex items-center gap-3 border border-white/5">
-                        <Zap size={10} className={t.pnl >= 0 ? "text-emerald-400" : "text-red-400"} fill="currentColor" />
-                        <span className="text-[10px] font-mono text-white/90 truncate">{t.pair}: <span className="text-nexus-muted italic font-sans">{t.notes?.slice(0, 30) || 'Missing entry'}</span></span>
+            <div className="flex flex-col gap-1.5 overflow-hidden mt-1">
+                {trades.length > 0 ? trades.slice(-2).reverse().map((t, i) => (
+                    <div key={i} className="bg-[#1a1a1a] rounded-xl p-2.5 flex justify-between items-center border border-white/5 group hover:border-white/10 transition-colors">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <Zap size={10} className={t.pnl >= 0 ? "text-emerald-400" : "text-red-400"} fill="currentColor" />
+                            <span className="text-[10px] font-mono text-white/90 truncate">{t.pair}: <span className="text-nexus-muted italic font-sans">{t.notes?.slice(0, 30) || 'Observation missing'}...</span></span>
+                        </div>
                     </div>
-                ))}
+                )) : (
+                    <div className="text-[9px] text-nexus-muted italic text-center py-2">Sensors idle. No recent activity.</div>
+                )}
             </div>
           </div>
 
-          {/* Bottom: Clinical Diagnostic Hub (The Focus Area) */}
-          <div className="flex-1 bg-[#111111] rounded-[2rem] p-6 border border-white/5 flex flex-col min-h-0 shadow-2xl relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 rounded-full blur-[100px] pointer-events-none"></div>
-             
-             <div className="flex items-center gap-3 mb-6 z-10 shrink-0">
-                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]">
-                  <Brain size={20} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-white tracking-tight">Clinical Diagnosis</h3>
-                  <p className="text-nexus-muted text-[10px] uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
-                    {isAnalyzing ? <Loader2 size={10} className="animate-spin text-purple-400" /> : <Sparkles size={10} className="text-purple-400" />}
-                    {isAnalyzing ? 'Processing Diagnostics' : 'Assessment Finalized'}
-                  </p>
-                </div>
-             </div>
+          <div className="flex-1 bg-[#111111] rounded-[2rem] p-6 border border-white/5 flex flex-col min-h-0 shadow-2xl">
+            <div className="flex items-start gap-3 mb-6">
+              <div className="w-9 h-9 rounded-full bg-[#A7F3D0]/20 flex items-center justify-center text-[#A7F3D0]">
+                <Activity size={18} />
+              </div>
+              <h3 className="text-base font-medium text-white tracking-tight leading-tight">Growth<br/>roadmap</h3>
+            </div>
 
-             {/* Diagnostic Report Area */}
-             <div className="flex-1 bg-gradient-to-b from-[#0a0a0a] to-[#070707] rounded-3xl p-6 border border-white/5 overflow-y-auto custom-scrollbar shadow-inner z-10 mb-6">
-                <div className="flex items-center justify-between mb-8 opacity-60">
-                    <div className="flex items-center gap-2">
-                        <FileText size={14} className="text-purple-400" />
-                        <span className="text-[10px] text-white uppercase tracking-widest font-bold tracking-[0.2em]">Patient Record</span>
+            <div className="flex gap-4 md:gap-6 h-full min-h-0">
+              <div className="flex flex-col items-center relative h-full w-24 shrink-0">
+                <div className="absolute top-0 bottom-0 w-px bg-white/5 left-1 tracking-widest"></div>
+                <div className="flex flex-col gap-6 relative z-10 py-1 h-full justify-between items-start">
+                  {[2023, 2024, 2025, 2027].map((year, i) => (
+                    <div key={year} className="flex items-start gap-3 relative">
+                      <div className={`w-2.5 h-2.5 mt-0.5 rounded-full border border-[#111] ${i === 3 ? 'bg-white shadow-[0_0_12px_rgba(255,255,255,0.4)]' : 'bg-[#333]'}`}></div>
+                      <div className="flex flex-col min-w-0">
+                        <span className={`text-[10px] font-bold ${i === 3 ? 'text-white' : 'text-nexus-muted'}`}>{year}</span>
+                        <p className="text-[7px] text-nexus-muted max-w-[60px] leading-tight mt-0.5 opacity-60">
+                           {i === 0 ? 'Strategy foundation' : i === 1 ? 'Consistent execution' : i === 2 ? 'Account scaling' : 'Market Mastery'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="px-2 py-0.5 bg-purple-500/10 rounded-md border border-purple-500/20 text-[8px] text-purple-400 font-bold uppercase tracking-widest">Level 4 Access</div>
+                  ))}
                 </div>
+              </div>
 
-                {isAnalyzing && !aiAnalysis ? (
-                    <div className="flex flex-col gap-8">
-                      <div className="h-6 w-3/4 bg-white/5 rounded animate-pulse"></div>
-                      <div className="h-4 w-full bg-white/5 rounded animate-pulse"></div>
-                      <div className="h-4 w-2/3 bg-white/5 rounded animate-pulse"></div>
-                    </div>
-                ) : (
-                    <div className="selection:bg-purple-500/30">
-                        {aiAnalysis ? renderFormattedReport(aiAnalysis) : (
-                          <div className="flex flex-col items-center justify-center h-full text-center py-10 opacity-40">
-                             <UserCheck size={32} className="mb-4" />
-                             <p className="text-xs uppercase tracking-widest font-bold">Awaiting Input</p>
-                             <p className="text-[10px] mt-2">Update trade logs to initiate diagnostic analysis.</p>
-                          </div>
-                        )}
-                    </div>
-                )}
-             </div>
-
-             {/* Neural Stability Footer (Integral Metric) */}
-             <div className="shrink-0 flex items-center justify-between bg-[#1a1a1a]/40 rounded-3xl border border-white/5 p-5 z-10">
-                <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                        <Pulse size={12} className="text-purple-400 opacity-50" />
-                        <span className="text-[10px] text-nexus-muted uppercase tracking-widest font-bold">Neural Stability</span>
-                    </div>
-                    <div className={`mt-2 px-3 py-1 rounded-full border bg-white/5 inline-flex items-center gap-2 ${
-                        stats.score > 70 ? 'border-emerald-500/20 text-emerald-400' : stats.score > 40 ? 'border-yellow-500/20 text-yellow-400' : 'border-red-500/20 text-red-400'
-                    }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
-                            stats.score > 70 ? 'bg-emerald-400' : stats.score > 40 ? 'bg-yellow-400' : 'bg-red-400'
-                        }`} />
-                        <span className="text-[10px] uppercase font-bold tracking-widest">
-                           {stats.score > 70 ? 'Stable' : stats.score > 40 ? 'Variant' : 'Alert'}
-                        </span>
-                    </div>
+              <div className="flex-1 flex flex-col gap-4 min-h-0">
+                <div className="bg-[#A7F3D0] rounded-[1.5rem] p-5 relative overflow-hidden flex-1 flex flex-col justify-between group cursor-default shadow-lg">
+                  <ArrowUpRight size={14} className="absolute top-4 right-4 text-black opacity-40 group-hover:opacity-100 transition-opacity" />
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-bold text-black/60 uppercase tracking-widest">Self-Regulation</span>
+                    <span className="text-2xl font-bold text-black mt-1 leading-none">
+                      {stats.score}% Accuracy
+                    </span>
+                  </div>
+                  <div className="mt-auto">
+                     <span className="text-[9px] font-bold text-black/40 uppercase">Target Flow: 95%</span>
+                     <div className="w-full h-2 bg-black/10 rounded-full mt-2 overflow-hidden">
+                        <div className="h-full bg-black/30" style={{ width: `${stats.score}%` }}></div>
+                     </div>
+                  </div>
                 </div>
 
-                <div className="relative w-24 h-24 flex items-center justify-center">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                      <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="6" />
-                      <circle 
-                          cx="50" cy="50" r="42" 
-                          fill="none" 
-                          stroke="#A7F3D0" 
-                          strokeWidth="6" 
-                          strokeLinecap="round" 
-                          strokeDasharray={`${(stats.score / 100) * 263.89} 263.89`} 
-                          className="transition-all duration-1000 ease-out drop-shadow-[0_0_8px_rgba(167,243,208,0.3)]"
-                      />
+                <div className="bg-[#C4B5FD] rounded-[1.5rem] p-5 relative overflow-hidden flex-1 flex flex-col justify-between group cursor-default shadow-lg">
+                  <ArrowUpRight size={14} className="absolute top-4 right-4 text-black opacity-40 group-hover:opacity-100 transition-opacity" />
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-bold text-black/60 uppercase tracking-widest">Risk Tolerance</span>
+                    <div className="flex items-center gap-2 mt-1">
+                        <Target size={14} className="text-black/40" />
+                        <span className="text-2xl font-bold text-black leading-none">Optimal</span>
+                    </div>
+                  </div>
+                  <div className="mt-auto h-12 w-full">
+                    <svg viewBox="0 0 100 40" className="w-full h-full stroke-black/20 fill-none">
+                      <path d="M0,35 Q25,30 50,15 T100,5" strokeWidth="4" strokeLinecap="round" />
+                      <circle cx="85" cy="10" r="3" fill="black/40" />
                     </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-xl font-light text-white tracking-tighter leading-none">{stats.score}%</span>
-                    </div>
+                  </div>
                 </div>
-             </div>
+              </div>
+            </div>
           </div>
         </div>
 
