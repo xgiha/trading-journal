@@ -274,14 +274,13 @@ const App: React.FC = () => {
   const handlePsychologyClick = () => { setCurrentView(currentView === 'psychology' ? 'dashboard' : 'psychology'); };
 
   const activeIndex = TABS.findIndex(t => t.id === activeTab);
-  const xOffset = activeIndex * 100;
 
   return (
     <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
-      {/* Container widened sideways significantly more */}
-      <div className="w-[99%] max-w-[2500px] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 transition-all duration-500">
+      {/* Container widened significantly to use full screen width */}
+      <div className="w-[99vw] max-w-full h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 transition-all duration-500">
         
         <div className="relative flex flex-col md:flex-row items-center justify-center mb-8 shrink-0 z-20 w-full min-h-[50px] gap-4 md:gap-0">
            <div className="md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2 text-center md:text-left">
@@ -339,10 +338,10 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            /* Reorganized grid with gutters */
-            className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 lg:gap-10 z-10 pb-4 lg:pb-0"
+            /* Reorganized grid with 12 cols: 2 (Left) + 1 (Empty) + 6 (Mid) + 1 (Empty) + 2 (Right) */
+            className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 lg:gap-8 z-10 pb-4 lg:pb-0"
         >
-          {/* LEFT COLUMN */}
+          {/* LEFT COLUMN (Cols 1-2) */}
           <div className="col-span-1 md:col-span-1 lg:col-span-2 flex flex-col gap-4 h-auto lg:h-full min-h-0 order-2 lg:order-1">
             <div className="liquid-card rounded-3xl p-6 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
               <div className="absolute top-0 right-0 w-32 h-32 bg-nexus-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
@@ -376,8 +375,15 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* MIDDLE COLUMN - Calendar */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-6 lg:col-start-4 relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-2 pb-24 lg:pb-20">
+          {/* EMPTY CARD LEFT (Col 3) */}
+          <div className="hidden lg:flex lg:col-span-1 flex-col gap-4">
+            <div className="liquid-card rounded-3xl p-6 flex-1 border border-white/5 opacity-40 flex items-center justify-center">
+               <div className="w-1.5 h-1.5 rounded-full bg-white/10"></div>
+            </div>
+          </div>
+
+          {/* MIDDLE COLUMN (Cols 4-9) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-6 relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-2 pb-24 lg:pb-20">
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
@@ -398,8 +404,15 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT COLUMN */}
-          <div className="col-span-1 md:col-span-1 lg:col-span-2 lg:col-start-11 flex flex-col gap-4 h-auto lg:h-full min-h-0 order-3 lg:order-3">
+          {/* EMPTY CARD RIGHT (Col 10) */}
+          <div className="hidden lg:flex lg:col-span-1 flex-col gap-4">
+             <div className="liquid-card rounded-3xl p-6 flex-1 border border-white/5 opacity-40 flex items-center justify-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-white/10"></div>
+             </div>
+          </div>
+
+          {/* RIGHT COLUMN (Cols 11-12) */}
+          <div className="col-span-1 md:col-span-1 lg:col-span-2 flex flex-col gap-4 h-auto lg:h-full min-h-0 order-3 lg:order-3">
             <div className="liquid-card rounded-3xl p-6 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10 mb-2">
                  <div className="w-full">
