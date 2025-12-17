@@ -280,7 +280,8 @@ const App: React.FC = () => {
     <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
-      <div className="w-full max-w-[1500px] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-8 transition-all duration-500">
+      {/* Container widened sideways */}
+      <div className="w-[98%] max-w-[1850px] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-8 transition-all duration-500">
         
         <div className="relative flex flex-col md:flex-row items-center justify-center mb-6 shrink-0 z-20 w-full min-h-[50px] gap-4 md:gap-0">
            <div className="md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2 text-center md:text-left">
@@ -338,9 +339,11 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 z-10 pb-4 lg:pb-0"
+            /* Reorganized grid to include empty gutters between side columns and middle */
+            className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 lg:gap-10 z-10 pb-4 lg:pb-0"
         >
-          <div className="col-span-1 md:col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-2 lg:order-1">
+          {/* LEFT COLUMN - Shrunk to 2 cols to make space */}
+          <div className="col-span-1 md:col-span-1 lg:col-span-2 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-2 lg:order-1">
             <div className="liquid-card rounded-3xl p-5 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
               <div className="absolute top-0 right-0 w-32 h-32 bg-nexus-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
               <div className="relative z-10 w-full mb-auto">
@@ -349,22 +352,22 @@ const App: React.FC = () => {
                 </div>
               </div>
               <div className="relative z-10 flex items-end justify-between gap-1 md:gap-2 mt-4">
-                 <div className="w-20 h-16 md:w-28 md:h-20 xl:w-40 xl:h-28 relative shrink-0 -ml-2 md:-ml-4 translate-y-2 md:translate-y-3 mix-blend-screen opacity-100 flex items-end transition-all duration-300">
+                 <div className="w-16 h-12 md:w-24 md:h-18 xl:w-32 xl:h-24 relative shrink-0 -ml-2 md:-ml-3 translate-y-2 md:translate-y-3 mix-blend-screen opacity-100 flex items-end transition-all duration-300">
                       <AsciiPyramid fillLevels={rankingStats} />
                  </div>
                  <div className="flex flex-col items-end gap-1 md:gap-2 flex-1 min-w-0">
-                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
+                     <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded border ${
                          globalStats.growthPct >= 0 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'
                      }`}>
-                         {globalStats.growthPct >= 0 ? '+' : ''}{globalStats.growthPct.toFixed(2)}% Growth
+                         {globalStats.growthPct >= 0 ? '+' : ''}{globalStats.growthPct.toFixed(1)}%
                      </span>
-                     <span className={`text-2xl sm:text-3xl xl:text-5xl font-light tracking-tighter glow-text whitespace-nowrap transition-all duration-300 ${globalStats.totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
+                     <span className={`text-xl sm:text-2xl xl:text-3xl font-light tracking-tighter glow-text whitespace-nowrap transition-all duration-300 ${globalStats.totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
                         {formatCurrency(globalStats.totalPnl)}
                      </span>
                  </div>
               </div>
             </div>
-            <div className="liquid-card rounded-3xl p-5 w-full h-[320px] lg:h-[340px] shrink-0 flex flex-col group relative overflow-hidden">
+            <div className="liquid-card rounded-3xl p-5 w-full h-[300px] lg:h-[320px] shrink-0 flex flex-col group relative overflow-hidden">
                 <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors z-10 relative">Performance Metrics</span>
                 <div className="flex-1 w-full relative z-10 flex items-center justify-center">
                    <PerformanceRadar data={radarData} />
@@ -373,7 +376,8 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-span-1 md:col-span-2 lg:col-span-6 relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-2 pb-24 lg:pb-20">
+          {/* MIDDLE COLUMN - Shifted to start from col 4, leaving a gutter at col 3 */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-6 lg:col-start-4 relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-2 pb-24 lg:pb-20">
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
@@ -394,8 +398,9 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-span-1 md:col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-3 lg:order-3">
-            <div className="liquid-card rounded-3xl p-5 h-[320px] shrink-0 flex flex-col relative overflow-hidden group">
+          {/* RIGHT COLUMN - Shifted to end at 12, leaving a gutter at col 10 */}
+          <div className="col-span-1 md:col-span-1 lg:col-span-2 lg:col-start-11 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-3 lg:order-3">
+            <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10 mb-2">
                  <div className="w-full">
                     <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors">Performance</span>
@@ -480,13 +485,6 @@ const App: React.FC = () => {
                            <span className="text-[10px] text-nexus-muted">Worst Trade</span>
                         </div>
                         <span className="text-xs font-bold text-red-400">{formatCurrency(globalStats.worstTrade)}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                         <div className="flex items-center gap-2">
-                           <div className="p-1 rounded-full bg-blue-500/20 text-blue-500"><TrendingUp size={10} /></div>
-                           <span className="text-[10px] text-nexus-muted">Avg Trade</span>
-                        </div>
-                        <span className="text-xs font-bold text-white">{formatCurrency(globalStats.avgTradePnl)}</span>
                     </div>
                  </div>
             </div>
