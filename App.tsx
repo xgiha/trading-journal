@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   LayoutGrid, 
   BookOpen, 
@@ -35,24 +35,17 @@ const App: React.FC = () => {
   const [isMarketOpen, setIsMarketOpen] = useState(false);
   const [marketCountdown, setMarketCountdown] = useState<string>('');
   
-  // Navigation State
-  // 'dashboard' shows the main 3-column grid (which contains Dashboard/Journal inner tabs)
-  // 'psychology' shows the full-screen psychological profile
   const [currentView, setCurrentView] = useState<'dashboard' | 'psychology'>('dashboard');
-  const [activeTab, setActiveTab] = useState('dashboard'); // Inner tab for the dashboard view
+  const [activeTab, setActiveTab] = useState('dashboard');
   
-  // Trade State with Persistence
   const [trades, setTrades] = useState<Trade[]>(() => {
     try {
       const saved = localStorage.getItem('nexus_trades');
-      if (saved) {
-        return JSON.parse(saved);
-      }
+      if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error("Failed to load trades", e);
     }
     
-    // Fallback Mock Data
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -66,7 +59,6 @@ const App: React.FC = () => {
     ];
   });
 
-  // Helper to Sync to Cloud
   const syncToCloud = async (newTrades: Trade[]) => {
       try {
           await fetch('/api/trades', {
@@ -79,7 +71,6 @@ const App: React.FC = () => {
       }
   };
 
-  // Load from Cloud on Mount (Priority Source)
   useEffect(() => {
     const fetchCloudTrades = async () => {
         try {
@@ -98,14 +89,12 @@ const App: React.FC = () => {
     fetchCloudTrades();
   }, []);
 
-  // Save to LocalStorage whenever trades change
   useEffect(() => {
     localStorage.setItem('nexus_trades', JSON.stringify(trades));
   }, [trades]);
 
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   
-  // Helper to get local date string YYYY-MM-DD
   const getLocalDateString = () => {
       const now = new Date();
       const year = now.getFullYear();
@@ -114,13 +103,11 @@ const App: React.FC = () => {
       return `${year}-${month}-${day}`;
   };
 
-  // Initialize with local date
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
   const [selectedTrades, setSelectedTrades] = useState<Trade[]>([]);
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
-  
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   useEffect(() => {
@@ -128,8 +115,7 @@ const App: React.FC = () => {
       const now = new Date();
       setCurrentTime(now);
 
-      // CME Futures Logic (UTC based)
-      const day = now.getUTCDay(); // 0 = Sunday, 1 = Mon ... 5 = Fri, 6 = Sat
+      const day = now.getUTCDay();
       const hour = now.getUTCHours();
       let isOpen = true;
 
@@ -140,7 +126,6 @@ const App: React.FC = () => {
 
       setIsMarketOpen(isOpen);
 
-      // --- Countdown Logic ---
       let targetDate = new Date(now);
       if (isOpen) {
           targetDate.setUTCHours(22, 0, 0, 0);
@@ -172,7 +157,6 @@ const App: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Format Time for Colombo
   const colomboTime = currentTime.toLocaleTimeString('en-US', {
     timeZone: 'Asia/Colombo',
     hour: '2-digit',
@@ -215,323 +199,95 @@ const App: React.FC = () => {
     ));
   };
 
-
   const formatCurrency = (val: number) => {
     const sign = val < 0 ? '-' : '';
     const absVal = Math.abs(val);
     return `${sign}$${absVal.toLocaleString()}`;
   };
 
-  // Calculate Global Stats
   const globalStats = useMemo(() => {
-    let totalPnl = 0;
-    let maxPnl = -Infinity;
-    let minPnl = Infinity;
-    let totalDurationMinutes = 0;
-    let timedTradeCount = 0;
-    
-    // Holding Time Tracking
-    let minDuration = Infinity;
-    let maxDuration = 0;
-
-    // News/Normal split
-    let newsCount = 0;
-    let normalCount = 0;
-
-    if (trades.length === 0) {
-      return { 
-          totalPnl: 0, 
-          bestTrade: 0, 
-          worstTrade: 0, 
-          avgTime: '0m', 
-          growthPct: 0,
-          shortestHold: '0m',
-          longestHold: '0m',
-          avgHoldNum: 0,
-          shortestHoldNum: 0,
-          longestHoldNum: 0,
-          avgTradePnl: 0,
-          newsCount: 0,
-          normalCount: 0,
-          currentBalance: 50000
-      };
-    }
-
+    let totalPnl = 0, maxPnl = -Infinity, minPnl = Infinity, totalDurationMinutes = 0, timedTradeCount = 0, minDuration = Infinity, maxDuration = 0, newsCount = 0, normalCount = 0;
+    if (trades.length === 0) return { totalPnl: 0, bestTrade: 0, worstTrade: 0, avgTime: '0m', growthPct: 0, shortestHold: '0m', longestHold: '0m', avgHoldNum: 0, shortestHoldNum: 0, longestHoldNum: 0, avgTradePnl: 0, newsCount: 0, normalCount: 0, currentBalance: 50000 };
     trades.forEach(t => {
       totalPnl += t.pnl;
       if (t.pnl > maxPnl) maxPnl = t.pnl;
       if (t.pnl < minPnl) minPnl = t.pnl;
-
-      if (t.newsEvent) newsCount++;
-      else normalCount++;
-
-      // Ensure we are using the real trades from the journal
+      if (t.newsEvent) newsCount++; else normalCount++;
       if (t.exitTime && t.entryTime && t.entryTime !== '00:00:00' && t.exitTime !== '00:00:00') {
          const [h1, m1] = t.entryTime.split(':').map(Number);
          const [h2, m2] = t.exitTime.split(':').map(Number);
          let minutes = (h2 * 60 + m2) - (h1 * 60 + m1);
          if (minutes < 0) minutes += 24 * 60; 
-         if (minutes > 0 && minutes < 1440) {
-            totalDurationMinutes += minutes;
-            timedTradeCount++;
-            if (minutes < minDuration) minDuration = minutes;
-            if (minutes > maxDuration) maxDuration = minutes;
-         }
+         if (minutes > 0 && minutes < 1440) { totalDurationMinutes += minutes; timedTradeCount++; if (minutes < minDuration) minDuration = minutes; if (minutes > maxDuration) maxDuration = minutes; }
       }
     });
-
     const avgMinutes = timedTradeCount > 0 ? Math.floor(totalDurationMinutes / timedTradeCount) : 0;
-    
-    const formatDur = (m: number) => {
-        if (m === Infinity || m === 0) return '0m';
-        const h = Math.floor(m / 60);
-        const mins = m % 60;
-        if (h > 0) return `${h}h ${mins}m`;
-        return `${mins}m`;
-    };
-
+    const formatDur = (m: number) => { if (m === Infinity || m === 0) return '0m'; const h = Math.floor(m / 60); const mins = m % 60; if (h > 0) return `${h}h ${mins}m`; return `${mins}m`; };
     const initialBalance = 50000;
     const currentBalance = initialBalance + totalPnl;
     const growthPct = (totalPnl / initialBalance) * 100;
     const avgTradePnl = trades.length > 0 ? totalPnl / trades.length : 0;
-
-    return {
-      totalPnl,
-      bestTrade: maxPnl === -Infinity ? 0 : maxPnl,
-      worstTrade: minPnl === Infinity ? 0 : minPnl,
-      avgTime: formatDur(avgMinutes),
-      growthPct,
-      shortestHold: minDuration === Infinity ? '0m' : formatDur(minDuration),
-      longestHold: formatDur(maxDuration),
-      shortestHoldNum: minDuration === Infinity ? 0 : minDuration,
-      longestHoldNum: maxDuration,
-      avgHoldNum: avgMinutes,
-      avgTradePnl,
-      newsCount,
-      normalCount,
-      currentBalance
-    };
+    return { totalPnl, bestTrade: maxPnl === -Infinity ? 0 : maxPnl, worstTrade: minPnl === Infinity ? 0 : minPnl, avgTime: formatDur(avgMinutes), growthPct, shortestHold: minDuration === Infinity ? '0m' : formatDur(minDuration), longestHold: formatDur(maxDuration), shortestHoldNum: minDuration === Infinity ? 0 : minDuration, longestHoldNum: maxDuration, avgHoldNum: avgMinutes, avgTradePnl, newsCount, normalCount, currentBalance };
   }, [trades]);
 
   const performanceChartData = useMemo(() => {
     const dailyMap = new Map<string, { total: number; normal: number; news: number }>();
-    
-    trades.forEach(t => {
-      const entry = dailyMap.get(t.date) || { total: 0, normal: 0, news: 0 };
-      entry.total += t.pnl;
-      if (t.newsEvent) {
-        entry.news += t.pnl;
-      } else {
-        entry.normal += t.pnl;
-      }
-      dailyMap.set(t.date, entry);
-    });
-
+    trades.forEach(t => { const entry = dailyMap.get(t.date) || { total: 0, normal: 0, news: 0 }; entry.total += t.pnl; if (t.newsEvent) entry.news += t.pnl; else entry.normal += t.pnl; dailyMap.set(t.date, entry); });
     const sortedDates = Array.from(dailyMap.keys()).sort();
-
-    let runningTotal = 50000;
-    let runningNormal = 50000;
-    let runningNews = 50000;
-
-    const fullHistory = [
-       { date: 'Start', price: 50000, normal: 50000, news: 50000 }
-    ];
-
-    sortedDates.forEach(date => {
-        const stats = dailyMap.get(date)!;
-        runningTotal += stats.total;
-        runningNormal += stats.normal;
-        runningNews += stats.news;
-
-        fullHistory.push({
-            date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
-            price: runningTotal, 
-            normal: runningNormal, 
-            news: runningNews
-        });
-    });
+    let runningTotal = 50000, runningNormal = 50000, runningNews = 50000;
+    const fullHistory = [{ date: 'Start', price: 50000, normal: 50000, news: 50000 }];
+    sortedDates.forEach(date => { const stats = dailyMap.get(date)!; runningTotal += stats.total; runningNormal += stats.normal; runningNews += stats.news; fullHistory.push({ date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }), price: runningTotal, normal: runningNormal, news: runningNews }); });
     return fullHistory;
   }, [trades]);
 
   const monthlyStats = useMemo(() => {
-    const year = currentCalendarDate.getFullYear();
-    const month = currentCalendarDate.getMonth() + 1; 
-    const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
-    
-    const monthTrades = trades.filter(t => t.date.startsWith(monthPrefix));
-    
-    const totalPnl = monthTrades.reduce((sum, t) => sum + t.pnl, 0);
-    const count = monthTrades.length;
-    const wins = monthTrades.filter(t => t.pnl > 0).length;
-    const winRate = count > 0 ? (wins / count) * 100 : 0;
-
+    const year = currentCalendarDate.getFullYear(), month = currentCalendarDate.getMonth() + 1, monthPrefix = `${year}-${String(month).padStart(2, '0')}`, monthTrades = trades.filter(t => t.date.startsWith(monthPrefix));
+    const totalPnl = monthTrades.reduce((sum, t) => sum + t.pnl, 0), count = monthTrades.length, wins = monthTrades.filter(t => t.pnl > 0).length, winRate = count > 0 ? (wins / count) * 100 : 0;
     return { totalPnl, count, winRate };
   }, [trades, currentCalendarDate]);
 
   const rankingStats = useMemo(() => {
-    const year = currentCalendarDate.getFullYear();
-    const month = currentCalendarDate.getMonth() + 1;
-    const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
-    const monthTrades = trades.filter(t => t.date.startsWith(monthPrefix));
-    
+    const year = currentCalendarDate.getFullYear(), month = currentCalendarDate.getMonth() + 1, monthPrefix = `${year}-${String(month).padStart(2, '0')}`, monthTrades = trades.filter(t => t.date.startsWith(monthPrefix));
     const counts = { es: 0, nq: 0, gc: 0, other: 0 };
-    
-    monthTrades.forEach(t => {
-       const p = t.pair.toUpperCase();
-       if (p.includes('ES') || p.includes('S&P')) counts.es++;
-       else if (p.includes('NQ') || p.includes('NAS')) counts.nq++;
-       else if (p.includes('GC') || p.includes('GOLD') || p.includes('XAU')) counts.gc++;
-       else counts.other++;
-    });
-
+    monthTrades.forEach(t => { const p = t.pair.toUpperCase(); if (p.includes('ES') || p.includes('S&P')) counts.es++; else if (p.includes('NQ') || p.includes('NAS')) counts.nq++; else if (p.includes('GC') || p.includes('GOLD') || p.includes('XAU')) counts.gc++; else counts.other++; });
     const TARGET = 20;
-
-    return {
-      es: Math.min(counts.es / TARGET, 1),
-      nq: Math.min(counts.nq / TARGET, 1),
-      gc: Math.min(counts.gc / TARGET, 1),
-      other: Math.min(counts.other / TARGET, 1)
-    };
+    return { es: Math.min(counts.es / TARGET, 1), nq: Math.min(counts.nq / TARGET, 1), gc: Math.min(counts.gc / TARGET, 1), other: Math.min(counts.other / TARGET, 1) };
   }, [trades, currentCalendarDate]);
 
   const radarData = useMemo(() => {
     const totalTrades = trades.length;
-    if (totalTrades === 0) {
-        return [
-            { subject: 'Win Rate', A: 0, fullMark: 100 },
-            { subject: 'Profit Factor', A: 0, fullMark: 100 },
-            { subject: 'Consistency', A: 0, fullMark: 100 },
-            { subject: 'Risk/Reward', A: 0, fullMark: 100 },
-            { subject: 'Discipline', A: 0, fullMark: 100 },
-        ];
-    }
-    const wins = trades.filter(t => t.pnl > 0);
-    const losses = trades.filter(t => t.pnl < 0);
-    const winRate = (wins.length / totalTrades) * 100;
-
-    const grossProfit = wins.reduce((sum, t) => sum + t.pnl, 0);
-    const grossLoss = Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0));
-    const profitFactor = grossLoss === 0 ? (grossProfit > 0 ? 3 : 0) : grossProfit / grossLoss;
-    const pfScore = Math.min((profitFactor / 3) * 100, 100);
-
-    const consistencyScore = Math.min((totalTrades / 50) * 100, 100);
-
-    const avgWin = wins.length > 0 ? grossProfit / wins.length : 0;
-    const avgLoss = losses.length > 0 ? grossLoss / losses.length : 1; 
-    const rrRatio = avgLoss === 0 ? 0 : avgWin / avgLoss;
-    const rrScore = Math.min((rrRatio / 2) * 100, 100);
-
-    let disciplineScore = 100;
-    losses.forEach(l => {
-        if (Math.abs(l.pnl) > avgLoss * 2) disciplineScore -= 10;
-    });
+    if (totalTrades === 0) return [ { subject: 'Win Rate', A: 0, fullMark: 100 }, { subject: 'Profit Factor', A: 0, fullMark: 100 }, { subject: 'Consistency', A: 0, fullMark: 100 }, { subject: 'Risk/Reward', A: 0, fullMark: 100 }, { subject: 'Discipline', A: 0, fullMark: 100 } ];
+    const wins = trades.filter(t => t.pnl > 0), losses = trades.filter(t => t.pnl < 0), winRate = (wins.length / totalTrades) * 100, grossProfit = wins.reduce((sum, t) => sum + t.pnl, 0), grossLoss = Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0)), profitFactor = grossLoss === 0 ? (grossProfit > 0 ? 3 : 0) : grossProfit / grossLoss, pfScore = Math.min((profitFactor / 3) * 100, 100), consistencyScore = Math.min((totalTrades / 50) * 100, 100), avgWin = wins.length > 0 ? grossProfit / wins.length : 0, avgLoss = losses.length > 0 ? grossLoss / losses.length : 1, rrRatio = avgLoss === 0 ? 0 : avgWin / avgLoss, rrScore = Math.min((rrRatio / 2) * 100, 100);
+    let disciplineScore = 100; losses.forEach(l => { if (Math.abs(l.pnl) > avgLoss * 2) disciplineScore -= 10; });
     disciplineScore = Math.max(0, disciplineScore);
-
-    return [
-        { subject: 'Win Rate', A: winRate, fullMark: 100 },
-        { subject: 'Profit Factor', A: pfScore, fullMark: 100 },
-        { subject: 'Consistency', A: consistencyScore, fullMark: 100 },
-        { subject: 'Risk/Reward', A: rrScore, fullMark: 100 },
-        { subject: 'Discipline', A: disciplineScore, fullMark: 100 },
-    ];
+    return [ { subject: 'Win Rate', A: winRate, fullMark: 100 }, { subject: 'Profit Factor', A: pfScore, fullMark: 100 }, { subject: 'Consistency', A: consistencyScore, fullMark: 100 }, { subject: 'Risk/Reward', A: rrScore, fullMark: 100 }, { subject: 'Discipline', A: disciplineScore, fullMark: 100 } ];
   }, [trades]);
 
+  const handleAddTradeClick = (date: string) => { setSelectedDate(date); setEditingTrade(undefined); setIsAddModalOpen(true); };
+  const handleAddTradeBtnClick = () => { setSelectedDate(getLocalDateString()); setEditingTrade(undefined); setIsAddModalOpen(true); };
+  const handleEditTrade = (trade: Trade) => { setSelectedDate(trade.date); setEditingTrade(trade); setIsAddModalOpen(true); };
+  const handleDeleteTrade = (tradeId: string) => { let updatedTrades: Trade[] = []; setTrades(prev => { updatedTrades = prev.filter(t => t.id !== tradeId); return updatedTrades; }); syncToCloud(updatedTrades); };
+  const handleViewDayClick = (date: string) => { setSelectedDate(date); setSelectedTrades(trades.filter(t => t.date === date)); setIsDetailModalOpen(true); };
+  const handleViewWeekClick = (weekTrades: Trade[], weekLabel: string) => { setSelectedDate(weekLabel); setSelectedTrades(weekTrades); setIsDetailModalOpen(true); };
+  const handleAddOrUpdateTrade = (tradeData: Trade) => { const currentTrades = trades; let newTrades: Trade[] = []; const existingIndex = currentTrades.findIndex(t => t.id === tradeData.id); if (existingIndex >= 0) { newTrades = [...currentTrades]; newTrades[existingIndex] = tradeData; } else { newTrades = [...currentTrades, tradeData]; } setTrades(newTrades); syncToCloud(newTrades); if (selectedDate === tradeData.date) { setSelectedTrades(prev => { const existingIndex = prev.findIndex(t => t.id === tradeData.id); if (existingIndex >= 0) { const newSelected = [...prev]; newSelected[existingIndex] = tradeData; return newSelected; } else { return [...prev, tradeData]; } }); } };
+  const handleTabChange = (tabId: string) => { setCurrentView('dashboard'); setActiveTab(tabId); };
+  const handlePsychologyClick = () => { setCurrentView(currentView === 'psychology' ? 'dashboard' : 'psychology'); };
 
-  const handleAddTradeClick = (date: string) => {
-    setSelectedDate(date);
-    setEditingTrade(undefined); // Reset edit mode
-    setIsAddModalOpen(true);
-  };
-
-  const handleAddTradeBtnClick = () => {
-    const dateStr = getLocalDateString();
-    setSelectedDate(dateStr);
-    setEditingTrade(undefined); // Reset edit mode
-    setIsAddModalOpen(true);
-  }
-
-  const handleEditTrade = (trade: Trade) => {
-    setSelectedDate(trade.date);
-    setEditingTrade(trade);
-    setIsAddModalOpen(true);
-  }
-
-  const handleDeleteTrade = (tradeId: string) => {
-    let updatedTrades: Trade[] = [];
-    setTrades(prev => {
-        updatedTrades = prev.filter(t => t.id !== tradeId);
-        return updatedTrades;
-    });
-    syncToCloud(updatedTrades);
-  }
-
-  const handleViewDayClick = (date: string) => {
-    setSelectedDate(date);
-    setSelectedTrades(trades.filter(t => t.date === date));
-    setIsDetailModalOpen(true);
-  };
-
-  const handleViewWeekClick = (weekTrades: Trade[], weekLabel: string) => {
-    setSelectedDate(weekLabel);
-    setSelectedTrades(weekTrades);
-    setIsDetailModalOpen(true);
-  }
-
-  const handleAddOrUpdateTrade = (tradeData: Trade) => {
-    const currentTrades = trades;
-    let newTrades: Trade[] = [];
-    
-    const existingIndex = currentTrades.findIndex(t => t.id === tradeData.id);
-    if (existingIndex >= 0) {
-        newTrades = [...currentTrades];
-        newTrades[existingIndex] = tradeData;
-    } else {
-        newTrades = [...currentTrades, tradeData];
-    }
-    
-    setTrades(newTrades);
-    syncToCloud(newTrades);
-
-    if (selectedDate === tradeData.date) {
-        setSelectedTrades(prev => {
-            const existingIndex = prev.findIndex(t => t.id === tradeData.id);
-            if (existingIndex >= 0) {
-                const newSelected = [...prev];
-                newSelected[existingIndex] = tradeData;
-                return newSelected;
-            } else {
-                return [...prev, tradeData];
-            }
-        });
-    }
-  };
-
-  // Switch tabs and view
-  const handleTabChange = (tabId: string) => {
-     setCurrentView('dashboard');
-     setActiveTab(tabId);
-  }
-
-  const handlePsychologyClick = () => {
-     setCurrentView('psychology');
-  }
+  const activeIndex = TABS.findIndex(t => t.id === activeTab);
+  const xOffset = activeIndex * 100;
 
   return (
     <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
-      {/* Main Container - Responsive Sizing */}
       <div className="w-full max-w-[1500px] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-8 transition-all duration-500">
         
-        {/* ================= HEADER AREA ================= */}
         <div className="relative flex flex-col md:flex-row items-center justify-center mb-6 shrink-0 z-20 w-full min-h-[50px] gap-4 md:gap-0">
-           {/* Welcome Text */}
            <div className="md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2 text-center md:text-left">
              <h2 className="text-white font-bold text-xl md:text-xl tracking-tight">Welcome, Gehan</h2>
              <p className="text-xs text-nexus-muted">Good to see you again.</p>
            </div>
            
-           {/* Market Status Card */}
            <div className="group relative">
              <div className="liquid-card rounded-full pl-3 pr-5 py-2 flex items-center gap-4 cursor-default transition-transform active:scale-95">
                 <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md">
@@ -547,7 +303,6 @@ const App: React.FC = () => {
                 </div>
               </div>
               
-              {/* Detailed Tooltip */}
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto z-50 w-[300px]">
                   <div className="bg-[#18181b] border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-3 text-left">
                      <div className="flex items-center gap-2 text-nexus-muted">
@@ -555,10 +310,7 @@ const App: React.FC = () => {
                         <span className="font-bold text-sm text-[#e4e4e7]">{isMarketOpen ? 'Market open' : 'Market closed'}</span>
                      </div>
                      <p className="text-sm text-[#a1a1aa] leading-snug">
-                       {isMarketOpen 
-                         ? <span>Market is active. It'll close in <strong className="text-white">{verboseCountdown}</strong>.</span>
-                         : <span>Time for a walk — this market is closed. It'll open in <strong className="text-white">{verboseCountdown}</strong>.</span>
-                       }
+                       {isMarketOpen ? <span>Market is active. It'll close in <strong className="text-white">{verboseCountdown}</strong>.</span> : <span>Time for a walk — this market is closed. It'll open in <strong className="text-white">{verboseCountdown}</strong>.</span>}
                      </p>
                      <div className="mt-2">
                         <div className="flex justify-between text-[10px] text-[#52525b] mb-1 font-bold tracking-wider">
@@ -578,11 +330,8 @@ const App: React.FC = () => {
            </div>
         </div>
 
-        {/* ================= VIEW SWITCHING CONTENT ================= */}
         <AnimatePresence mode="wait">
-        
         {currentView === 'dashboard' ? (
-        
         <motion.div 
             key="dashboard-grid"
             initial={{ opacity: 0, scale: 0.98 }}
@@ -591,11 +340,7 @@ const App: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 z-10 pb-4 lg:pb-0"
         >
-          
-          {/* ================= LEFT COLUMN (Stats) ================= */}
           <div className="col-span-1 md:col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-2 lg:order-1">
-            
-            {/* Total P&L Card */}
             <div className="liquid-card rounded-3xl p-5 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
               <div className="absolute top-0 right-0 w-32 h-32 bg-nexus-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
               <div className="relative z-10 w-full mb-auto">
@@ -609,9 +354,7 @@ const App: React.FC = () => {
                  </div>
                  <div className="flex flex-col items-end gap-1 md:gap-2 flex-1 min-w-0">
                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
-                         globalStats.growthPct >= 0 
-                         ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
-                         : 'text-red-400 bg-red-500/10 border-red-500/20'
+                         globalStats.growthPct >= 0 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'
                      }`}>
                          {globalStats.growthPct >= 0 ? '+' : ''}{globalStats.growthPct.toFixed(2)}% Growth
                      </span>
@@ -621,8 +364,6 @@ const App: React.FC = () => {
                  </div>
               </div>
             </div>
-
-            {/* Performance Radar Chart - Fixed Height, doesn't grow */}
             <div className="liquid-card rounded-3xl p-5 w-full h-[320px] lg:h-[340px] shrink-0 flex flex-col group relative overflow-hidden">
                 <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors z-10 relative">Performance Metrics</span>
                 <div className="flex-1 w-full relative z-10 flex items-center justify-center">
@@ -630,16 +371,9 @@ const App: React.FC = () => {
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-nexus-accent/5 to-transparent opacity-50 pointer-events-none"></div>
             </div>
-            
-            {/* Empty space placeholder - No Card */}
-            <div className="hidden lg:block flex-1 min-h-[50px]"></div>
-
           </div>
 
-
-          {/* ================= CENTER COLUMN (CALENDAR / JOURNAL) ================= */}
           <div className="col-span-1 md:col-span-2 lg:col-span-6 relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-2 pb-24 lg:pb-20">
-            
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
@@ -651,35 +385,17 @@ const App: React.FC = () => {
                    className="absolute inset-0 w-full h-full flex flex-col"
                  >
                    {activeTab === 'dashboard' ? (
-                     <TradingCalendar 
-                       trades={trades}
-                       currentDate={currentCalendarDate}
-                       onMonthChange={setCurrentCalendarDate}
-                       onAddTradeClick={handleAddTradeClick}
-                       onViewDayClick={handleViewDayClick}
-                       onViewWeekClick={handleViewWeekClick}
-                       monthlyStats={monthlyStats}
-                     />
+                     <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} monthlyStats={monthlyStats} />
                    ) : (
-                     <JournalTable 
-                       trades={trades} 
-                       onEdit={handleEditTrade}
-                       onDelete={handleDeleteTrade}
-                       onViewDay={handleViewDayClick}
-                     />
+                     <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} />
                    )}
                  </motion.div>
                </AnimatePresence>
             </div>
-            {/* Floating Menu is now outside this grid */}
           </div>
 
-
-          {/* ================= RIGHT COLUMN ================= */}
           <div className="col-span-1 md:col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-3 lg:order-3">
-            
-            {/* 1. Performance Chart - Modified Header */}
-            <div className="liquid-card rounded-3xl p-5 h-[320px] lg:h-auto lg:flex-1 lg:min-h-0 flex flex-col relative overflow-hidden group">
+            <div className="liquid-card rounded-3xl p-5 h-[320px] shrink-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10 mb-2">
                  <div className="w-full">
                     <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors">Performance</span>
@@ -703,8 +419,7 @@ const App: React.FC = () => {
                  <EnergyChart data={performanceChartData} />
               </div>
             </div>
-
-            {/* 2. Trade Holding Time - Fixed Height */}
+            
             <div className="liquid-card rounded-3xl p-5 h-[160px] shrink-0 flex flex-col relative overflow-hidden group">
                 <div className="flex justify-between items-start shrink-0 z-10">
                     <div>
@@ -716,94 +431,66 @@ const App: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex-1 w-full relative min-h-0 mt-3 flex flex-col justify-center gap-3">
-                    
-                    {/* Shortest */}
                     <div className="flex flex-col gap-1.5">
                        <div className="flex justify-between items-end">
                           <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-medium">Shortest</span>
                           <span className="text-xs font-bold text-white font-mono">{globalStats.shortestHold}</span>
                        </div>
                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
-                          <div 
-                             className="h-full bg-emerald-500 rounded-full opacity-80" 
-                             style={{ width: `${Math.max(2, (globalStats.shortestHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}
-                          ></div>
+                          <div className="h-full bg-emerald-500 rounded-full opacity-80" style={{ width: `${Math.max(2, (globalStats.shortestHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}></div>
                        </div>
                     </div>
-
-                    {/* Average */}
                     <div className="flex flex-col gap-1.5">
                        <div className="flex justify-between items-end">
                           <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-medium">Average</span>
                           <span className="text-xs font-bold text-white font-mono">{globalStats.avgTime}</span>
                        </div>
                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
-                           <div 
-                             className="h-full bg-nexus-accent rounded-full" 
-                             style={{ width: `${Math.max(2, (globalStats.avgHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}
-                          ></div>
+                           <div className="h-full bg-nexus-accent rounded-full" style={{ width: `${Math.max(2, (globalStats.avgHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}></div>
                        </div>
                     </div>
-
-                     {/* Longest */}
                     <div className="flex flex-col gap-1.5">
                        <div className="flex justify-between items-end">
                           <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-medium">Longest</span>
                           <span className="text-xs font-bold text-white font-mono">{globalStats.longestHold}</span>
                        </div>
                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
-                           <div 
-                             className="h-full bg-blue-500 rounded-full opacity-80" 
-                             style={{ width: '100%' }}
-                          ></div>
+                           <div className="h-full bg-blue-500 rounded-full opacity-80" style={{ width: '100%' }}></div>
                        </div>
                     </div>
-
                 </div>
             </div>
 
-            {/* 3. Stats Card - Compact Fixed Height */}
             <div className="liquid-card rounded-3xl p-4 shrink-0 flex flex-col gap-2">
                  <div className="flex justify-between items-center mb-1">
                     <span className="text-[10px] uppercase tracking-widest text-nexus-muted">Session Insights</span>
                     <Activity size={14} className="text-nexus-muted" />
                  </div>
-                 
                  <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <div className="flex items-center gap-2">
-                           <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500">
-                             <ArrowUpRight size={10} />
-                           </div>
+                           <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500"><ArrowUpRight size={10} /></div>
                            <span className="text-[10px] text-nexus-muted">Best Trade</span>
                         </div>
                         <span className="text-xs font-bold text-emerald-400">{formatCurrency(globalStats.bestTrade)}</span>
                     </div>
-
                     <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <div className="flex items-center gap-2">
-                           <div className="p-1 rounded-full bg-red-500/20 text-red-500">
-                             <ArrowDownRight size={10} />
-                           </div>
+                           <div className="p-1 rounded-full bg-red-500/20 text-red-500"><ArrowDownRight size={10} /></div>
                            <span className="text-[10px] text-nexus-muted">Worst Trade</span>
                         </div>
                         <span className="text-xs font-bold text-red-400">{formatCurrency(globalStats.worstTrade)}</span>
                     </div>
-
                     <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                          <div className="flex items-center gap-2">
-                           <div className="p-1 rounded-full bg-blue-500/20 text-blue-500">
-                             <TrendingUp size={10} />
-                           </div>
+                           <div className="p-1 rounded-full bg-blue-500/20 text-blue-500"><TrendingUp size={10} /></div>
                            <span className="text-[10px] text-nexus-muted">Avg Trade</span>
                         </div>
                         <span className="text-xs font-bold text-white">{formatCurrency(globalStats.avgTradePnl)}</span>
                     </div>
                  </div>
             </div>
-            
           </div>
-
         </motion.div>
         ) : (
              <motion.div 
@@ -819,11 +506,8 @@ const App: React.FC = () => {
         )}
         </AnimatePresence>
 
-        {/* Floating Menu - Positioned Absolutely at Bottom Center */}
         <div className="absolute bottom-4 left-0 right-0 z-50 flex justify-center items-center pointer-events-none">
             <div className="flex items-center gap-4 pointer-events-auto">
-               
-               {/* Psych Analysis Navigation Button */}
                <button
                   onClick={handlePsychologyClick}
                   className={`liquid-card w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group shadow-2xl relative ${currentView === 'psychology' ? 'bg-white/10 text-purple-400' : 'text-nexus-muted hover:text-white hover:bg-white/10'}`}
@@ -832,80 +516,63 @@ const App: React.FC = () => {
                    <Brain size={20} className="group-hover:text-purple-400 transition-colors" />
                </button>
 
-               {/* Tab Switcher */}
-               <div className="liquid-card p-1.5 rounded-full flex items-center justify-center gap-1 shadow-2xl">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`relative w-24 md:w-28 py-2.5 rounded-full flex items-center justify-center gap-2 transition-transform active:scale-95 duration-100 z-20 ${
-                      activeTab === tab.id && currentView === 'dashboard' ? 'text-white' : 'text-nexus-muted hover:text-white'
-                    }`}
+               <div className="relative liquid-card p-1 rounded-full flex items-center justify-center shadow-2xl isolate overflow-hidden w-[260px]">
+                  <div className="relative flex items-center justify-center w-full">
+                    {TABS.map((tab) => (
+                      <button
+                        key={`bg-${tab.id}`}
+                        onClick={() => handleTabChange(tab.id)}
+                        className="flex-1 py-2.5 rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white/60 transition-colors duration-200 z-10"
+                      >
+                        <tab.icon size={16} className="shrink-0" />
+                        <span className="text-xs font-medium tracking-tight">{tab.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <motion.div
+                    className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] z-20 pointer-events-none overflow-hidden rounded-full border border-white/20 bg-white/10 backdrop-blur-xl shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+                    initial={false}
+                    animate={{ x: `${activeIndex * 100}%` }}
+                    transition={{ type: "spring", stiffness: 450, damping: 38, mass: 0.8 }}
                   >
-                    {activeTab === tab.id && currentView === 'dashboard' && (
-                      <motion.div
-                        layoutId="activeTabIndicator"
-                        className="absolute inset-0 bg-white/10 border border-white/10 rounded-full -z-10 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      />
-                    )}
-                    <tab.icon size={16} />
-                    <span className="text-xs font-medium whitespace-nowrap">
-                      {tab.label}
-                    </span>
-                  </button>
-                ))}
+                    <motion.div 
+                        className="absolute top-0 bottom-0 flex items-center justify-center"
+                        style={{ width: 'calc(260px - 8px)' }}
+                        animate={{ x: `-${activeIndex * 50}%` }}
+                        transition={{ type: "spring", stiffness: 450, damping: 38, mass: 0.8 }}
+                    >
+                      {TABS.map((tab) => (
+                        <div
+                          key={`fg-${tab.id}`}
+                          className="flex-1 py-2.5 flex items-center justify-center gap-2 text-white font-bold"
+                        >
+                          <tab.icon size={16} className="shrink-0" />
+                          <span className="text-xs tracking-tight">{tab.label}</span>
+                        </div>
+                      ))}
+                    </motion.div>
+                  </motion.div>
                </div>
 
-               {/* Add Trade Button (Hidden in Psychology View) */}
-               <AnimatePresence>
-               {currentView === 'dashboard' && (
-                   <motion.button 
-                      initial={{ width: 0, opacity: 0, padding: 0 }}
-                      animate={{ width: 'auto', opacity: 1, padding: '0.75rem 1.5rem' }}
-                      exit={{ width: 0, opacity: 0, padding: 0 }}
-                      onClick={handleAddTradeBtnClick}
-                      className="liquid-card rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white hover:bg-white/10 transition-all active:scale-95 duration-100 group shadow-2xl overflow-hidden whitespace-nowrap"
-                   >
-                        <Plus size={16} className="group-hover:text-nexus-accent transition-colors" />
-                        <span className="text-xs font-medium">Add Trade</span>
-                   </motion.button>
-               )}
-               </AnimatePresence>
+               <button 
+                  onClick={handleAddTradeBtnClick}
+                  className="liquid-card rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white hover:bg-white/10 transition-all active:scale-95 duration-100 group shadow-2xl px-6 py-3 overflow-hidden whitespace-nowrap"
+               >
+                    <Plus size={16} className="group-hover:text-nexus-accent transition-colors shrink-0" />
+                    <span className="text-xs font-medium shrink-0">Add Trade</span>
+               </button>
             </div>
         </div>
 
-        {/* MODALS */}
         <AnimatePresence>
           {isAddModalOpen && (
-            <AddTradeModal 
-              key={editingTrade ? editingTrade.id : 'add-trade'}
-              isOpen={true} 
-              onClose={() => setIsAddModalOpen(false)} 
-              date={selectedDate}
-              onAdd={handleAddOrUpdateTrade}
-              initialData={editingTrade}
-            />
+            <AddTradeModal key={editingTrade ? editingTrade.id : 'add-trade'} isOpen={true} onClose={() => setIsAddModalOpen(false)} date={selectedDate} onAdd={handleAddOrUpdateTrade} initialData={editingTrade} />
           )}
-          
           {isDetailModalOpen && selectedDate && (
-             <DayDetailsModal 
-               key="day-details"
-               isOpen={true}
-               onClose={() => setIsDetailModalOpen(false)}
-               date={selectedDate}
-               trades={selectedTrades}
-               onEdit={handleEditTrade}
-               onDelete={handleDeleteTrade}
-               onAddTrade={() => {
-                  setIsDetailModalOpen(false);
-                  setEditingTrade(undefined);
-                  setTimeout(() => setIsAddModalOpen(true), 200); 
-               }}
-             />
+             <DayDetailsModal key="day-details" isOpen={true} onClose={() => setIsDetailModalOpen(false)} date={selectedDate} trades={selectedTrades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onAddTrade={() => { setIsDetailModalOpen(false); setEditingTrade(undefined); setTimeout(() => setIsAddModalOpen(true), 200); }} />
           )}
         </AnimatePresence>
-
       </div>
     </div>
   );

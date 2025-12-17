@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect } from "react";
-import { format, subDays, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
+// Use addDays as a fallback for subDays and manual logic for startOfWeek to fix missing export errors
+import { format, addDays, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
 
 interface ContributionDay {
   date: string; // ISO date string (e.g., "2025-09-13")
@@ -20,7 +22,8 @@ const GitHubCalendar = ({ data, colors = ["#27272a", "#064e3b", "#065f46", "#10b
   // We will reduce weeks to 20 to fit nicely in a smaller card without scrolling.
   const weeks = 24; 
   const today = new Date();
-  const startDate = subDays(today, (weeks * 7) - 1); 
+  // Fixed: Replaced subDays(today, n) with addDays(today, -n) to avoid missing export error
+  const startDate = addDays(today, -((weeks * 7) - 1)); 
 
   // Process data prop
   useEffect(() => {
@@ -39,7 +42,9 @@ const GitHubCalendar = ({ data, colors = ["#27272a", "#064e3b", "#065f46", "#10b
   // Render weeks
   const renderWeeks = () => {
     const weeksArray = [];
-    let currentWeekStart = startOfWeek(startDate, { weekStartsOn: 0 });
+    // Fixed: Replaced startOfWeek with manual calculation (subtract current day index to get Sunday)
+    // to avoid missing export error for startOfWeek
+    let currentWeekStart = addDays(startDate, -startDate.getDay());
 
     for (let i = 0; i < weeks; i++) {
       const weekDays = eachDayOfInterval({
