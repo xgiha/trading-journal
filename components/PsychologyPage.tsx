@@ -69,7 +69,7 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
     const emotionalCost = emotionMap.FOMO.pnl + emotionMap.Fear.pnl + emotionMap.Revenge.pnl + emotionMap.Greed.pnl;
     const disciplinedPnl = emotionMap.Disciplined.pnl + emotionMap.Flow.pnl;
     
-    const score = Math.round(((emotionMap.Disciplined.count + emotionMap.Flow.count) / total) * 100);
+    const score = Math.round(((emotionMap.Disciplined.count + emotionMap.Flow.count) / (total || 1)) * 100);
     const avgScore = 15000 + (score * 50);
 
     const patienceVal = Math.min(score * 1.2, 100);
@@ -89,22 +89,29 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
   // 2. Gemini AI Deep Analysis
   useEffect(() => {
     const fetchAiAnalysis = async () => {
-      if (trades.length === 0) return;
+      if (trades.length === 0) {
+        setAiAnalysis("No trades to analyze yet. Start journaling to reveal your psychological patterns.");
+        return;
+      }
       setIsAnalyzing(true);
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const notes = trades.map(t => `Trade (${t.pair}): ${t.notes || 'No notes'}`).join('\n');
+        const notesSummary = trades.map(t => `Trade (${t.pair}, PnL: ${t.pnl}): ${t.notes || 'No notes'}`).join('\n');
         
         const prompt = `You are a Behavioral Psychologist specializing in trading psychology.
-        Analyze these trade notes for a user:
-        ${notes}
+        Analyze these recent trade notes and outcomes:
+        ${notesSummary}
+        
+        Current Analytics:
+        - Emotional Cost (Fear/FOMO/Revenge/Greed): $${stats.emotionalCost.toFixed(2)}
+        - Disciplined Performance (Plan/Flow): $${stats.disciplinedPnl.toFixed(2)}
         
         Task: 
-        1. Identify the dominant emotional state.
-        2. Provide a 2-sentence summary of the user's psychological state.
-        3. Explain the "Emotional Cost" (current estimate: $${stats.emotionalCost.toFixed(2)}) and how to fix the primary leak.
+        1. Identify the user's primary psychological leak.
+        2. Provide a 2-sentence summary of their emotional regulation.
+        3. Explain the "Emotional Cost" and how much money their emotions are costing them compared to their disciplined potential.
         
-        Keep it professional, encouraging, and clinical. Format with brief sections.`;
+        Keep it professional, encouraging, and highly clinical. Format with clear, concise bullet points for readability.`;
 
         const response = await ai.models.generateContent({
           model: 'gemini-3-flash-preview',
@@ -113,14 +120,14 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
         setAiAnalysis(response.text || 'Analysis unavailable.');
       } catch (err) {
         console.error("AI Analysis failed", err);
-        setAiAnalysis('Analysis service currently unavailable. Using local heuristic insights.');
+        setAiAnalysis('The AI analyst is currently unavailable. Using local behavioral mapping to identify your primary emotional triggers.');
       } finally {
         setIsAnalyzing(false);
       }
     };
 
     fetchAiAnalysis();
-  }, [trades, stats.emotionalCost]);
+  }, [trades, stats.emotionalCost, stats.disciplinedPnl]);
 
   const formatCurrency = (val: number) => {
     const sign = val < 0 ? '-' : '+';
@@ -145,7 +152,7 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
                   <h3 className="text-lg font-medium text-white tracking-tight">Psychological Analysis</h3>
                   <p className="text-nexus-muted text-[10px] uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
                     {isAnalyzing ? (
-                        <><Loader2 size={10} className="animate-spin" /> Analyzing behavior...</>
+                        <><Loader2 size={10} className="animate-spin" /> Deep scanning notes...</>
                     ) : (
                         <><Sparkles size={10} className="text-purple-400" /> Behavioral profile: Active</>
                     )}
@@ -162,13 +169,13 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col justify-center">
                    <span className="text-[10px] text-nexus-muted uppercase tracking-widest font-bold mb-1">Emotional Cost</span>
-                   <span className={`text-4xl font-light tracking-tighter leading-none ${stats.emotionalCost < 0 ? 'text-red-400' : 'text-white'}`}>
+                   <span className={`text-3xl font-light tracking-tighter leading-none ${stats.emotionalCost < 0 ? 'text-red-400' : 'text-white'}`}>
                       {formatCurrency(stats.emotionalCost)}
                    </span>
                 </div>
                 <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col justify-center">
                    <span className="text-[10px] text-nexus-muted uppercase tracking-widest font-bold mb-1">Disciplined P&L</span>
-                   <span className="text-4xl font-light tracking-tighter leading-none text-emerald-400">
+                   <span className="text-3xl font-light tracking-tighter leading-none text-emerald-400">
                       {formatCurrency(stats.disciplinedPnl)}
                    </span>
                 </div>
@@ -181,12 +188,12 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
                     <span className="text-[10px] text-white uppercase tracking-widest font-bold">Psychologist's Report</span>
                 </div>
                 <div className="text-xs text-nexus-muted leading-relaxed whitespace-pre-line italic">
-                    {aiAnalysis || "Aggregating trading patterns for deeper psychological mapping..."}
+                    {aiAnalysis || "Synthesizing your behavioral data for a comprehensive psychological map..."}
                 </div>
               </div>
               
               {/* Emotion Bar Chart */}
-              <div className="mt-4 flex gap-1 h-3 rounded-full overflow-hidden">
+              <div className="mt-4 flex gap-1 h-3 rounded-full overflow-hidden bg-white/5">
                 {Object.entries(stats.emotionBreakdown).map(([emotion, data], idx) => {
                     const percentage = (data.count / (trades.length || 1)) * 100;
                     if (percentage === 0) return null;
@@ -216,18 +223,18 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
             </div>
           </div>
 
-          {/* Current Mindset Gauge (Static but relevant) */}
-          <div className="h-48 bg-[#111111] rounded-[2rem] p-6 border border-white/5 flex flex-col min-h-0">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-sm font-bold text-white tracking-tight">Mindset Accuracy</h3>
+          {/* Current Mindset Gauge */}
+          <div className="h-44 bg-[#111111] rounded-[2rem] p-6 border border-white/5 flex flex-col min-h-0">
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="text-sm font-bold text-white tracking-tight">Mindset Consistency</h3>
               <div className="flex gap-2">
                  <button className="w-7 h-7 rounded-full bg-[#1a1a1a] flex items-center justify-center text-nexus-muted border border-white/10 hover:text-white transition-colors" onClick={onBack}><ArrowLeft size={12}/></button>
                  <button className="w-7 h-7 rounded-full bg-[#1a1a1a] flex items-center justify-center text-white border border-white/10 hover:bg-white/5 transition-colors"><ArrowRight size={12}/></button>
               </div>
             </div>
             
-            <div className="flex-1 flex flex-col justify-center items-center relative mt-2 min-h-0">
-               <div className="relative w-full aspect-[2/1] max-w-[200px]">
+            <div className="flex-1 flex flex-col justify-center items-center relative min-h-0">
+               <div className="relative w-full aspect-[2/1] max-w-[180px]">
                   <svg className="w-full h-full transform -rotate-180" viewBox="0 0 100 50">
                     <path 
                       d="M 10 50 A 40 40 0 0 1 90 50" 
@@ -246,7 +253,7 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-end">
-                    <span className="text-xl font-light text-white tracking-tighter">{stats.score}% Flow</span>
+                    <span className="text-xl font-light text-white tracking-tighter">{stats.score}% Accuracy</span>
                   </div>
                </div>
             </div>
@@ -256,7 +263,7 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
         {/* RIGHT COLUMN */}
         <div className="lg:col-span-5 flex flex-col gap-4 min-h-0">
           
-          {/* Recent Insights */}
+          {/* Recent Activity */}
           <div className="h-32 bg-[#111111] rounded-[2rem] p-5 border border-white/5 flex flex-col justify-center shrink-0">
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-3">
@@ -270,14 +277,16 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
               </div>
             </div>
             <div className="flex flex-col gap-1 overflow-hidden">
-                {trades.slice(-2).map((t, i) => (
+                {trades.length > 0 ? trades.slice(-2).map((t, i) => (
                     <div key={i} className="bg-[#1a1a1a] rounded-lg p-2 flex justify-between items-center border border-white/5">
                         <div className="flex items-center gap-2 overflow-hidden">
-                            <Zap size={10} className={t.pnl > 0 ? "text-[#A7F3D0]" : "text-[#ef4444]"} fill="currentColor" />
+                            <Zap size={10} className={t.pnl >= 0 ? "text-[#A7F3D0]" : "text-[#ef4444]"} fill="currentColor" />
                             <span className="text-[9px] font-mono text-white/90 truncate">{t.pair}: {t.notes?.slice(0, 30)}...</span>
                         </div>
                     </div>
-                ))}
+                )) : (
+                    <div className="text-[9px] text-nexus-muted italic text-center py-2">No activity detected</div>
+                )}
             </div>
           </div>
 
@@ -328,7 +337,7 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
                 <div className="bg-[#C4B5FD] rounded-[1.5rem] p-4 relative overflow-hidden flex-1 flex flex-col justify-between group cursor-default">
                   <ArrowUpRight size={14} className="absolute top-3 right-3 text-black opacity-40 group-hover:opacity-100 transition-opacity" />
                   <div className="flex flex-col">
-                    <span className="text-[8px] font-bold text-black/60 uppercase tracking-widest">Risk Management</span>
+                    <span className="text-[8px] font-bold text-black/60 uppercase tracking-widest">Risk Exposure</span>
                     <span className="text-xl font-bold text-black mt-0.5 leading-none">
                       {formatCurrency(stats.riskAmount)}
                     </span>
