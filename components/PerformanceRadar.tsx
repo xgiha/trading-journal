@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
@@ -197,10 +198,10 @@ const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ data }) => {
                     style={{ overflow: 'visible' }}
                 >
                     <div className={`flex flex-col items-center justify-center w-full h-full text-center`}>
-                        <span className="text-[9px] font-bold text-nexus-muted uppercase tracking-widest shadow-black drop-shadow-md whitespace-nowrap">
+                        <span className="text-[11px] font-bold text-white uppercase tracking-widest shadow-black drop-shadow-md whitespace-nowrap">
                             {d.subject}
                         </span>
-                        <span className="text-[9px] font-mono font-medium text-white opacity-80">
+                        <span className="text-[10px] font-mono font-medium text-nexus-accent opacity-90">
                             {d.score.toFixed(0)}
                         </span>
                     </div>

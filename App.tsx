@@ -370,8 +370,9 @@ const App: React.FC = () => {
                  </div>
               </div>
             </div>
-            <div className="liquid-card rounded-3xl p-4 w-full h-[300px] lg:h-[320px] shrink-0 flex flex-col group relative overflow-hidden">
-                <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors z-10 relative">Performance</span>
+            {/* Performance Card - Height reduced as per request */}
+            <div className="liquid-card rounded-3xl p-4 w-full h-[230px] lg:h-[250px] shrink-0 flex flex-col group relative overflow-hidden">
+                <span className="text-xs uppercase tracking-widest text-nexus-muted block mb-1 group-hover:text-white transition-colors z-10 relative font-bold">Performance</span>
                 <div className="flex-1 w-full relative z-10 flex items-center justify-center">
                    <PerformanceRadar data={radarData} />
                 </div>
