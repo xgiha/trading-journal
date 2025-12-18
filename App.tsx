@@ -379,8 +379,8 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* LEFT GUTTER - Redesigned Cards to match P&L Card Size */}
-          <div className="hidden lg:flex flex-col gap-6 items-center justify-center p-4">
+          {/* LEFT GUTTER - Top aligned to sidebar */}
+          <div className="hidden lg:flex flex-col gap-4 items-center justify-start p-0 px-4">
              {[1, 2, 3].map((num) => (
                 <div key={num} className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden">
                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
@@ -411,8 +411,8 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT GUTTER - Redesigned Cards to match P&L Card Size */}
-          <div className="hidden lg:flex flex-col gap-6 items-center justify-center p-4">
+          {/* RIGHT GUTTER - Top aligned to sidebar */}
+          <div className="hidden lg:flex flex-col gap-4 items-center justify-start p-0 px-4">
              {[4, 5, 6].map((num) => (
                 <div key={num} className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden">
                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
