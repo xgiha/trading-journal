@@ -379,9 +379,9 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* LEFT GUTTER - Huge space */}
+          {/* LEFT GUTTER - Empty Space (Lines Removed) */}
           <div className="hidden lg:flex flex-col gap-4 items-center justify-center">
-             <div className="h-full w-px bg-white/5 opacity-40"></div>
+             {/* Divider line removed */}
           </div>
 
           {/* CENTER WORKSPACE - Fixed at 800px */}
@@ -406,9 +406,9 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT GUTTER - Huge space */}
+          {/* RIGHT GUTTER - Empty Space (Lines Removed) */}
           <div className="hidden lg:flex flex-col gap-4 items-center justify-center">
-             <div className="h-full w-px bg-white/5 opacity-40"></div>
+             {/* Divider line removed */}
           </div>
 
           {/* RIGHT SIDEBAR - Reduced to 220px */}
