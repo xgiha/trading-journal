@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   LayoutGrid, 
@@ -282,13 +283,15 @@ const App: React.FC = () => {
       {/* Main Dashboard Card - Expanded to screen size */}
       <div className="w-[98vw] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 transition-all duration-500">
         
-        {/* Header Section */}
+        {/* Header Section - Decoupled from Dashboard Grid */}
         <div className="relative flex flex-col md:flex-row items-center justify-center mb-6 shrink-0 z-20 w-full min-h-[50px] gap-4 md:gap-0">
-           <div className="md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2 text-center md:text-left">
+           {/* Static Welcome Group - Positioned absolutely to container for zero interference */}
+           <div className="md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2 text-center md:text-left transition-none">
              <h2 className="text-white font-bold text-xl md:text-xl tracking-tight">Welcome, Gehan</h2>
              <p className="text-xs text-nexus-muted">Good to see you again.</p>
            </div>
            
+           {/* Market Status Group - Center-relative */}
            <div className="group relative">
              <div className="liquid-card rounded-full pl-3 pr-5 py-2 flex items-center gap-4 cursor-default transition-transform active:scale-95">
                 <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md">
@@ -339,11 +342,11 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            /* UPDATED GRID: Fixed sidebars at edges, flexible gutters, fixed center workspace */
-            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[380px_1fr_800px_1fr_380px] gap-4 md:gap-0 z-10 pb-4 lg:pb-0"
+            /* UPDATED GRID: Sidebars reduced to 220px for massive independent gutters */
+            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 pb-4 lg:pb-0"
         >
-          {/* LEFT SIDEBAR - Pushed to Left edge */}
-          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-2 lg:order-none max-w-[380px] w-full">
+          {/* LEFT SIDEBAR - Reduced to 220px */}
+          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full">
             <div className="liquid-card rounded-3xl p-6 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
               <div className="absolute top-0 right-0 w-32 h-32 bg-nexus-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
               <div className="relative z-10 w-full mb-auto">
@@ -352,23 +355,23 @@ const App: React.FC = () => {
                 </div>
               </div>
               <div className="relative z-10 flex items-end justify-between gap-1 md:gap-2 mt-4">
-                 <div className="w-20 h-16 md:w-28 md:h-20 xl:w-40 xl:h-28 relative shrink-0 -ml-2 md:-ml-4 translate-y-2 md:translate-y-3 mix-blend-screen opacity-100 flex items-end transition-all duration-300">
+                 <div className="w-16 h-12 md:w-20 md:h-16 xl:w-24 xl:h-20 relative shrink-0 -ml-2 md:-ml-4 translate-y-2 md:translate-y-3 mix-blend-screen opacity-100 flex items-end transition-all duration-300">
                       <AsciiPyramid fillLevels={rankingStats} />
                  </div>
-                 <div className="flex flex-col items-end gap-1 md:gap-2 flex-1 min-w-0">
-                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
+                 <div className="flex flex-col items-end gap-1 flex-1 min-w-0">
+                     <span className={`text-[8px] font-medium px-1.5 py-0.5 rounded border ${
                          globalStats.growthPct >= 0 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'
                      }`}>
                          {globalStats.growthPct >= 0 ? '+' : ''}{globalStats.growthPct.toFixed(2)}%
                      </span>
-                     <span className={`text-2xl sm:text-3xl xl:text-5xl font-light tracking-tighter glow-text whitespace-nowrap transition-all duration-300 ${globalStats.totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
+                     <span className={`text-xl sm:text-2xl xl:text-3xl font-light tracking-tighter glow-text whitespace-nowrap transition-all duration-300 ${globalStats.totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
                         {formatCurrency(globalStats.totalPnl)}
                      </span>
                  </div>
               </div>
             </div>
-            <div className="liquid-card rounded-3xl p-6 w-full h-[320px] lg:h-[350px] shrink-0 flex flex-col group relative overflow-hidden">
-                <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors z-10 relative">Performance Metrics</span>
+            <div className="liquid-card rounded-3xl p-4 w-full h-[300px] lg:h-[320px] shrink-0 flex flex-col group relative overflow-hidden">
+                <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors z-10 relative">Performance</span>
                 <div className="flex-1 w-full relative z-10 flex items-center justify-center">
                    <PerformanceRadar data={radarData} />
                 </div>
@@ -376,12 +379,12 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* LEFT GUTTER - Flexible Space */}
+          {/* LEFT GUTTER - Huge space */}
           <div className="hidden lg:flex flex-col gap-4 items-center justify-center">
              <div className="h-full w-px bg-white/5 opacity-40"></div>
           </div>
 
-          {/* CENTER WORKSPACE - Smaller/Fixed width as requested */}
+          {/* CENTER WORKSPACE - Fixed at 800px */}
           <div className="relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-none pb-24 lg:pb-20 w-full max-w-[800px] mx-auto">
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
@@ -403,29 +406,25 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT GUTTER - Flexible Space */}
+          {/* RIGHT GUTTER - Huge space */}
           <div className="hidden lg:flex flex-col gap-4 items-center justify-center">
              <div className="h-full w-px bg-white/5 opacity-40"></div>
           </div>
 
-          {/* RIGHT SIDEBAR - Pushed to Right edge */}
-          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-3 lg:order-none max-w-[380px] w-full">
-            <div className="liquid-card rounded-3xl p-6 h-[320px] shrink-0 flex flex-col relative overflow-hidden group">
+          {/* RIGHT SIDEBAR - Reduced to 220px */}
+          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-3 lg:order-none max-w-[220px] w-full">
+            <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10 mb-2">
                  <div className="w-full">
-                    <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors">Performance</span>
-                    <div className="flex justify-between items-center w-full px-1">
+                    <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors">Insights</span>
+                    <div className="flex justify-between items-center w-full">
                          <div className="flex flex-col">
-                            <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-60">Balance</span>
-                            <span className="text-sm font-bold text-white tracking-tight">${globalStats.currentBalance.toLocaleString()}</span>
-                         </div>
-                         <div className="flex flex-col items-center">
-                            <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-60">Normal</span>
-                            <span className="text-sm font-bold text-emerald-400">{globalStats.normalCount}</span>
+                            <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Balance</span>
+                            <span className="text-xs font-bold text-white tracking-tight">${globalStats.currentBalance.toLocaleString()}</span>
                          </div>
                          <div className="flex flex-col items-end">
-                            <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-60">News</span>
-                            <span className="text-sm font-bold text-yellow-500">{globalStats.newsCount}</span>
+                            <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Norm/News</span>
+                            <span className="text-xs font-bold text-white">{globalStats.normalCount}/{globalStats.newsCount}</span>
                          </div>
                     </div>
                  </div>
@@ -435,66 +434,53 @@ const App: React.FC = () => {
               </div>
             </div>
             
-            <div className="liquid-card rounded-3xl p-6 h-[170px] shrink-0 flex flex-col relative overflow-hidden group">
+            <div className="liquid-card rounded-3xl p-5 h-[150px] shrink-0 flex flex-col relative overflow-hidden group">
                 <div className="flex justify-between items-start shrink-0 z-10">
                     <div>
                         <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">Efficiency</span>
                         <div className="flex items-center gap-1.5">
-                             <Clock size={14} className="text-nexus-accent" />
-                             <span className="text-xs font-bold text-white">Hold Time Metrics</span>
+                             <Clock size={12} className="text-nexus-accent" />
+                             <span className="text-[10px] font-bold text-white">Hold Time</span>
                         </div>
                     </div>
                 </div>
-                <div className="flex-1 w-full relative min-h-0 mt-3 flex flex-col justify-center gap-3">
-                    <div className="flex flex-col gap-1.5">
+                <div className="flex-1 w-full relative min-h-0 mt-3 flex flex-col justify-center gap-2">
+                    <div className="flex flex-col gap-1">
                        <div className="flex justify-between items-end">
-                          <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-medium">Shortest</span>
-                          <span className="text-xs font-bold text-white font-mono">{globalStats.shortestHold}</span>
+                          <span className="text-[8px] text-nexus-muted uppercase tracking-widest font-medium">Avg</span>
+                          <span className="text-[10px] font-bold text-white font-mono">{globalStats.avgTime}</span>
                        </div>
                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
-                          <div className="h-full bg-emerald-500 rounded-full opacity-80" style={{ width: `${Math.max(2, (globalStats.shortestHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}></div>
+                           <div className="h-full bg-nexus-accent rounded-full" style={{ width: `${Math.max(5, (globalStats.avgHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}></div>
                        </div>
                     </div>
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1">
                        <div className="flex justify-between items-end">
-                          <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-medium">Average</span>
-                          <span className="text-xs font-bold text-white font-mono">{globalStats.avgTime}</span>
+                          <span className="text-[8px] text-nexus-muted uppercase tracking-widest font-medium">Peak</span>
+                          <span className="text-[10px] font-bold text-white font-mono">{globalStats.longestHold}</span>
                        </div>
                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
-                           <div className="h-full bg-nexus-accent rounded-full" style={{ width: `${Math.max(2, (globalStats.avgHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}></div>
-                       </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                       <div className="flex justify-between items-end">
-                          <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-medium">Longest</span>
-                          <span className="text-xs font-bold text-white font-mono">{globalStats.longestHold}</span>
-                       </div>
-                       <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
-                           <div className="h-full bg-blue-500 rounded-full opacity-80" style={{ width: '100%' }}></div>
+                           <div className="h-full bg-blue-500 rounded-full opacity-60" style={{ width: '100%' }}></div>
                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-2">
-                 <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] uppercase tracking-widest text-nexus-muted font-bold">Insights</span>
-                    <Activity size={14} className="text-nexus-muted" />
-                 </div>
+            <div className="liquid-card rounded-3xl p-4 shrink-0 flex flex-col gap-2">
                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <div className="flex items-center gap-2">
-                           <div className="p-1.5 rounded-full bg-emerald-500/20 text-emerald-500"><ArrowUpRight size={10} /></div>
-                           <span className="text-[10px] text-nexus-muted uppercase font-bold">Best</span>
+                           <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500"><ArrowUpRight size={10} /></div>
+                           <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">High</span>
                         </div>
-                        <span className="text-xs font-bold text-emerald-400 font-mono">{formatCurrency(globalStats.bestTrade)}</span>
+                        <span className="text-[10px] font-bold text-emerald-400 font-mono">{formatCurrency(globalStats.bestTrade)}</span>
                     </div>
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <div className="flex items-center gap-2">
-                           <div className="p-1.5 rounded-full bg-red-500/20 text-red-500"><ArrowDownRight size={10} /></div>
-                           <span className="text-[10px] text-nexus-muted uppercase font-bold">Worst</span>
+                           <div className="p-1 rounded-full bg-red-500/20 text-red-500"><ArrowDownRight size={10} /></div>
+                           <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">Low</span>
                         </div>
-                        <span className="text-xs font-bold text-red-400 font-mono">{formatCurrency(globalStats.worstTrade)}</span>
+                        <span className="text-[10px] font-bold text-red-400 font-mono">{formatCurrency(globalStats.worstTrade)}</span>
                     </div>
                  </div>
             </div>
@@ -514,7 +500,7 @@ const App: React.FC = () => {
         )}
         </AnimatePresence>
 
-        {/* Global Navigation & Actions */}
+        {/* Global Navigation & Actions - Anchored Bottom */}
         <div className="absolute bottom-6 left-0 right-0 z-50 flex justify-center items-center pointer-events-none">
             <div className="flex items-center gap-6 pointer-events-auto">
                <button
