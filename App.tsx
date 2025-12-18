@@ -345,7 +345,7 @@ const App: React.FC = () => {
             /* UPDATED GRID: Sidebars reduced to 220px for massive independent gutters */
             className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 pb-4 lg:pb-0"
         >
-          {/* LEFT SIDEBAR - Reduced to 220px */}
+          {/* LEFT SIDEBAR - Fixed at 220px */}
           <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full">
             <div className="liquid-card rounded-3xl p-6 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
               <div className="absolute top-0 right-0 w-32 h-32 bg-nexus-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
@@ -379,9 +379,14 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* LEFT GUTTER - Empty Space (Lines Removed) */}
-          <div className="hidden lg:flex flex-col gap-4 items-center justify-center">
-             {/* Divider line removed */}
+          {/* LEFT GUTTER - Redesigned Cards to match P&L Card Size */}
+          <div className="hidden lg:flex flex-col gap-6 items-center justify-center p-4">
+             {[1, 2, 3].map((num) => (
+                <div key={num} className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden">
+                   <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                   <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">{num}</span>
+                </div>
+             ))}
           </div>
 
           {/* CENTER WORKSPACE - Fixed at 800px */}
@@ -406,12 +411,17 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT GUTTER - Empty Space (Lines Removed) */}
-          <div className="hidden lg:flex flex-col gap-4 items-center justify-center">
-             {/* Divider line removed */}
+          {/* RIGHT GUTTER - Redesigned Cards to match P&L Card Size */}
+          <div className="hidden lg:flex flex-col gap-6 items-center justify-center p-4">
+             {[4, 5, 6].map((num) => (
+                <div key={num} className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden">
+                   <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                   <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">{num}</span>
+                </div>
+             ))}
           </div>
 
-          {/* RIGHT SIDEBAR - Reduced to 220px */}
+          {/* RIGHT SIDEBAR - Fixed at 220px */}
           <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-3 lg:order-none max-w-[220px] w-full">
             <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10 mb-2">
