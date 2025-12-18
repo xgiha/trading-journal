@@ -257,7 +257,7 @@ const App: React.FC = () => {
   const radarData = useMemo(() => {
     const totalTrades = trades.length;
     if (totalTrades === 0) return [ { subject: 'Win Rate', A: 0, fullMark: 100 }, { subject: 'Profit Factor', A: 0, fullMark: 100 }, { subject: 'Consistency', A: 0, fullMark: 100 }, { subject: 'Risk/Reward', A: 0, fullMark: 100 }, { subject: 'Discipline', A: 0, fullMark: 100 } ];
-    const wins = trades.filter(t => t.pnl > 0), losses = trades.filter(t => t.pnl < 0), winRate = (wins.length / totalTrades) * 100, grossProfit = wins.reduce((sum, t) => sum + t.pnl, 0), grossLoss = Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0)), profitFactor = grossLoss === 0 ? (grossProfit > 0 ? 3 : 0) : grossProfit / grossLoss, pfScore = Math.min((profitFactor / 3) * 100, 100), consistencyScore = Math.min((totalTrades / 50) * 100, 100), avgWin = wins.length > 0 ? grossProfit / wins.length : 0, avgLoss = losses.length > 0 ? grossLoss / losses.length : 1, rrRatio = avgLoss === 0 ? 0 : avgWin / avgLoss, rrScore = Math.min((rrRatio / 2) * 100, 100);
+    const wins = trades.filter(t => t.pnl > 0), losses = trades.filter(t => t.pnl < 0), winRate = (wins.length / totalTrades) * 100, grossProfit = wins.reduce((sum, t) => sum + t.pnl, 0), grossLoss = Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0)), profitFactor = grossLoss === 0 ? (grossProfit > 0 ? 3 : 0) : grossProfit / grossLoss, pfScore = Math.min((profitFactor / 3) * 100, 100), consistencyScore = Math.min((totalTrades / 50) * 100, 100), avgWin = wins.length > 0 ? grossProfit / wins.length : 0, avgLoss = losses.filter(t => t.pnl < 0).length > 0 ? Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0)) / losses.length : 1, rrRatio = avgLoss === 0 ? 0 : avgWin / avgLoss, rrScore = Math.min((rrRatio / 2) * 100, 100);
     let disciplineScore = 100; losses.forEach(l => { if (Math.abs(l.pnl) > avgLoss * 2) disciplineScore -= 10; });
     disciplineScore = Math.max(0, disciplineScore);
     return [ { subject: 'Win Rate', A: winRate, fullMark: 100 }, { subject: 'Profit Factor', A: pfScore, fullMark: 100 }, { subject: 'Consistency', A: consistencyScore, fullMark: 100 }, { subject: 'Risk/Reward', A: rrScore, fullMark: 100 }, { subject: 'Discipline', A: disciplineScore, fullMark: 100 } ];
@@ -339,11 +339,11 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            /* Layout Grid updated to push sidebars to edges while keeping fixed card sizes */
-            className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[380px_1fr_380px] gap-4 md:gap-8 z-10 pb-4 lg:pb-0"
+            /* UPDATED GRID: Fixed sidebars at edges, flexible gutters, fixed center workspace */
+            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[380px_1fr_800px_1fr_380px] gap-4 md:gap-0 z-10 pb-4 lg:pb-0"
         >
-          {/* Left Sidebar - Pushed to Left Side */}
-          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-2 lg:order-1 max-w-[380px] w-full">
+          {/* LEFT SIDEBAR - Pushed to Left edge */}
+          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-2 lg:order-none max-w-[380px] w-full">
             <div className="liquid-card rounded-3xl p-6 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
               <div className="absolute top-0 right-0 w-32 h-32 bg-nexus-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
               <div className="relative z-10 w-full mb-auto">
@@ -359,7 +359,7 @@ const App: React.FC = () => {
                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${
                          globalStats.growthPct >= 0 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'
                      }`}>
-                         {globalStats.growthPct >= 0 ? '+' : ''}{globalStats.growthPct.toFixed(2)}% Growth
+                         {globalStats.growthPct >= 0 ? '+' : ''}{globalStats.growthPct.toFixed(2)}%
                      </span>
                      <span className={`text-2xl sm:text-3xl xl:text-5xl font-light tracking-tighter glow-text whitespace-nowrap transition-all duration-300 ${globalStats.totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
                         {formatCurrency(globalStats.totalPnl)}
@@ -376,8 +376,13 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Content Hub - Fills the center space */}
-          <div className="relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-2 pb-24 lg:pb-20 w-full">
+          {/* LEFT GUTTER - Flexible Space */}
+          <div className="hidden lg:flex flex-col gap-4 items-center justify-center">
+             <div className="h-full w-px bg-white/5 opacity-40"></div>
+          </div>
+
+          {/* CENTER WORKSPACE - Smaller/Fixed width as requested */}
+          <div className="relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-none pb-24 lg:pb-20 w-full max-w-[800px] mx-auto">
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
@@ -398,8 +403,13 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Sidebar - Pushed to Right Side */}
-          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-3 lg:order-3 max-w-[380px] w-full">
+          {/* RIGHT GUTTER - Flexible Space */}
+          <div className="hidden lg:flex flex-col gap-4 items-center justify-center">
+             <div className="h-full w-px bg-white/5 opacity-40"></div>
+          </div>
+
+          {/* RIGHT SIDEBAR - Pushed to Right edge */}
+          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-3 lg:order-none max-w-[380px] w-full">
             <div className="liquid-card rounded-3xl p-6 h-[320px] shrink-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10 mb-2">
                  <div className="w-full">
@@ -431,7 +441,7 @@ const App: React.FC = () => {
                         <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">Efficiency</span>
                         <div className="flex items-center gap-1.5">
                              <Clock size={14} className="text-nexus-accent" />
-                             <span className="text-xs font-bold text-white">Trade Holding Time</span>
+                             <span className="text-xs font-bold text-white">Hold Time Metrics</span>
                         </div>
                     </div>
                 </div>
@@ -468,21 +478,21 @@ const App: React.FC = () => {
 
             <div className="liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-2">
                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] uppercase tracking-widest text-nexus-muted">Session Insights</span>
+                    <span className="text-[10px] uppercase tracking-widest text-nexus-muted font-bold">Insights</span>
                     <Activity size={14} className="text-nexus-muted" />
                  </div>
                  <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <div className="flex items-center gap-2">
                            <div className="p-1.5 rounded-full bg-emerald-500/20 text-emerald-500"><ArrowUpRight size={10} /></div>
-                           <span className="text-[10px] text-nexus-muted uppercase font-bold">Best Trade</span>
+                           <span className="text-[10px] text-nexus-muted uppercase font-bold">Best</span>
                         </div>
                         <span className="text-xs font-bold text-emerald-400 font-mono">{formatCurrency(globalStats.bestTrade)}</span>
                     </div>
                     <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <div className="flex items-center gap-2">
                            <div className="p-1.5 rounded-full bg-red-500/20 text-red-500"><ArrowDownRight size={10} /></div>
-                           <span className="text-[10px] text-nexus-muted uppercase font-bold">Worst Trade</span>
+                           <span className="text-[10px] text-nexus-muted uppercase font-bold">Worst</span>
                         </div>
                         <span className="text-xs font-bold text-red-400 font-mono">{formatCurrency(globalStats.worstTrade)}</span>
                     </div>
@@ -504,7 +514,7 @@ const App: React.FC = () => {
         )}
         </AnimatePresence>
 
-        {/* Floating Navigation Controls */}
+        {/* Global Navigation & Actions */}
         <div className="absolute bottom-6 left-0 right-0 z-50 flex justify-center items-center pointer-events-none">
             <div className="flex items-center gap-6 pointer-events-auto">
                <button
