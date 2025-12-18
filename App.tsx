@@ -274,14 +274,15 @@ const App: React.FC = () => {
   const handlePsychologyClick = () => { setCurrentView(currentView === 'psychology' ? 'dashboard' : 'psychology'); };
 
   const activeIndex = TABS.findIndex(t => t.id === activeTab);
-  const xOffset = activeIndex * 100;
 
   return (
     <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
-      <div className="w-full max-w-[1500px] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-8 transition-all duration-500">
+      {/* Main Dashboard Card - Expanded to screen size */}
+      <div className="w-[98vw] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 transition-all duration-500">
         
+        {/* Header Section */}
         <div className="relative flex flex-col md:flex-row items-center justify-center mb-6 shrink-0 z-20 w-full min-h-[50px] gap-4 md:gap-0">
            <div className="md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2 text-center md:text-left">
              <h2 className="text-white font-bold text-xl md:text-xl tracking-tight">Welcome, Gehan</h2>
@@ -338,10 +339,12 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6 z-10 pb-4 lg:pb-0"
+            /* Layout Grid updated to push sidebars to edges while keeping fixed card sizes */
+            className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[380px_1fr_380px] gap-4 md:gap-8 z-10 pb-4 lg:pb-0"
         >
-          <div className="col-span-1 md:col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-2 lg:order-1">
-            <div className="liquid-card rounded-3xl p-5 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
+          {/* Left Sidebar - Pushed to Left Side */}
+          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-2 lg:order-1 max-w-[380px] w-full">
+            <div className="liquid-card rounded-3xl p-6 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
               <div className="absolute top-0 right-0 w-32 h-32 bg-nexus-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
               <div className="relative z-10 w-full mb-auto">
                 <div className="flex justify-between items-start">
@@ -364,7 +367,7 @@ const App: React.FC = () => {
                  </div>
               </div>
             </div>
-            <div className="liquid-card rounded-3xl p-5 w-full h-[320px] lg:h-[340px] shrink-0 flex flex-col group relative overflow-hidden">
+            <div className="liquid-card rounded-3xl p-6 w-full h-[320px] lg:h-[350px] shrink-0 flex flex-col group relative overflow-hidden">
                 <span className="text-[10px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors z-10 relative">Performance Metrics</span>
                 <div className="flex-1 w-full relative z-10 flex items-center justify-center">
                    <PerformanceRadar data={radarData} />
@@ -373,7 +376,8 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-span-1 md:col-span-2 lg:col-span-6 relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-2 pb-24 lg:pb-20">
+          {/* Main Content Hub - Fills the center space */}
+          <div className="relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-2 pb-24 lg:pb-20 w-full">
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
@@ -394,8 +398,9 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="col-span-1 md:col-span-1 lg:col-span-3 flex flex-col gap-3 h-auto lg:h-full min-h-0 order-3 lg:order-3">
-            <div className="liquid-card rounded-3xl p-5 h-[320px] shrink-0 flex flex-col relative overflow-hidden group">
+          {/* Right Sidebar - Pushed to Right Side */}
+          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-3 lg:order-3 max-w-[380px] w-full">
+            <div className="liquid-card rounded-3xl p-6 h-[320px] shrink-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10 mb-2">
                  <div className="w-full">
                     <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors">Performance</span>
@@ -420,7 +425,7 @@ const App: React.FC = () => {
               </div>
             </div>
             
-            <div className="liquid-card rounded-3xl p-5 h-[160px] shrink-0 flex flex-col relative overflow-hidden group">
+            <div className="liquid-card rounded-3xl p-6 h-[170px] shrink-0 flex flex-col relative overflow-hidden group">
                 <div className="flex justify-between items-start shrink-0 z-10">
                     <div>
                         <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">Efficiency</span>
@@ -461,32 +466,25 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            <div className="liquid-card rounded-3xl p-4 shrink-0 flex flex-col gap-2">
+            <div className="liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-2">
                  <div className="flex justify-between items-center mb-1">
                     <span className="text-[10px] uppercase tracking-widest text-nexus-muted">Session Insights</span>
                     <Activity size={14} className="text-nexus-muted" />
                  </div>
                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <div className="flex items-center gap-2">
-                           <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500"><ArrowUpRight size={10} /></div>
-                           <span className="text-[10px] text-nexus-muted">Best Trade</span>
+                           <div className="p-1.5 rounded-full bg-emerald-500/20 text-emerald-500"><ArrowUpRight size={10} /></div>
+                           <span className="text-[10px] text-nexus-muted uppercase font-bold">Best Trade</span>
                         </div>
-                        <span className="text-xs font-bold text-emerald-400">{formatCurrency(globalStats.bestTrade)}</span>
+                        <span className="text-xs font-bold text-emerald-400 font-mono">{formatCurrency(globalStats.bestTrade)}</span>
                     </div>
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <div className="flex items-center gap-2">
-                           <div className="p-1 rounded-full bg-red-500/20 text-red-500"><ArrowDownRight size={10} /></div>
-                           <span className="text-[10px] text-nexus-muted">Worst Trade</span>
+                           <div className="p-1.5 rounded-full bg-red-500/20 text-red-500"><ArrowDownRight size={10} /></div>
+                           <span className="text-[10px] text-nexus-muted uppercase font-bold">Worst Trade</span>
                         </div>
-                        <span className="text-xs font-bold text-red-400">{formatCurrency(globalStats.worstTrade)}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                         <div className="flex items-center gap-2">
-                           <div className="p-1 rounded-full bg-blue-500/20 text-blue-500"><TrendingUp size={10} /></div>
-                           <span className="text-[10px] text-nexus-muted">Avg Trade</span>
-                        </div>
-                        <span className="text-xs font-bold text-white">{formatCurrency(globalStats.avgTradePnl)}</span>
+                        <span className="text-xs font-bold text-red-400 font-mono">{formatCurrency(globalStats.worstTrade)}</span>
                     </div>
                  </div>
             </div>
@@ -506,49 +504,50 @@ const App: React.FC = () => {
         )}
         </AnimatePresence>
 
-        <div className="absolute bottom-4 left-0 right-0 z-50 flex justify-center items-center pointer-events-none">
-            <div className="flex items-center gap-4 pointer-events-auto">
+        {/* Floating Navigation Controls */}
+        <div className="absolute bottom-6 left-0 right-0 z-50 flex justify-center items-center pointer-events-none">
+            <div className="flex items-center gap-6 pointer-events-auto">
                <button
                   onClick={handlePsychologyClick}
-                  className={`liquid-card w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group shadow-2xl relative ${currentView === 'psychology' ? 'bg-white/10 text-purple-400' : 'text-nexus-muted hover:text-white hover:bg-white/10'}`}
+                  className={`liquid-card w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group shadow-2xl relative ${currentView === 'psychology' ? 'bg-white/10 text-purple-400' : 'text-nexus-muted hover:text-white hover:bg-white/10'}`}
                   title="Psychology"
                >
-                   <Brain size={20} className="group-hover:text-purple-400 transition-colors" />
+                   <Brain size={24} className="group-hover:text-purple-400 transition-colors" />
                </button>
 
-               <div className="relative liquid-card p-1 rounded-full flex items-center justify-center shadow-2xl isolate overflow-hidden w-[260px]">
+               <div className="relative liquid-card p-1.5 rounded-full flex items-center justify-center shadow-2xl isolate overflow-hidden w-[280px]">
                   <div className="relative flex items-center justify-center w-full">
                     {TABS.map((tab) => (
                       <button
                         key={`bg-${tab.id}`}
                         onClick={() => handleTabChange(tab.id)}
-                        className="flex-1 py-2.5 rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white/60 transition-colors duration-200 z-10"
+                        className="flex-1 py-3 rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white/60 transition-colors duration-200 z-10"
                       >
-                        <tab.icon size={16} className="shrink-0" />
-                        <span className="text-xs font-medium tracking-tight">{tab.label}</span>
+                        <tab.icon size={18} className="shrink-0" />
+                        <span className="text-sm font-medium tracking-tight">{tab.label}</span>
                       </button>
                     ))}
                   </div>
 
                   <motion.div
-                    className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] z-20 pointer-events-none overflow-hidden rounded-full border border-white/20 bg-white/10 backdrop-blur-xl shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+                    className="absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-6px)] z-20 pointer-events-none overflow-hidden rounded-full border border-white/20 bg-white/10 backdrop-blur-xl shadow-[0_0_20px_rgba(255,255,255,0.05)]"
                     initial={false}
                     animate={{ x: `${activeIndex * 100}%` }}
                     transition={{ type: "spring", stiffness: 450, damping: 38, mass: 0.8 }}
                   >
                     <motion.div 
                         className="absolute top-0 bottom-0 flex items-center justify-center"
-                        style={{ width: 'calc(260px - 8px)' }}
+                        style={{ width: 'calc(280px - 12px)' }}
                         animate={{ x: `-${activeIndex * 50}%` }}
                         transition={{ type: "spring", stiffness: 450, damping: 38, mass: 0.8 }}
                     >
                       {TABS.map((tab) => (
                         <div
                           key={`fg-${tab.id}`}
-                          className="flex-1 py-2.5 flex items-center justify-center gap-2 text-white font-bold"
+                          className="flex-1 py-3 flex items-center justify-center gap-2 text-white font-bold"
                         >
-                          <tab.icon size={16} className="shrink-0" />
-                          <span className="text-xs tracking-tight">{tab.label}</span>
+                          <tab.icon size={18} className="shrink-0" />
+                          <span className="text-sm tracking-tight">{tab.label}</span>
                         </div>
                       ))}
                     </motion.div>
@@ -557,10 +556,10 @@ const App: React.FC = () => {
 
                <button 
                   onClick={handleAddTradeBtnClick}
-                  className="liquid-card rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white hover:bg-white/10 transition-all active:scale-95 duration-100 group shadow-2xl px-6 py-3 overflow-hidden whitespace-nowrap"
+                  className="liquid-card rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white hover:bg-white/10 transition-all active:scale-95 duration-100 group shadow-2xl px-8 py-4 overflow-hidden whitespace-nowrap"
                >
-                    <Plus size={16} className="group-hover:text-nexus-accent transition-colors shrink-0" />
-                    <span className="text-xs font-medium shrink-0">Add Trade</span>
+                    <Plus size={20} className="group-hover:text-nexus-accent transition-colors shrink-0" />
+                    <span className="text-sm font-bold uppercase tracking-widest shrink-0">Add Trade</span>
                </button>
             </div>
         </div>
