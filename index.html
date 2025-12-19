@@ -7,19 +7,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Using Plus Jakarta Sans as it closely mimics the geometric look of the reference interface if Google Sans is unavailable -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet" />
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
               sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+              pixel: ['"Silkscreen"', 'cursive'],
             },
             colors: {
               nexus: {
                 bg: '#050505',
-                card: '#0c0c0e',
+                card: '#161616',
                 border: '#1f1f22',
                 accent: '#ffa600',
                 text: '#e4e4e7',
@@ -44,13 +44,12 @@
         margin: 0;
         overflow-x: hidden;
       }
-      /* Remove scrollbars completely while keeping functionality */
       * {
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
       }
       *::-webkit-scrollbar {
-        display: none; /* Chrome, Safari and Opera */
+        display: none;
       }
       
       .glass-panel {
@@ -61,17 +60,8 @@
         box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
       }
       .liquid-card {
-        background: rgba(20, 20, 20, 0.2);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
-      }
-      .glow-text {
-        text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-      }
-      .scene-button-glow {
-        box-shadow: 0 0 30px rgba(255, 166, 0, 0.2), inset 0 0 10px rgba(255, 255, 255, 0.1);
+        background: #161616;
+        border: 1px solid rgba(255, 255, 255, 0.03);
       }
 
       /* Voice Chat Animations */

@@ -164,7 +164,7 @@ const App: React.FC = () => {
           const h = Math.floor(diff / (1000 * 60 * 60));
           const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
           const s = Math.floor((diff % (1000 * 60)) / 1000);
-          setMarketCountdown(`${h}h ${m}m ${s}s`);
+          setMarketCountdown(`${h} h ${m} m ${s} s`);
       } else {
           setMarketCountdown("00h 00m 00s");
       }
@@ -231,12 +231,13 @@ const App: React.FC = () => {
   };
 
   const globalStats = useMemo(() => {
-    let totalPnl = 0, maxPnl = -Infinity, minPnl = Infinity, totalDurationMinutes = 0, timedTradeCount = 0, minDuration = Infinity, maxDuration = 0, newsCount = 0, normalCount = 0;
-    if (trades.length === 0) return { totalPnl: 0, bestTrade: 0, worstTrade: 0, avgTime: '0m', growthPct: 0, shortestHold: '0m', longestHold: '0m', avgHoldNum: 0, shortestHoldNum: 0, longestHoldNum: 0, avgTradePnl: 0, newsCount: 0, normalCount: 0, currentBalance: 50000 };
+    let totalPnl = 0, maxPnl = -Infinity, minPnl = Infinity, totalDurationMinutes = 0, timedTradeCount = 0, minDuration = Infinity, maxDuration = 0, newsCount = 0, normalCount = 0, wins = 0;
+    if (trades.length === 0) return { totalPnl: 0, bestTrade: 0, worstTrade: 0, avgTime: '0m', growthPct: 0, shortestHold: '0m', longestHold: '0m', avgHoldNum: 0, shortestHoldNum: 0, longestHoldNum: 0, avgTradePnl: 0, newsCount: 0, normalCount: 0, currentBalance: 50000, winRate: 0, totalTrades: 0 };
     trades.forEach(t => {
       totalPnl += t.pnl;
       if (t.pnl > maxPnl) maxPnl = t.pnl;
       if (t.pnl < minPnl) minPnl = t.pnl;
+      if (t.pnl > 0) wins++;
       if (t.newsEvent) newsCount++; else normalCount++;
       if (t.exitTime && t.entryTime && t.entryTime !== '00:00:00' && t.exitTime !== '00:00:00') {
          const [h1, m1] = t.entryTime.split(':').map(Number);
@@ -252,7 +253,8 @@ const App: React.FC = () => {
     const currentBalance = initialBalance + totalPnl;
     const growthPct = (totalPnl / initialBalance) * 100;
     const avgTradePnl = trades.length > 0 ? totalPnl / trades.length : 0;
-    return { totalPnl, bestTrade: maxPnl === -Infinity ? 0 : maxPnl, worstTrade: minPnl === Infinity ? 0 : minPnl, avgTime: formatDur(avgMinutes), growthPct, shortestHold: minDuration === Infinity ? '0m' : formatDur(minDuration), longestHold: formatDur(maxDuration), shortestHoldNum: minDuration === Infinity ? 0 : minDuration, longestHoldNum: maxDuration, avgHoldNum: avgMinutes, avgTradePnl, newsCount, normalCount, currentBalance };
+    const winRate = (wins / trades.length) * 100;
+    return { totalPnl, bestTrade: maxPnl === -Infinity ? 0 : maxPnl, worstTrade: minPnl === Infinity ? 0 : minPnl, avgTime: formatDur(avgMinutes), growthPct, shortestHold: minDuration === Infinity ? '0m' : formatDur(minDuration), longestHold: formatDur(maxDuration), shortestHoldNum: minDuration === Infinity ? 0 : minDuration, longestHoldNum: maxDuration, avgHoldNum: avgMinutes, avgTradePnl, newsCount, normalCount, currentBalance, winRate, totalTrades: trades.length };
   }, [trades]);
 
   const performanceChartData = useMemo(() => {
@@ -340,7 +342,7 @@ const App: React.FC = () => {
     <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
-      {/* Main Dashboard Card - Fixed size and overflow hidden */}
+      {/* Main Dashboard Card */}
       <div className="w-[98vw] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 pb-32 lg:pb-36 transition-all duration-500">
         
         <AnimatePresence mode="wait">
@@ -353,12 +355,10 @@ const App: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-start"
         >
-          {/* LEFT SIDEBAR - Performance and Profile - Static */}
+          {/* LEFT SIDEBAR */}
           <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-start">
-            {/* 1. Total P&L Card */}
             <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
             
-            {/* 2. Performance Card */}
             <div className="liquid-card rounded-3xl p-4 w-full h-[230px] lg:h-[250px] shrink-0 flex flex-col group relative overflow-hidden">
                 <span className="text-xs uppercase tracking-widest text-nexus-muted block mb-1 group-hover:text-white transition-colors z-10 relative font-bold">Performance</span>
                 <div className="flex-1 w-full relative z-10 flex items-center justify-center">
@@ -367,7 +367,6 @@ const App: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-nexus-accent/5 to-transparent opacity-50 pointer-events-none"></div>
             </div>
 
-            {/* 3. User Identity Card (Profile Card) */}
             <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-4 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-[#1c1c21] border border-white/10 flex items-center justify-center text-nexus-accent shadow-2xl overflow-hidden shrink-0">
@@ -397,7 +396,6 @@ const App: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Combined Tooltip */}
                 <div className="absolute bottom-full left-0 mb-4 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-50 w-[260px]">
                   <div className="bg-[#0c0c0e]/95 border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col gap-3 text-left backdrop-blur-3xl">
                      <div className="flex items-center gap-2 text-nexus-muted">
@@ -432,34 +430,30 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* LEFT GUTTER - Independent Layout (Modules 4, 5, 6, Efficiency, High/Low) - Static */}
+          {/* LEFT GUTTER */}
           <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
              <div className="w-full flex flex-col gap-4 items-center pb-4">
-                {/* Module 4 */}
                 <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                     <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">4</span>
                 </div>
 
-                {/* Module 5 */}
                 <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                     <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">5</span>
                 </div>
 
-                {/* Module 6 */}
                 <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
                 </div>
 
-                {/* Efficiency Card */}
                 <div className="liquid-card rounded-3xl p-5 h-[150px] w-full max-w-[220px] shrink-0 flex flex-col relative overflow-hidden group">
                     <div className="flex justify-between items-start shrink-0 z-10">
                         <div>
                             <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">Efficiency</span>
                             <div className="flex items-center gap-1.5">
-                                 <Clock size={12} className="text-nexus-accent" />
+                                 <Activity size={12} className="text-nexus-accent" />
                                  <span className="text-[10px] font-bold text-white">Hold Time</span>
                             </div>
                         </div>
@@ -486,7 +480,6 @@ const App: React.FC = () => {
                     </div>
                 </div>
 
-                {/* High/Low P&L Extremes */}
                 <div className="liquid-card rounded-3xl p-4 w-full max-w-[220px] shrink-0 flex flex-col gap-2">
                      <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
@@ -508,7 +501,7 @@ const App: React.FC = () => {
              </div>
           </div>
 
-          {/* CENTER WORKSPACE - Always fixed size relative to calendar */}
+          {/* CENTER WORKSPACE */}
           <div className="relative flex flex-col items-center h-[700px] lg:h-[700px] lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0">
             <div className="w-full h-full min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
@@ -530,37 +523,24 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT SECTION - Combined Gutter and Sidebar - Static */}
+          {/* RIGHT SECTION */}
           <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 h-full order-3 lg:order-none lg:pl-4">
             
-            {/* Insights Card - Spanning both columns */}
+            {/* Analytics Card */}
             <div className="lg:col-span-2 w-full">
-                <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
-                  <div className="flex justify-between items-start shrink-0 z-10 mb-2">
-                     <div className="w-full">
-                        <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors">Insights</span>
-                        <div className="flex justify-between items-center w-full">
-                             <div className="flex flex-col">
-                                <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Balance</span>
-                                <span className="text-xs font-bold text-white tracking-tight">${globalStats.currentBalance.toLocaleString()}</span>
-                             </div>
-                             <div className="flex flex-col items-end">
-                                <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Norm/News</span>
-                                <span className="text-xs font-bold text-white">{globalStats.normalCount}/{globalStats.newsCount}</span>
-                             </div>
-                        </div>
-                     </div>
-                  </div>
-                  <div className="flex-1 w-full relative min-h-0 -mx-2 mt-2">
-                     <EnergyChart data={performanceChartData} />
-                  </div>
+                <div className="liquid-card rounded-3xl h-[400px] shrink-0 flex flex-col relative overflow-hidden group border-white/5">
+                  <EnergyChart 
+                    trades={trades}
+                    stats={{
+                        totalPnl: globalStats.totalPnl,
+                        growthPct: globalStats.growthPct
+                    }}
+                  />
                 </div>
             </div>
             
-            {/* Gutter Column: Spacer */}
             <div className="hidden lg:block h-px"></div>
 
-            {/* Sidebar Column: Live Voice and Activities below Insights */}
             <div className="flex flex-col gap-4 h-full justify-start w-full max-w-[220px]">
                 <div className="z-[60] w-full flex justify-center">
                     <VoiceChat />
@@ -587,7 +567,6 @@ const App: React.FC = () => {
         )}
         </AnimatePresence>
 
-        {/* Global Navigation & Actions - Anchored Bottom */}
         <div className="absolute bottom-6 left-0 right-0 z-50 flex justify-center items-center pointer-events-none">
             <div className="flex items-center gap-6 pointer-events-auto">
                <button
