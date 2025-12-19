@@ -21,9 +21,10 @@ import PaperBackground from './components/PaperBackground';
 import { TradingCalendar } from './components/TradingCalendar';
 import { JournalTable } from './components/JournalTable';
 import PsychologicalAnalysis from './components/PsychologicalAnalysis';
-import AsciiPyramid from './components/AsciiPyramid';
 import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
 import PsychologyPage from './components/PsychologyPage';
+import { VoiceChat } from './components/VoiceChat';
+import TotalPnlCard from './components/TotalPnlCard';
 import { Trade } from './types';
 
 const TABS = [
@@ -247,14 +248,6 @@ const App: React.FC = () => {
     return { totalPnl, count, winRate };
   }, [trades, currentCalendarDate]);
 
-  const rankingStats = useMemo(() => {
-    const year = currentCalendarDate.getFullYear(), month = currentCalendarDate.getMonth() + 1, monthPrefix = `${year}-${String(month).padStart(2, '0')}`, monthTrades = trades.filter(t => t.date.startsWith(monthPrefix));
-    const counts = { es: 0, nq: 0, gc: 0, other: 0 };
-    monthTrades.forEach(t => { const p = t.pair.toUpperCase(); if (p.includes('ES') || p.includes('S&P')) counts.es++; else if (p.includes('NQ') || p.includes('NAS')) counts.nq++; else if (p.includes('GC') || p.includes('GOLD') || p.includes('XAU')) counts.gc++; else counts.other++; });
-    const TARGET = 20;
-    return { es: Math.min(counts.es / TARGET, 1), nq: Math.min(counts.nq / TARGET, 1), gc: Math.min(counts.gc / TARGET, 1), other: Math.min(counts.other / TARGET, 1) };
-  }, [trades, currentCalendarDate]);
-
   const radarData = useMemo(() => {
     const totalTrades = trades.length;
     if (totalTrades === 0) return [ { subject: 'Win Rate', A: 0, fullMark: 100 }, { subject: 'Profit Factor', A: 0, fullMark: 100 }, { subject: 'Consistency', A: 0, fullMark: 100 }, { subject: 'Risk/Reward', A: 0, fullMark: 100 }, { subject: 'Discipline', A: 0, fullMark: 100 } ];
@@ -342,35 +335,14 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            /* UPDATED GRID: Sidebars reduced to 220px for massive independent gutters */
             className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 pb-4 lg:pb-0"
         >
           {/* LEFT SIDEBAR - Fixed at 220px */}
           <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full">
-            <div className="liquid-card rounded-3xl p-6 relative overflow-hidden flex flex-col group h-auto shrink-0 transition-all">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-nexus-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-              <div className="relative z-10 w-full mb-auto">
-                <div className="flex justify-between items-start">
-                  <span className="text-[10px] uppercase tracking-widest text-nexus-muted group-hover:text-white transition-colors">Total P&L</span>
-                </div>
-              </div>
-              <div className="relative z-10 flex items-end justify-between gap-1 md:gap-2 mt-4">
-                 <div className="w-16 h-12 md:w-20 md:h-16 xl:w-24 xl:h-20 relative shrink-0 -ml-2 md:-ml-4 translate-y-2 md:translate-y-3 mix-blend-screen opacity-100 flex items-end transition-all duration-300">
-                      <AsciiPyramid fillLevels={rankingStats} />
-                 </div>
-                 <div className="flex flex-col items-end gap-1 flex-1 min-w-0">
-                     <span className={`text-[8px] font-medium px-1.5 py-0.5 rounded border ${
-                         globalStats.growthPct >= 0 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'
-                     }`}>
-                         {globalStats.growthPct >= 0 ? '+' : ''}{globalStats.growthPct.toFixed(2)}%
-                     </span>
-                     <span className={`text-xl sm:text-2xl xl:text-3xl font-light tracking-tighter glow-text whitespace-nowrap transition-all duration-300 ${globalStats.totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
-                        {formatCurrency(globalStats.totalPnl)}
-                     </span>
-                 </div>
-              </div>
-            </div>
-            {/* Performance Card - Height reduced as per request */}
+            {/* NEW Total P&L Card */}
+            <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+            
+            {/* Performance Card */}
             <div className="liquid-card rounded-3xl p-4 w-full h-[230px] lg:h-[250px] shrink-0 flex flex-col group relative overflow-hidden">
                 <span className="text-xs uppercase tracking-widest text-nexus-muted block mb-1 group-hover:text-white transition-colors z-10 relative font-bold">Performance</span>
                 <div className="flex-1 w-full relative z-10 flex items-center justify-center">
@@ -382,7 +354,10 @@ const App: React.FC = () => {
 
           {/* LEFT GUTTER - Top aligned to sidebar */}
           <div className="hidden lg:flex flex-col gap-4 items-center justify-start p-0 px-4">
-             {[1, 2, 3].map((num) => (
+             <div className="z-[60] w-full flex justify-center">
+                <VoiceChat />
+             </div>
+             {[2, 3].map((num) => (
                 <div key={num} className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden">
                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">{num}</span>

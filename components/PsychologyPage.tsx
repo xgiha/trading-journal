@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -220,9 +221,11 @@ const PsychologyPage: React.FC<PsychologyPageProps> = ({ trades, onBack }) => {
                 </div>
                 <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-white/5">
                   {Object.entries(stats.breakdown).map(([name, data]) => {
-                      const pct = (data.count / (trades.length || 1)) * 100;
+                      // Fix: Added type assertion to resolve 'unknown' property access errors
+                      const breakdownData = data as { count: number; color: string };
+                      const pct = (breakdownData.count / (trades.length || 1)) * 100;
                       if (pct === 0) return null;
-                      return <div key={name} className={`${data.color} h-full transition-all duration-700`} style={{ width: `${pct}%` }} title={`${name}: ${data.count}`} />
+                      return <div key={name} className={`${breakdownData.color} h-full transition-all duration-700`} style={{ width: `${pct}%` }} title={`${name}: ${breakdownData.count}`} />
                   })}
                 </div>
             </div>
