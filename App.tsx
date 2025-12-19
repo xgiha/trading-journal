@@ -353,7 +353,7 @@ const App: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-start"
         >
-          {/* LEFT SIDEBAR - Reordered as requested */}
+          {/* LEFT SIDEBAR - Aligned to Top (matching Journal) */}
           <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-start">
             {/* 1. Total P&L Card */}
             <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
@@ -367,16 +367,7 @@ const App: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-nexus-accent/5 to-transparent opacity-50 pointer-events-none"></div>
             </div>
 
-            {/* 3. Module 3 - Placed between Performance and Profile */}
-            <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-               <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-               <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">3</span>
-            </div>
-
-            {/* Spacer to push User Identity to the absolute bottom */}
-            <div className="flex-1" />
-
-            {/* 4. User Identity Card (Profile Card) */}
+            {/* 3. User Identity Card */}
             <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-4 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-[#1c1c21] border border-white/10 flex items-center justify-center text-nexus-accent shadow-2xl overflow-hidden shrink-0">
@@ -441,7 +432,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* LEFT GUTTER - Independent Layout (Only Voice and Activities) */}
+          {/* LEFT GUTTER - Independent Layout */}
           <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
              <div className="w-full flex flex-col gap-4 items-center">
                 <div className="z-[60] w-full flex justify-center">
@@ -454,6 +445,12 @@ const App: React.FC = () => {
              </div>
              
              <div className="flex-1" />
+
+             {/* Module 3 */}
+             <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">3</span>
+             </div>
           </div>
 
           {/* CENTER WORKSPACE - Always fixed size */}
