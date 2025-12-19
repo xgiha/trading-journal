@@ -18,7 +18,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import EnergyChart from './components/EnergyChart';
 import InsightsChart from './components/InsightsChart';
-import PerformanceRadar from './components/PerformanceRadar';
 import PaperBackground from './components/PaperBackground';
 import { TradingCalendar } from './components/TradingCalendar';
 import { JournalTable } from './components/JournalTable';
@@ -282,15 +281,6 @@ const App: React.FC = () => {
     return { totalPnl, count, winRate };
   }, [trades, currentCalendarDate]);
 
-  const radarData = useMemo(() => {
-    const totalTrades = trades.length;
-    if (totalTrades === 0) return [ { subject: 'Win Rate', A: 0, fullMark: 100 }, { subject: 'Profit Factor', A: 0, fullMark: 100 }, { subject: 'Consistency', A: 0, fullMark: 100 }, { subject: 'Risk/Reward', A: 0, fullMark: 100 }, { subject: 'Discipline', A: 0, fullMark: 100 } ];
-    const wins = trades.filter(t => t.pnl > 0), losses = trades.filter(t => t.pnl < 0), winRate = (wins.length / totalTrades) * 100, grossProfit = wins.reduce((sum, t) => sum + t.pnl, 0), grossLoss = Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0)), profitFactor = grossLoss === 0 ? (grossProfit > 0 ? 3 : 0) : grossProfit / grossLoss, pfScore = Math.min((profitFactor / 3) * 100, 100), consistencyScore = Math.min((totalTrades / 50) * 100, 100), avgWin = wins.length > 0 ? grossProfit / wins.length : 0, avgLoss = losses.filter(t => t.pnl < 0).length > 0 ? Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0)) / losses.length : 1, rrRatio = avgLoss === 0 ? 0 : avgWin / avgLoss, rrScore = Math.min((rrRatio / 2) * 100, 100);
-    let disciplineScore = 100; losses.forEach(l => { if (Math.abs(l.pnl) > avgLoss * 2) disciplineScore -= 10; });
-    disciplineScore = Math.max(0, disciplineScore);
-    return [ { subject: 'Win Rate', A: winRate, fullMark: 100 }, { subject: 'Profit Factor', A: pfScore, fullMark: 100 }, { subject: 'Consistency', A: consistencyScore, fullMark: 100 }, { subject: 'Risk/Reward', A: rrScore, fullMark: 100 }, { subject: 'Discipline', A: disciplineScore, fullMark: 100 } ];
-  }, [trades]);
-
   const handleAddTradeClick = (date: string) => { setSelectedDate(date); setEditingTrade(undefined); setIsAddModalOpen(true); };
   const handleAddTradeBtnClick = () => { setSelectedDate(getLocalDateString()); setEditingTrade(undefined); setIsAddModalOpen(true); };
   const handleEditTrade = (trade: Trade) => { setSelectedDate(trade.date); setEditingTrade(trade); setIsAddModalOpen(true); };
@@ -368,12 +358,9 @@ const App: React.FC = () => {
           <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-start overflow-y-auto custom-scrollbar pr-1">
             <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
             
-            <div className="liquid-card rounded-3xl p-4 w-full h-[230px] lg:h-[250px] shrink-0 flex flex-col group relative overflow-hidden">
-                <span className="text-xs uppercase tracking-widest text-nexus-muted block mb-1 group-hover:text-white transition-colors z-10 relative font-bold">Performance</span>
-                <div className="flex-1 w-full relative z-10 flex items-center justify-center">
-                   <PerformanceRadar data={radarData} />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-nexus-accent/5 to-transparent opacity-50 pointer-events-none"></div>
+            {/* Voice Chat Moved Here to replace Performance Card */}
+            <div className="shrink-0 flex justify-center">
+              <VoiceChat />
             </div>
 
             <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-4 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
@@ -404,10 +391,6 @@ const App: React.FC = () => {
                         <div className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
                     </div>
                 </div>
-            </div>
-
-            <div className="shrink-0 flex justify-center">
-              <VoiceChat />
             </div>
 
             <div className="shrink-0 flex justify-center mb-6">
