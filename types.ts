@@ -1,3 +1,4 @@
+
 export interface SystemLog {
   id: string;
   event: string;
@@ -50,4 +51,13 @@ export interface DayStats {
   date: string;
   trades: number;
   pnl: number;
+}
+
+export interface ActivityLog {
+  id: string;
+  type: 'add' | 'edit' | 'delete' | 'system';
+  title: string;
+  description: string;
+  time: string;
+  timestamp: number;
 }

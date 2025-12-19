@@ -27,7 +27,7 @@ import PsychologyPage from './components/PsychologyPage';
 import { VoiceChat } from './components/VoiceChat';
 import TotalPnlCard from './components/TotalPnlCard';
 import { ActivityDropdown } from './components/ActivityDropdown';
-import { Trade } from './types';
+import { Trade, ActivityLog } from './types';
 
 const TABS = [
   { id: 'dashboard', icon: LayoutGrid, label: 'Dashboard' },
@@ -42,6 +42,20 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'psychology'>('dashboard');
   const [activeTab, setActiveTab] = useState('dashboard');
   
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+
+  const addActivity = (type: ActivityLog['type'], title: string, description: string) => {
+    const newLog: ActivityLog = {
+        id: `act-${Date.now()}`,
+        type,
+        title,
+        description,
+        time: 'Just Now',
+        timestamp: Date.now()
+    };
+    setActivityLogs(prev => [newLog, ...prev]);
+  };
+
   const [trades, setTrades] = useState<Trade[]>(() => {
     try {
       const saved = localStorage.getItem('nexus_trades');
@@ -269,10 +283,54 @@ const App: React.FC = () => {
   const handleAddTradeClick = (date: string) => { setSelectedDate(date); setEditingTrade(undefined); setIsAddModalOpen(true); };
   const handleAddTradeBtnClick = () => { setSelectedDate(getLocalDateString()); setEditingTrade(undefined); setIsAddModalOpen(true); };
   const handleEditTrade = (trade: Trade) => { setSelectedDate(trade.date); setEditingTrade(trade); setIsAddModalOpen(true); };
-  const handleDeleteTrade = (tradeId: string) => { let updatedTrades: Trade[] = []; setTrades(prev => { updatedTrades = prev.filter(t => t.id !== tradeId); return updatedTrades; }); syncToCloud(updatedTrades); };
+  
+  const handleDeleteTrade = (tradeId: string) => { 
+    const tradeToDelete = trades.find(t => t.id === tradeId);
+    let updatedTrades: Trade[] = []; 
+    setTrades(prev => { 
+        updatedTrades = prev.filter(t => t.id !== tradeId); 
+        return updatedTrades; 
+    }); 
+    syncToCloud(updatedTrades); 
+    if (tradeToDelete) {
+        addActivity('delete', 'Entry Removed', `Deleted ${tradeToDelete.pair} ${tradeToDelete.type} from history.`);
+    }
+  };
+
   const handleViewDayClick = (date: string) => { setSelectedDate(date); setSelectedTrades(trades.filter(t => t.date === date)); setIsDetailModalOpen(true); };
   const handleViewWeekClick = (weekTrades: Trade[], weekLabel: string) => { setSelectedDate(weekLabel); setSelectedTrades(weekTrades); setIsDetailModalOpen(true); };
-  const handleAddOrUpdateTrade = (tradeData: Trade) => { const currentTrades = trades; let newTrades: Trade[] = []; const existingIndex = currentTrades.findIndex(t => t.id === tradeData.id); if (existingIndex >= 0) { newTrades = [...currentTrades]; newTrades[existingIndex] = tradeData; } else { newTrades = [...currentTrades, tradeData]; } setTrades(newTrades); syncToCloud(newTrades); if (selectedDate === tradeData.date) { setSelectedTrades(prev => { const existingIndex = prev.findIndex(t => t.id === tradeData.id); if (existingIndex >= 0) { const newSelected = [...prev]; newSelected[existingIndex] = tradeData; return newSelected; } else { return [...prev, tradeData]; } }); } };
+  
+  const handleAddOrUpdateTrade = (tradeData: Trade) => { 
+    const currentTrades = trades; 
+    let newTrades: Trade[] = []; 
+    const existingIndex = currentTrades.findIndex(t => t.id === tradeData.id); 
+    
+    if (existingIndex >= 0) { 
+        newTrades = [...currentTrades]; 
+        newTrades[existingIndex] = tradeData; 
+        addActivity('edit', 'Journal Updated', `Entry for ${tradeData.pair} has been modified.`);
+    } else { 
+        newTrades = [...currentTrades, tradeData]; 
+        addActivity('add', 'Trade Executed', `${tradeData.pair} ${tradeData.type} position recorded.`);
+    } 
+    
+    setTrades(newTrades); 
+    syncToCloud(newTrades); 
+    
+    if (selectedDate === tradeData.date) { 
+        setSelectedTrades(prev => { 
+            const existingIndex = prev.findIndex(t => t.id === tradeData.id); 
+            if (existingIndex >= 0) { 
+                const newSelected = [...prev]; 
+                newSelected[existingIndex] = tradeData; 
+                return newSelected; 
+            } else { 
+                return [...prev, tradeData]; 
+            } 
+        }); 
+    } 
+  };
+
   const handleTabChange = (tabId: string) => { setCurrentView('dashboard'); setActiveTab(tabId); };
   const handlePsychologyClick = () => { setCurrentView(currentView === 'psychology' ? 'dashboard' : 'psychology'); };
 
@@ -312,15 +370,15 @@ const App: React.FC = () => {
             {/* 3. Combined Identity & Market Card */}
             <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-4 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-nexus-accent shadow-inner overflow-hidden">
+                    <div className="w-12 h-12 rounded-full bg-[#151518] border border-white/10 flex items-center justify-center text-nexus-accent shadow-inner overflow-hidden shrink-0">
                         <img 
                           src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/attachments/profile-pic-uN0Tq8r9C5bXj3Z.png" 
                           alt="Avatar" 
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover scale-110 translate-y-1"
                         />
                     </div>
                     <div className="flex flex-col">
-                        <h2 className="text-white font-bold text-sm tracking-tight leading-tight">Welcome, Gehan</h2>
+                        <h2 className="text-white font-bold text-sm tracking-tight leading-tight">Gehan</h2>
                         <p className="text-[10px] text-nexus-muted leading-tight font-medium uppercase tracking-widest opacity-60">Active session</p>
                     </div>
                 </div>
@@ -382,7 +440,7 @@ const App: React.FC = () => {
              
              {/* Card 2: Activity Dropdown */}
              <div className="z-[50] w-full flex justify-center">
-                <ActivityDropdown />
+                <ActivityDropdown logs={activityLogs} />
              </div>
 
              {/* Placeholder Card 3 */}
