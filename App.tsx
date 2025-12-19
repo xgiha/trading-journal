@@ -351,10 +351,10 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-end"
+            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-start"
         >
-          {/* LEFT SIDEBAR - Fixed at 220px */}
-          <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-end">
+          {/* LEFT SIDEBAR - Aligned to Top (matching Journal) */}
+          <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-start">
             {/* 1. Total P&L Card */}
             <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
             
@@ -367,14 +367,14 @@ const App: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-nexus-accent/5 to-transparent opacity-50 pointer-events-none"></div>
             </div>
 
-            {/* 3. Combined Identity & Market Card */}
+            {/* 3. User Identity Card */}
             <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-4 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#151518] border border-white/10 flex items-center justify-center text-nexus-accent shadow-inner overflow-hidden shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-[#1c1c21] border border-white/10 flex items-center justify-center text-nexus-accent shadow-2xl overflow-hidden shrink-0">
                         <img 
                           src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/attachments/profile-pic-uN0Tq8r9C5bXj3Z.png" 
                           alt="Avatar" 
-                          className="w-full h-full object-cover scale-110 translate-y-1"
+                          className="w-full h-full object-cover scale-125 translate-y-2 opacity-90"
                         />
                     </div>
                     <div className="flex flex-col">
@@ -397,7 +397,7 @@ const App: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Combined Tooltip (Hover on card) */}
+                {/* Combined Tooltip */}
                 <div className="absolute bottom-full left-0 mb-4 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-50 w-[260px]">
                   <div className="bg-[#0c0c0e]/95 border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col gap-3 text-left backdrop-blur-3xl">
                      <div className="flex items-center gap-2 text-nexus-muted">
@@ -432,25 +432,28 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* LEFT GUTTER */}
-          <div className="hidden lg:flex flex-col gap-4 items-center justify-end p-0 px-4 h-full">
-             <div className="z-[60] w-full flex justify-center">
-                <VoiceChat />
+          {/* LEFT GUTTER - Independent Layout */}
+          <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
+             <div className="w-full flex flex-col gap-4 items-center">
+                <div className="z-[60] w-full flex justify-center">
+                    <VoiceChat />
+                </div>
+                
+                <div className="z-[50] w-full flex justify-center">
+                    <ActivityDropdown logs={activityLogs} />
+                </div>
              </div>
              
-             {/* Card 2: Activity Dropdown */}
-             <div className="z-[50] w-full flex justify-center">
-                <ActivityDropdown logs={activityLogs} />
-             </div>
+             <div className="flex-1" />
 
-             {/* Placeholder Card 3 */}
+             {/* Module 3 */}
              <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                 <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">3</span>
              </div>
           </div>
 
-          {/* CENTER WORKSPACE - Fixed at 800px and fixed height to match sidebars */}
+          {/* CENTER WORKSPACE - Always fixed size */}
           <div className="relative flex flex-col items-center h-[700px] lg:h-[700px] lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0">
             <div className="w-full h-full min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
@@ -472,17 +475,28 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT GUTTER */}
-          <div className="hidden lg:flex flex-col gap-4 items-center justify-end p-0 px-4 h-full">
-             {[4, 5, 6].map((num) => (
-                <div key={num} className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                   <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                   <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">{num}</span>
+          {/* RIGHT GUTTER - Independent Layout */}
+          <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
+             <div className="w-full flex flex-col gap-4 items-center">
+                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">4</span>
                 </div>
-             ))}
+                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">5</span>
+                </div>
+             </div>
+
+             <div className="flex-1" />
+
+             <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
+             </div>
           </div>
 
-          {/* RIGHT SIDEBAR - Fixed at 220px */}
+          {/* RIGHT SIDEBAR - Separated Logic (Aligned to Bottom) */}
           <div className="flex flex-col gap-4 h-full min-h-0 order-3 lg:order-none max-w-[220px] w-full justify-end">
             <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10 mb-2">
