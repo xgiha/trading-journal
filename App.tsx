@@ -11,7 +11,8 @@ import {
   MinusCircle, 
   CheckCircle,
   TrendingUp,
-  Brain
+  Brain,
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,6 +26,7 @@ import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
 import PsychologyPage from './components/PsychologyPage';
 import { VoiceChat } from './components/VoiceChat';
 import TotalPnlCard from './components/TotalPnlCard';
+import { ActivityDropdown } from './components/ActivityDropdown';
 import { Trade } from './types';
 
 const TABS = [
@@ -166,6 +168,13 @@ const App: React.FC = () => {
     hour12: true
   });
 
+  const nyTimeStr = currentTime.toLocaleTimeString('en-US', {
+    timeZone: 'America/New_York',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+
   const chicagoTime = new Date(currentTime.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
   const chicagoDayName = chicagoTime.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
   const chicagoProgress = ((chicagoTime.getHours() * 60 + chicagoTime.getMinutes()) / (24 * 60)) * 100;
@@ -273,60 +282,9 @@ const App: React.FC = () => {
     <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
-      {/* Main Dashboard Card - Expanded to screen size */}
+      {/* Main Dashboard Card */}
       <div className="w-[98vw] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 transition-all duration-500">
         
-        {/* Header Section - Decoupled from Dashboard Grid */}
-        <div className="relative flex flex-col md:flex-row items-center justify-center mb-6 shrink-0 z-20 w-full min-h-[50px] gap-4 md:gap-0">
-           {/* Static Welcome Group - Positioned absolutely to container for zero interference */}
-           <div className="md:absolute md:left-0 md:top-1/2 md:-translate-y-1/2 text-center md:text-left transition-none">
-             <h2 className="text-white font-bold text-xl md:text-xl tracking-tight">Welcome, Gehan</h2>
-             <p className="text-xs text-nexus-muted">Good to see you again.</p>
-           </div>
-           
-           {/* Market Status Group - Center-relative */}
-           <div className="group relative">
-             <div className="liquid-card rounded-full pl-3 pr-5 py-2 flex items-center gap-4 cursor-default transition-transform active:scale-95">
-                <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md">
-                   <div className={`w-2 h-2 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
-                </div>
-                <div className="flex flex-col text-left">
-                  <h1 className="text-xs font-bold tracking-widest uppercase text-white drop-shadow-md">
-                    {isMarketOpen ? 'Market Open' : 'Market Closed'}
-                  </h1>
-                  <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-mono">
-                    CMB {colomboTime}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto z-50 w-[300px]">
-                  <div className="bg-[#18181b] border border-white/10 rounded-xl p-4 shadow-2xl flex flex-col gap-3 text-left">
-                     <div className="flex items-center gap-2 text-nexus-muted">
-                        {isMarketOpen ? <CheckCircle size={16} /> : <MinusCircle size={16} />}
-                        <span className="font-bold text-sm text-[#e4e4e7]">{isMarketOpen ? 'Market open' : 'Market closed'}</span>
-                     </div>
-                     <p className="text-sm text-[#a1a1aa] leading-snug">
-                       {isMarketOpen ? <span>Market is active. It'll close in <strong className="text-white">{verboseCountdown}</strong>.</span> : <span>Time for a walk — this market is closed. It'll open in <strong className="text-white">{verboseCountdown}</strong>.</span>}
-                     </p>
-                     <div className="mt-2">
-                        <div className="flex justify-between text-[10px] text-[#52525b] mb-1 font-bold tracking-wider">
-                           <span>{chicagoDayName} 00:00</span>
-                           <span>24:00</span>
-                        </div>
-                        <div className="relative h-1.5 bg-[#27272a] rounded-full w-full overflow-hidden">
-                            {renderTimelineSegments()}
-                            <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_8px_white] z-20" style={{ left: `${chicagoProgress}%` }}></div>
-                        </div>
-                        <div className="mt-3 text-center">
-                            <span className="text-[10px] text-[#52525b] font-medium">Exchange timezone: Chicago (UTC-6)</span>
-                        </div>
-                     </div>
-                  </div>
-              </div>
-           </div>
-        </div>
-
         <AnimatePresence mode="wait">
         {currentView === 'dashboard' ? (
         <motion.div 
@@ -335,14 +293,14 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 pb-4 lg:pb-0"
+            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10"
         >
           {/* LEFT SIDEBAR - Fixed at 220px */}
           <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full">
-            {/* NEW Total P&L Card */}
+            {/* 1. Total P&L Card */}
             <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
             
-            {/* Performance Card */}
+            {/* 2. Performance Card */}
             <div className="liquid-card rounded-3xl p-4 w-full h-[230px] lg:h-[250px] shrink-0 flex flex-col group relative overflow-hidden">
                 <span className="text-xs uppercase tracking-widest text-nexus-muted block mb-1 group-hover:text-white transition-colors z-10 relative font-bold">Performance</span>
                 <div className="flex-1 w-full relative z-10 flex items-center justify-center">
@@ -350,23 +308,92 @@ const App: React.FC = () => {
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-nexus-accent/5 to-transparent opacity-50 pointer-events-none"></div>
             </div>
+
+            {/* 3. Combined Identity & Market Card */}
+            <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-4 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
+                <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-nexus-accent shadow-inner overflow-hidden">
+                        <img 
+                          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/attachments/profile-pic-uN0Tq8r9C5bXj3Z.png" 
+                          alt="Avatar" 
+                          className="w-full h-full object-cover"
+                        />
+                    </div>
+                    <div className="flex flex-col">
+                        <h2 className="text-white font-bold text-sm tracking-tight leading-tight">Welcome, Gehan</h2>
+                        <p className="text-[10px] text-nexus-muted leading-tight font-medium uppercase tracking-widest opacity-60">Active session</p>
+                    </div>
+                </div>
+                
+                <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                    <div className="flex flex-col">
+                        <h1 className="text-[10px] font-bold tracking-widest uppercase text-white drop-shadow-md">
+                            {isMarketOpen ? 'Market Open' : 'Market Closed'}
+                        </h1>
+                        <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-mono mt-0.5">
+                            UTC +5:30 Colombo {colomboTime}
+                        </span>
+                    </div>
+                    <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md shrink-0">
+                        <div className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
+                    </div>
+                </div>
+
+                {/* Combined Tooltip (Hover on card) */}
+                <div className="absolute bottom-full left-0 mb-4 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-50 w-[260px]">
+                  <div className="bg-[#0c0c0e]/95 border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col gap-3 text-left backdrop-blur-3xl">
+                     <div className="flex items-center gap-2 text-nexus-muted">
+                        {isMarketOpen ? <CheckCircle size={14} className="text-emerald-500" /> : <MinusCircle size={14} className="text-red-500" />}
+                        <span className="font-bold text-xs text-white uppercase tracking-wider">{isMarketOpen ? 'Market is active' : 'Market is idle'}</span>
+                     </div>
+                     <p className="text-[11px] text-nexus-muted leading-snug">
+                       {isMarketOpen ? <span>Execution window is live. Closes in <strong className="text-white font-mono">{verboseCountdown}</strong>.</span> : <span>Exchange is currently offline. Opens in <strong className="text-white font-mono">{verboseCountdown}</strong>.</span>}
+                     </p>
+                     
+                     <div className="mt-1 border-t border-white/5 pt-3">
+                        <div className="flex justify-between items-center mb-2">
+                           <span className="text-[9px] text-nexus-muted uppercase font-bold tracking-widest">Local Session</span>
+                           <span className="text-[10px] text-white font-mono">UTC +5:30 {colomboTime}</span>
+                        </div>
+                        <div className="flex justify-between items-center mb-3">
+                           <span className="text-[9px] text-nexus-muted uppercase font-bold tracking-widest">Exchange Time</span>
+                           <span className="text-[10px] text-white font-mono">UTC -5 NY {nyTimeStr}</span>
+                        </div>
+
+                        <div className="flex justify-between text-[8px] text-[#52525b] mb-1 font-bold tracking-widest uppercase">
+                           <span>{chicagoDayName} 00:00</span>
+                           <span>24:00</span>
+                        </div>
+                        <div className="relative h-1 bg-[#27272a] rounded-full w-full overflow-hidden">
+                            {renderTimelineSegments()}
+                            <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_8px_white] z-20" style={{ left: `${chicagoProgress}%` }}></div>
+                        </div>
+                     </div>
+                  </div>
+                </div>
+            </div>
           </div>
 
-          {/* LEFT GUTTER - Top aligned to sidebar */}
+          {/* LEFT GUTTER */}
           <div className="hidden lg:flex flex-col gap-4 items-center justify-start p-0 px-4">
              <div className="z-[60] w-full flex justify-center">
                 <VoiceChat />
              </div>
-             {[2, 3].map((num) => (
-                <div key={num} className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden">
-                   <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                   <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">{num}</span>
-                </div>
-             ))}
+             
+             {/* Card 2: Activity Dropdown */}
+             <div className="z-[50] w-full flex justify-center">
+                <ActivityDropdown />
+             </div>
+
+             {/* Placeholder Card 3 */}
+             <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">3</span>
+             </div>
           </div>
 
           {/* CENTER WORKSPACE - Fixed at 800px */}
-          <div className="relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-none pb-24 lg:pb-20 w-full max-w-[800px] mx-auto">
+          <div className="relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-none pb-24 lg:pb-0 w-full max-w-[800px] mx-auto">
             <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
@@ -387,7 +414,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT GUTTER - Top aligned to sidebar */}
+          {/* RIGHT GUTTER */}
           <div className="hidden lg:flex flex-col gap-4 items-center justify-start p-0 px-4">
              {[4, 5, 6].map((num) => (
                 <div key={num} className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden">
