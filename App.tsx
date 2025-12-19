@@ -432,17 +432,9 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* LEFT GUTTER - Independent Layout (Voice, Activities, Modules 4, 5, 6) */}
+          {/* LEFT GUTTER - Independent Layout (Modules 4, 5, 6, Efficiency, High/Low) */}
           <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start overflow-y-auto custom-scrollbar">
              <div className="w-full flex flex-col gap-4 items-center pb-4">
-                <div className="z-[60] w-full flex justify-center">
-                    <VoiceChat />
-                </div>
-                
-                <div className="z-[50] w-full flex justify-center">
-                    <ActivityDropdown logs={activityLogs} />
-                </div>
-
                 {/* Module 4 */}
                 <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
@@ -460,66 +452,9 @@ const App: React.FC = () => {
                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
                 </div>
-             </div>
-             
-             <div className="flex-1" />
-          </div>
 
-          {/* CENTER WORKSPACE - Always fixed size */}
-          <div className="relative flex flex-col items-center h-[700px] lg:h-[700px] lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0">
-            <div className="w-full h-full min-h-0 relative overflow-hidden">
-               <AnimatePresence mode="wait">
-                 <motion.div
-                   key={activeTab}
-                   initial={{ opacity: 0, filter: 'blur(8px)', scale: 0.98 }}
-                   animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
-                   exit={{ opacity: 0, filter: 'blur(8px)', scale: 0.98 }}
-                   transition={{ duration: 0.3, ease: "easeInOut" }}
-                   className="absolute inset-0 w-full h-full flex flex-col"
-                 >
-                   {activeTab === 'dashboard' ? (
-                     <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} monthlyStats={monthlyStats} />
-                   ) : (
-                     <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} />
-                   )}
-                 </motion.div>
-               </AnimatePresence>
-            </div>
-          </div>
-
-          {/* RIGHT SECTION - Combined Gutter and Sidebar with balanced padding to match left side gap */}
-          <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 h-full items-start order-3 lg:order-none lg:pl-4">
-            
-            {/* Insights Card - Spanning both columns */}
-            <div className="lg:col-span-2 w-full">
-                <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
-                  <div className="flex justify-between items-start shrink-0 z-10 mb-2">
-                     <div className="w-full">
-                        <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors">Insights</span>
-                        <div className="flex justify-between items-center w-full">
-                             <div className="flex flex-col">
-                                <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Balance</span>
-                                <span className="text-xs font-bold text-white tracking-tight">${globalStats.currentBalance.toLocaleString()}</span>
-                             </div>
-                             <div className="flex flex-col items-end">
-                                <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Norm/News</span>
-                                <span className="text-xs font-bold text-white">{globalStats.normalCount}/{globalStats.newsCount}</span>
-                             </div>
-                        </div>
-                     </div>
-                  </div>
-                  <div className="flex-1 w-full relative min-h-0 -mx-2 mt-2">
-                     <EnergyChart data={performanceChartData} />
-                  </div>
-                </div>
-            </div>
-            
-            {/* Empty first column where Modules 5 and 6 used to be */}
-            <div className="hidden lg:block h-full"></div>
-
-            {/* Right sidebar column: Efficiency and P&L extremes */}
-            <div className="flex flex-col gap-4 h-full justify-start w-full max-w-[220px]">
-                <div className="liquid-card rounded-3xl p-5 h-[150px] shrink-0 flex flex-col relative overflow-hidden group">
+                {/* Efficiency Card */}
+                <div className="liquid-card rounded-3xl p-5 h-[150px] w-full max-w-[220px] shrink-0 flex flex-col relative overflow-hidden group">
                     <div className="flex justify-between items-start shrink-0 z-10">
                         <div>
                             <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">Efficiency</span>
@@ -551,7 +486,8 @@ const App: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="liquid-card rounded-3xl p-4 shrink-0 flex flex-col gap-2">
+                {/* High/Low P&L Extremes */}
+                <div className="liquid-card rounded-3xl p-4 w-full max-w-[220px] shrink-0 flex flex-col gap-2">
                      <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                             <div className="flex items-center gap-2">
@@ -568,6 +504,72 @@ const App: React.FC = () => {
                             <span className="text-[10px] font-bold text-red-400 font-mono">{formatCurrency(globalStats.worstTrade)}</span>
                         </div>
                      </div>
+                </div>
+             </div>
+             
+             <div className="flex-1" />
+          </div>
+
+          {/* CENTER WORKSPACE - Always fixed size */}
+          <div className="relative flex flex-col items-center h-[700px] lg:h-[700px] lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0">
+            <div className="w-full h-full min-h-0 relative overflow-hidden">
+               <AnimatePresence mode="wait">
+                 <motion.div
+                   key={activeTab}
+                   initial={{ opacity: 0, filter: 'blur(8px)', scale: 0.98 }}
+                   animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
+                   exit={{ opacity: 0, filter: 'blur(8px)', scale: 0.98 }}
+                   transition={{ duration: 0.3, ease: "easeInOut" }}
+                   className="absolute inset-0 w-full h-full flex flex-col"
+                 >
+                   {activeTab === 'dashboard' ? (
+                     <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} monthlyStats={monthlyStats} />
+                   ) : (
+                     <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} />
+                   )}
+                 </motion.div>
+               </AnimatePresence>
+            </div>
+          </div>
+
+          {/* RIGHT SECTION - Combined Gutter and Sidebar */}
+          <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 h-full items-start order-3 lg:order-none lg:pl-4">
+            
+            {/* Insights Card - Spanning both columns */}
+            <div className="lg:col-span-2 w-full">
+                <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
+                  <div className="flex justify-between items-start shrink-0 z-10 mb-2">
+                     <div className="w-full">
+                        <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors">Insights</span>
+                        <div className="flex justify-between items-center w-full">
+                             <div className="flex flex-col">
+                                <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Balance</span>
+                                <span className="text-xs font-bold text-white tracking-tight">${globalStats.currentBalance.toLocaleString()}</span>
+                             </div>
+                             <div className="flex flex-col items-end">
+                                <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Norm/News</span>
+                                <span className="text-xs font-bold text-white">{globalStats.normalCount}/{globalStats.newsCount}</span>
+                             </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div className="flex-1 w-full relative min-h-0 -mx-2 mt-2">
+                     <EnergyChart data={performanceChartData} />
+                  </div>
+                </div>
+            </div>
+            
+            {/* Gutter Column: Spacer */}
+            <div className="hidden lg:block h-full"></div>
+
+            {/* Sidebar Column: Live Voice and Activities below Insights */}
+            <div className="flex flex-col gap-4 h-full justify-start w-full max-w-[220px]">
+                <div className="z-[60] w-full flex justify-center">
+                    <VoiceChat />
+                </div>
+                
+                <div className="z-[50] w-full flex justify-center">
+                    <ActivityDropdown logs={activityLogs} />
                 </div>
             </div>
 
