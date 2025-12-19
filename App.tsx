@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import EnergyChart from './components/EnergyChart';
+import InsightsChart from './components/InsightsChart';
 import PerformanceRadar from './components/PerformanceRadar';
 import PaperBackground from './components/PaperBackground';
 import { TradingCalendar } from './components/TradingCalendar';
@@ -268,8 +269,16 @@ const App: React.FC = () => {
   }, [trades]);
 
   const monthlyStats = useMemo(() => {
-    const year = currentCalendarDate.getFullYear(), month = currentCalendarDate.getMonth() + 1, monthPrefix = `${year}-${String(month).padStart(2, '0')}`, monthTrades = trades.filter(t => t.date.startsWith(monthPrefix));
-    const totalPnl = monthTrades.reduce((sum, t) => sum + t.pnl, 0), count = monthTrades.length, wins = monthTrades.filter(t => t.pnl > 0).length, winRate = count > 0 ? (wins / count) * 100 : 0;
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth() + 1;
+    const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
+    const monthTrades = trades.filter(t => t.date.startsWith(monthPrefix));
+    
+    const totalPnl = monthTrades.reduce((sum, t) => sum + t.pnl, 0);
+    const count = monthTrades.length;
+    const wins = monthTrades.filter(t => t.pnl > 0).length;
+    const winRate = count > 0 ? (wins / count) * 100 : 0;
+    
     return { totalPnl, count, winRate };
   }, [trades, currentCalendarDate]);
 
@@ -339,11 +348,11 @@ const App: React.FC = () => {
   const activeIndex = TABS.findIndex(t => t.id === activeTab);
 
   return (
-    <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
+    <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
-      {/* Main Dashboard Card */}
-      <div className="w-[98vw] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 pb-32 lg:pb-36 transition-all duration-500">
+      {/* Main Dashboard Card - Fixed padding issue */}
+      <div className="w-[98vw] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 pb-6 lg:pb-10 transition-all duration-500">
         
         <AnimatePresence mode="wait">
         {currentView === 'dashboard' ? (
@@ -356,7 +365,7 @@ const App: React.FC = () => {
             className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-start"
         >
           {/* LEFT SIDEBAR */}
-          <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-start">
+          <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-start overflow-y-auto custom-scrollbar pr-1">
             <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
             
             <div className="liquid-card rounded-3xl p-4 w-full h-[230px] lg:h-[250px] shrink-0 flex flex-col group relative overflow-hidden">
@@ -395,38 +404,14 @@ const App: React.FC = () => {
                         <div className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
                     </div>
                 </div>
+            </div>
 
-                <div className="absolute bottom-full left-0 mb-4 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-50 w-[260px]">
-                  <div className="bg-[#0c0c0e]/95 border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col gap-3 text-left backdrop-blur-3xl">
-                     <div className="flex items-center gap-2 text-nexus-muted">
-                        {isMarketOpen ? <CheckCircle size={14} className="text-emerald-500" /> : <MinusCircle size={14} className="text-red-500" />}
-                        <span className="font-bold text-xs text-white uppercase tracking-wider">{isMarketOpen ? 'Market is active' : 'Market is idle'}</span>
-                     </div>
-                     <p className="text-[11px] text-nexus-muted leading-snug">
-                       {isMarketOpen ? <span>Execution window is live. Closes in <strong className="text-white font-mono">{verboseCountdown}</strong>.</span> : <span>Exchange is currently offline. Opens in <strong className="text-white font-mono">{verboseCountdown}</strong>.</span>}
-                     </p>
-                     
-                     <div className="mt-1 border-t border-white/5 pt-3">
-                        <div className="flex justify-between items-center mb-2">
-                           <span className="text-[9px] text-nexus-muted uppercase font-bold tracking-widest">Local Session</span>
-                           <span className="text-[10px] text-white font-mono">UTC +5:30 {colomboTime}</span>
-                        </div>
-                        <div className="flex justify-between items-center mb-3">
-                           <span className="text-[9px] text-nexus-muted uppercase font-bold tracking-widest">Exchange Time</span>
-                           <span className="text-[10px] text-white font-mono">UTC -5 NY {nyTimeStr}</span>
-                        </div>
+            <div className="shrink-0 flex justify-center">
+              <VoiceChat />
+            </div>
 
-                        <div className="flex justify-between text-[8px] text-[#52525b] mb-1 font-bold tracking-widest uppercase">
-                           <span>{chicagoDayName} 00:00</span>
-                           <span>24:00</span>
-                        </div>
-                        <div className="relative h-1 bg-[#27272a] rounded-full w-full overflow-hidden">
-                            {renderTimelineSegments()}
-                            <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_8px_white] z-20" style={{ left: `${chicagoProgress}%` }}></div>
-                        </div>
-                     </div>
-                  </div>
-                </div>
+            <div className="shrink-0 flex justify-center mb-6">
+              <ActivityDropdown logs={activityLogs} />
             </div>
           </div>
 
@@ -434,17 +419,12 @@ const App: React.FC = () => {
           <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
              <div className="w-full flex flex-col gap-4 items-center pb-4">
                 <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                     <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">4</span>
                 </div>
-
                 <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                     <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">5</span>
                 </div>
-
                 <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                   <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
                 </div>
 
@@ -458,7 +438,7 @@ const App: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="flex-1 w-full relative min-h-0 mt-3 flex flex-col justify-center gap-2">
+                    <div className="flex-1 w-full mt-3 flex flex-col justify-center gap-2">
                         <div className="flex flex-col gap-1">
                            <div className="flex justify-between items-end">
                               <span className="text-[8px] text-nexus-muted uppercase tracking-widest font-medium">Avg</span>
@@ -468,32 +448,17 @@ const App: React.FC = () => {
                                <div className="h-full bg-nexus-accent rounded-full" style={{ width: `${Math.max(5, (globalStats.avgHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}></div>
                            </div>
                         </div>
-                        <div className="flex flex-col gap-1">
-                           <div className="flex justify-between items-end">
-                              <span className="text-[8px] text-nexus-muted uppercase tracking-widest font-medium">Peak</span>
-                              <span className="text-[10px] font-bold text-white font-mono">{globalStats.longestHold}</span>
-                           </div>
-                           <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
-                               <div className="h-full bg-blue-500 rounded-full opacity-60" style={{ width: '100%' }}></div>
-                           </div>
-                        </div>
                     </div>
                 </div>
 
                 <div className="liquid-card rounded-3xl p-4 w-full max-w-[220px] shrink-0 flex flex-col gap-2">
                      <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                            <div className="flex items-center gap-2">
-                               <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500"><ArrowUpRight size={10} /></div>
-                               <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">High</span>
-                            </div>
+                            <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">High</span>
                             <span className="text-[10px] font-bold text-emerald-400 font-mono">{formatCurrency(globalStats.bestTrade)}</span>
                         </div>
                         <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                            <div className="flex items-center gap-2">
-                               <div className="p-1 rounded-full bg-red-500/20 text-red-500"><ArrowDownRight size={10} /></div>
-                               <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">Low</span>
-                            </div>
+                            <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">Low</span>
                             <span className="text-[10px] font-bold text-red-400 font-mono">{formatCurrency(globalStats.worstTrade)}</span>
                         </div>
                      </div>
@@ -502,7 +467,7 @@ const App: React.FC = () => {
           </div>
 
           {/* CENTER WORKSPACE */}
-          <div className="relative flex flex-col items-center h-[700px] lg:h-[700px] lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0">
+          <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0">
             <div className="w-full h-full min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
@@ -523,12 +488,12 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT SECTION */}
-          <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 h-full order-3 lg:order-none lg:pl-4">
+          {/* RIGHT SECTION - Optimized for full visibility */}
+          <div className="lg:col-span-2 flex flex-col gap-4 h-full order-3 lg:order-none lg:pl-4 overflow-hidden">
             
             {/* Analytics Card */}
-            <div className="lg:col-span-2 w-full">
-                <div className="liquid-card rounded-3xl h-[400px] shrink-0 flex flex-col relative overflow-hidden group border-white/5">
+            <div className="w-full flex-1 min-h-0">
+                <div className="liquid-card rounded-3xl h-full flex flex-col relative overflow-hidden border-white/5 shadow-lg">
                   <EnergyChart 
                     trades={trades}
                     stats={{
@@ -538,16 +503,11 @@ const App: React.FC = () => {
                   />
                 </div>
             </div>
-            
-            <div className="hidden lg:block h-px"></div>
 
-            <div className="flex flex-col gap-4 h-full justify-start w-full max-w-[220px]">
-                <div className="z-[60] w-full flex justify-center">
-                    <VoiceChat />
-                </div>
-                
-                <div className="z-[50] w-full flex justify-center">
-                    <ActivityDropdown logs={activityLogs} />
+            {/* Insights Comparative Chart Card */}
+            <div className="w-full flex-1 min-h-0">
+                <div className="liquid-card rounded-3xl h-full flex flex-col relative overflow-hidden border-white/5 shadow-lg">
+                  <InsightsChart trades={trades} />
                 </div>
             </div>
 
@@ -567,12 +527,12 @@ const App: React.FC = () => {
         )}
         </AnimatePresence>
 
-        <div className="absolute bottom-6 left-0 right-0 z-50 flex justify-center items-center pointer-events-none">
+        {/* Floating Menu - Truly independent */}
+        <div className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none">
             <div className="flex items-center gap-6 pointer-events-auto">
                <button
                   onClick={handlePsychologyClick}
                   className={`liquid-card w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group shadow-2xl relative ${currentView === 'psychology' ? 'bg-white/10 text-purple-400' : 'text-nexus-muted hover:text-white hover:bg-white/10'}`}
-                  title="Psychology"
                >
                    <Brain size={24} className="group-hover:text-purple-400 transition-colors" />
                </button>
