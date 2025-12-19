@@ -478,10 +478,10 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT SECTION - Combined Gutter and Sidebar with padding to restore gutter space */}
-          <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 h-full items-start order-3 lg:order-none lg:pl-12">
+          {/* RIGHT SECTION - Combined Gutter and Sidebar with balanced padding to match left side gap */}
+          <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 h-full items-start order-3 lg:order-none lg:pl-4">
             
-            {/* Insights Card - Spanning both columns, footprint reduced by lg:pl-12 above */}
+            {/* Insights Card - Spanning both columns, horizontal size reduced by lg:pl-4 above */}
             <div className="lg:col-span-2 w-full">
                 <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
                   <div className="flex justify-between items-start shrink-0 z-10 mb-2">
