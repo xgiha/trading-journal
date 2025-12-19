@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo } from "react"
 import { Trade } from "../types"
 
@@ -109,23 +108,34 @@ export default function TotalPnlCard({ trades, totalPnl, growthPct }: TotalPnlCa
     return `${sign}$${Math.abs(val).toLocaleString()}`
   }
 
+  // Dynamic Font Size logic tailored to the 220px sidebar width
+  const getDynamicFontSize = (text: string) => {
+    const len = text.length;
+    if (len > 13) return 'text-[18px]'; // Extremely long
+    if (len > 10) return 'text-[22px]'; // Millions with sign/commas
+    if (len > 8) return 'text-[26px]';  // Hundreds of thousands
+    return 'text-[32px]';               // Standard thousands/less
+  };
+
+  const pnlString = formatCurrency(totalPnl);
+
   return (
-    <div className="relative w-full rounded-[2.5rem] bg-gradient-to-b from-white/10 to-white/5 p-2 shadow-2xl overflow-hidden group">
+    <div className="relative w-full h-[230px] lg:h-[250px] rounded-[2.5rem] bg-gradient-to-b from-white/10 to-white/5 p-2 shadow-2xl overflow-hidden group shrink-0">
       {/* Inner highlight */}
       <div className="absolute inset-[1px] rounded-[2.4rem] bg-gradient-to-b from-white/10 to-transparent pointer-events-none" style={{ height: "40%" }} />
 
-      <div className="relative overflow-hidden rounded-[2rem] bg-[#0c0c0e] p-6 pb-4 border border-white/5">
+      <div className="relative h-full overflow-hidden rounded-[2rem] bg-[#0c0c0e] p-6 pb-4 border border-white/5 flex flex-col justify-between">
         {/* Header Section */}
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
+        <div className="flex items-start justify-between min-w-0">
+          <div className="flex-1 min-w-0">
             <p className="text-[12px] font-bold tracking-widest text-nexus-muted uppercase">Total P&L</p>
-            <h2 className={`mt-1 text-[38px] font-semibold leading-[1] tracking-tighter ${totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
-              {formatCurrency(totalPnl)}
+            <h2 className={`mt-1 font-semibold leading-tight tracking-tighter whitespace-nowrap overflow-hidden transition-all duration-300 ${getDynamicFontSize(pnlString)} ${totalPnl >= 0 ? 'text-white' : 'text-red-400'}`}>
+              {pnlString}
             </h2>
             <div className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-md ${
               lastTradePnl >= 0 ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400' : 'border-red-500/20 bg-red-500/5 text-red-400'
             }`}>
-              <span className="text-[11px] font-bold font-mono">
+              <span className="text-[11px] font-bold font-mono whitespace-nowrap">
                 {lastTradePnl >= 0 ? '+' : ''}{formatCurrency(lastTradePnl)}
               </span>
               <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className={lastTradePnl >= 0 ? 'rotate-0' : 'rotate-90'}>
@@ -134,21 +144,18 @@ export default function TotalPnlCard({ trades, totalPnl, growthPct }: TotalPnlCa
               </svg>
             </div>
           </div>
-
-          <div className="relative -mr-2 -mt-2 h-[80px] w-[100px] opacity-80 group-hover:opacity-100 transition-opacity duration-500">
-            <MoneyIllustration />
-          </div>
         </div>
 
         {/* Chart Section */}
-        <div className="relative mt-2">
+        <div className="relative mt-2 flex-1">
           <svg
             ref={chartRef}
             viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-            className="w-full"
+            className="w-full h-full"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             style={{ cursor: "default" }}
+            preserveAspectRatio="xMidYMid meet"
           >
             <defs>
               <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
@@ -224,7 +231,7 @@ export default function TotalPnlCard({ trades, totalPnl, growthPct }: TotalPnlCa
               }}
             >
               <div className="relative rounded-lg bg-white px-3 py-1.5 shadow-2xl">
-                <span className="text-[12px] font-bold text-black font-mono">
+                <span className="text-[12px] font-bold text-black font-mono whitespace-nowrap">
                   {formatCurrency(weekData[hoveredIndex].value)}
                 </span>
                 <div className="absolute left-1/2 -bottom-1.5 -translate-x-1/2 w-0 h-0 border-l-6 border-r-6 border-t-6 border-l-transparent border-r-transparent border-t-white" />
@@ -234,37 +241,5 @@ export default function TotalPnlCard({ trades, totalPnl, growthPct }: TotalPnlCa
         </div>
       </div>
     </div>
-  )
-}
-
-function MoneyIllustration() {
-  return (
-    <svg viewBox="0 0 130 110" className="h-full w-full">
-      <defs>
-        <linearGradient id="bill1" x1="0" y1="0" x2="0.3" y2="1">
-          <stop offset="0%" stopColor="#1a1a1e" />
-          <stop offset="100%" stopColor="#0c0c0e" />
-        </linearGradient>
-        <linearGradient id="holeGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ffa600" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#ffa600" stopOpacity="0.1" />
-        </linearGradient>
-      </defs>
-      <g transform="translate(8, 12) rotate(-20, 40, 25)">
-        <rect x="0" y="0" width="80" height="48" rx="6" fill="url(#bill1)" stroke="white" strokeOpacity="0.05" />
-        <circle cx="62" cy="14" r="7" fill="url(#holeGrad)" />
-        <circle cx="62" cy="34" r="5" fill="url(#holeGrad)" />
-      </g>
-      <g transform="translate(22, 28) rotate(-10, 40, 25)">
-        <rect x="0" y="0" width="80" height="48" rx="6" fill="url(#bill1)" stroke="white" strokeOpacity="0.05" />
-        <circle cx="62" cy="14" r="7" fill="url(#holeGrad)" />
-        <circle cx="62" cy="34" r="5" fill="url(#holeGrad)" />
-      </g>
-      <g transform="translate(38, 44) rotate(-2, 40, 25)">
-        <rect x="0" y="0" width="80" height="48" rx="6" fill="url(#bill1)" stroke="white" strokeOpacity="0.1" />
-        <circle cx="62" cy="14" r="7" fill="url(#holeGrad)" />
-        <circle cx="62" cy="34" r="5" fill="url(#holeGrad)" />
-      </g>
-    </svg>
   )
 }

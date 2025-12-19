@@ -340,7 +340,7 @@ const App: React.FC = () => {
     <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-y-auto lg:overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
-      {/* Main Dashboard Card */}
+      {/* Main Dashboard Card - Fixed size and overflow hidden */}
       <div className="w-[98vw] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 pb-32 lg:pb-36 transition-all duration-500">
         
         <AnimatePresence mode="wait">
@@ -353,7 +353,7 @@ const App: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-start"
         >
-          {/* LEFT SIDEBAR - Performance and Profile */}
+          {/* LEFT SIDEBAR - Performance and Profile - Static */}
           <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-start">
             {/* 1. Total P&L Card */}
             <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
@@ -432,8 +432,8 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* LEFT GUTTER - Independent Layout (Modules 4, 5, 6, Efficiency, High/Low) */}
-          <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start overflow-y-auto custom-scrollbar">
+          {/* LEFT GUTTER - Independent Layout (Modules 4, 5, 6, Efficiency, High/Low) - Static */}
+          <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
              <div className="w-full flex flex-col gap-4 items-center pb-4">
                 {/* Module 4 */}
                 <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
@@ -506,11 +506,9 @@ const App: React.FC = () => {
                      </div>
                 </div>
              </div>
-             
-             <div className="flex-1" />
           </div>
 
-          {/* CENTER WORKSPACE - Always fixed size */}
+          {/* CENTER WORKSPACE - Always fixed size relative to calendar */}
           <div className="relative flex flex-col items-center h-[700px] lg:h-[700px] lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0">
             <div className="w-full h-full min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
@@ -532,8 +530,8 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT SECTION - Combined Gutter and Sidebar */}
-          <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 h-full items-start order-3 lg:order-none lg:pl-4">
+          {/* RIGHT SECTION - Combined Gutter and Sidebar - Static */}
+          <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 h-full order-3 lg:order-none lg:pl-4">
             
             {/* Insights Card - Spanning both columns */}
             <div className="lg:col-span-2 w-full">
@@ -560,7 +558,7 @@ const App: React.FC = () => {
             </div>
             
             {/* Gutter Column: Spacer */}
-            <div className="hidden lg:block h-full"></div>
+            <div className="hidden lg:block h-px"></div>
 
             {/* Sidebar Column: Live Voice and Activities below Insights */}
             <div className="flex flex-col gap-4 h-full justify-start w-full max-w-[220px]">
