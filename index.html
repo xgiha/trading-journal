@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -38,18 +39,24 @@
       }
     </script>
     <style>
-      body {
+      html, body {
         background-color: #000;
         color: #e4e4e7;
         margin: 0;
-        overflow-x: hidden;
+        overflow: hidden !important;
+        height: 100%;
+        width: 100%;
+        position: fixed;
+        touch-action: none; /* Disables touch scrolling */
       }
+      
+      /* Disable all scrollbars globally */
       * {
-        scrollbar-width: none;
-        -ms-overflow-style: none;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
       }
       *::-webkit-scrollbar {
-        display: none;
+        display: none !important;
       }
       
       .glass-panel {

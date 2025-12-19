@@ -182,48 +182,8 @@ const App: React.FC = () => {
     hour12: true
   });
 
-  const nyTimeStr = currentTime.toLocaleTimeString('en-US', {
-    timeZone: 'America/New_York',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
-
   const chicagoTime = new Date(currentTime.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-  const chicagoDayName = chicagoTime.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-  const chicagoProgress = ((chicagoTime.getHours() * 60 + chicagoTime.getMinutes()) / (24 * 60)) * 100;
   
-  const verboseCountdown = useMemo(() => {
-    return marketCountdown
-      .replace(/ \d+s$/, '') 
-      .replace(/(\d+)h/, '$1 hours and')
-      .replace(/(\d+)m/, '$1 minutes');
-  }, [marketCountdown]);
-
-  const renderTimelineSegments = () => {
-    const day = chicagoTime.getDay();
-    const OPEN_Start = 70.83; 
-    const CLOSE_End = 66.66; 
-    
-    let segments = [];
-    if (day === 0) { 
-        segments.push({ left: 0, width: OPEN_Start, color: 'bg-[#3f3f46]' });
-        segments.push({ left: OPEN_Start, width: 100 - OPEN_Start, color: 'bg-emerald-500' }); 
-    } else if (day >= 1 && day <= 4) { 
-        segments.push({ left: 0, width: CLOSE_End, color: 'bg-emerald-500' }); 
-        segments.push({ left: CLOSE_End, width: OPEN_Start - CLOSE_End, color: 'bg-[#3f3f46]' }); 
-        segments.push({ left: OPEN_Start, width: 100 - OPEN_Start, color: 'bg-emerald-500' }); 
-    } else if (day === 5) { 
-        segments.push({ left: 0, width: CLOSE_End, color: 'bg-emerald-500' }); 
-        segments.push({ left: CLOSE_End, width: 100 - CLOSE_End, color: 'bg-[#3f3f46]' }); 
-    } else { 
-        segments.push({ left: 0, width: 100, color: 'bg-[#3f3f46]' }); 
-    }
-    return segments.map((s, i) => (
-        <div key={i} className={`absolute top-0 bottom-0 h-full ${s.color} rounded-sm`} style={{ left: `${s.left}%`, width: `${s.width}%` }}></div>
-    ));
-  };
-
   const formatCurrency = (val: number) => {
     const sign = val < 0 ? '-' : '';
     const absVal = Math.abs(val);
@@ -250,21 +210,9 @@ const App: React.FC = () => {
     const avgMinutes = timedTradeCount > 0 ? Math.floor(totalDurationMinutes / timedTradeCount) : 0;
     const formatDur = (m: number) => { if (m === Infinity || m === 0) return '0m'; const h = Math.floor(m / 60); const mins = m % 60; if (h > 0) return `${h}h ${mins}m`; return `${mins}m`; };
     const initialBalance = 50000;
-    const currentBalance = initialBalance + totalPnl;
     const growthPct = (totalPnl / initialBalance) * 100;
-    const avgTradePnl = trades.length > 0 ? totalPnl / trades.length : 0;
-    const winRate = (wins / trades.length) * 100;
-    return { totalPnl, bestTrade: maxPnl === -Infinity ? 0 : maxPnl, worstTrade: minPnl === Infinity ? 0 : minPnl, avgTime: formatDur(avgMinutes), growthPct, shortestHold: minDuration === Infinity ? '0m' : formatDur(minDuration), longestHold: formatDur(maxDuration), shortestHoldNum: minDuration === Infinity ? 0 : minDuration, longestHoldNum: maxDuration, avgHoldNum: avgMinutes, avgTradePnl, newsCount, normalCount, currentBalance, winRate, totalTrades: trades.length };
-  }, [trades]);
-
-  const performanceChartData = useMemo(() => {
-    const dailyMap = new Map<string, { total: number; normal: number; news: number }>();
-    trades.forEach(t => { const entry = dailyMap.get(t.date) || { total: 0, normal: 0, news: 0 }; entry.total += t.pnl; if (t.newsEvent) entry.news += t.pnl; else entry.normal += t.pnl; dailyMap.set(t.date, entry); });
-    const sortedDates = Array.from(dailyMap.keys()).sort();
-    let runningTotal = 50000, runningNormal = 50000, runningNews = 50000;
-    const fullHistory = [{ date: 'Start', price: 50000, normal: 50000, news: 50000 }];
-    sortedDates.forEach(date => { const stats = dailyMap.get(date)!; runningTotal += stats.total; runningNormal += stats.normal; runningNews += stats.news; fullHistory.push({ date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }), price: runningTotal, normal: runningNormal, news: runningNews }); });
-    return fullHistory;
+    const winRate = trades.length > 0 ? (wins / trades.length) * 100 : 0;
+    return { totalPnl, bestTrade: maxPnl === -Infinity ? 0 : maxPnl, worstTrade: minPnl === Infinity ? 0 : minPnl, avgTime: formatDur(avgMinutes), growthPct, shortestHold: minDuration === Infinity ? '0m' : formatDur(minDuration), longestHold: formatDur(maxDuration), shortestHoldNum: minDuration === Infinity ? 0 : minDuration, longestHoldNum: maxDuration, avgHoldNum: avgMinutes, newsCount, normalCount, winRate, totalTrades: trades.length };
   }, [trades]);
 
   const monthlyStats = useMemo(() => {
@@ -338,11 +286,10 @@ const App: React.FC = () => {
   const activeIndex = TABS.findIndex(t => t.id === activeTab);
 
   return (
-    <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
+    <div className="h-screen w-screen relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
       <PaperBackground />
       
-      {/* Main Dashboard Card - Fixed padding issue */}
-      <div className="w-[98vw] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 pb-6 lg:pb-10 transition-all duration-500">
+      <div className="w-full h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 pb-6 lg:pb-10 transition-all duration-500">
         
         <AnimatePresence mode="wait">
         {currentView === 'dashboard' ? (
@@ -352,106 +299,84 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-start"
+            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[minmax(180px,220px)_120px_1fr_120px_minmax(280px,380px)] gap-0 z-10 items-stretch"
         >
-          {/* LEFT SIDEBAR */}
-          <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-start overflow-y-auto custom-scrollbar pr-1">
-            <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-            
-            {/* Voice Chat Moved Here to replace Performance Card */}
-            <div className="shrink-0 flex justify-center">
-              <VoiceChat />
+          {/* LEFT SIDEBAR - Optimized layout to prevent cutting */}
+          <div className="flex flex-col gap-3 h-full min-h-0 order-2 lg:order-none w-full max-w-[220px] justify-between overflow-hidden px-1">
+            <div className="flex flex-col gap-3">
+              <div className="shrink-0"><TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} /></div>
+              
+              <div className="shrink-0 flex justify-center"><VoiceChat /></div>
+
+              {/* Market Status Card only - Profile removed */}
+              <div className="liquid-card rounded-3xl p-4 shrink-0 flex flex-col gap-3 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
+                  <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                          <h1 className="text-[9px] font-bold tracking-widest uppercase text-white drop-shadow-md">
+                              {isMarketOpen ? 'Market Open' : 'Market Closed'}
+                          </h1>
+                          <span className="text-[8px] text-nexus-muted uppercase tracking-widest font-mono mt-0.5 truncate">
+                              UTC +5:30 {colomboTime}
+                          </span>
+                      </div>
+                      <div className="w-7 h-7 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md shrink-0">
+                          <div className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
+                      </div>
+                  </div>
+              </div>
             </div>
 
-            <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-4 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#1c1c21] border border-white/10 flex items-center justify-center text-nexus-accent shadow-2xl overflow-hidden shrink-0">
-                        <img 
-                          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/attachments/profile-pic-uN0Tq8r9C5bXj3Z.png" 
-                          alt="Avatar" 
-                          className="w-full h-full object-cover scale-125 translate-y-2 opacity-90"
-                        />
-                    </div>
-                    <div className="flex flex-col">
-                        <h2 className="text-white font-bold text-sm tracking-tight leading-tight">Gehan</h2>
-                        <p className="text-[10px] text-nexus-muted leading-tight font-medium uppercase tracking-widest opacity-60">Active session</p>
-                    </div>
-                </div>
-                
-                <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                    <div className="flex flex-col">
-                        <h1 className="text-[10px] font-bold tracking-widest uppercase text-white drop-shadow-md">
-                            {isMarketOpen ? 'Market Open' : 'Market Closed'}
-                        </h1>
-                        <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-mono mt-0.5">
-                            UTC +5:30 Colombo {colomboTime}
-                        </span>
-                    </div>
-                    <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md shrink-0">
-                        <div className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="shrink-0 flex justify-center mb-6">
-              <ActivityDropdown logs={activityLogs} />
-            </div>
+            <div className="shrink-0 flex justify-center pb-2"><ActivityDropdown logs={activityLogs} /></div>
           </div>
 
-          {/* LEFT GUTTER */}
-          <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
-             <div className="w-full flex flex-col gap-4 items-center pb-4">
-                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">4</span>
-                </div>
-                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">5</span>
-                </div>
-                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                   <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
-                </div>
+          {/* LEFT GUTTER - Spacer/Info */}
+          <div className="hidden lg:flex flex-col gap-3 items-center p-0 px-4 h-full justify-start overflow-hidden">
+             <div className="w-full flex flex-col gap-3 items-center">
+                {[4, 5, 6].map(num => (
+                  <div key={num} className="liquid-card rounded-3xl p-4 w-full h-[90px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                      <span className="text-nexus-muted font-bold text-xl group-hover:text-white transition-colors z-10">{num}</span>
+                  </div>
+                ))}
 
-                <div className="liquid-card rounded-3xl p-5 h-[150px] w-full max-w-[220px] shrink-0 flex flex-col relative overflow-hidden group">
+                <div className="liquid-card rounded-3xl p-4 h-[110px] w-full shrink-0 flex flex-col relative overflow-hidden group">
                     <div className="flex justify-between items-start shrink-0 z-10">
                         <div>
-                            <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">Efficiency</span>
-                            <div className="flex items-center gap-1.5">
-                                 <Activity size={12} className="text-nexus-accent" />
-                                 <span className="text-[10px] font-bold text-white">Hold Time</span>
+                            <span className="text-[8px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">Efficiency</span>
+                            <div className="flex items-center gap-1">
+                                 <Activity size={10} className="text-nexus-accent" />
+                                 <span className="text-[9px] font-bold text-white">Hold</span>
                             </div>
                         </div>
                     </div>
-                    <div className="flex-1 w-full mt-3 flex flex-col justify-center gap-2">
-                        <div className="flex flex-col gap-1">
+                    <div className="flex-1 w-full mt-1 flex flex-col justify-center gap-1.5">
+                        <div className="flex flex-col gap-0.5">
                            <div className="flex justify-between items-end">
-                              <span className="text-[8px] text-nexus-muted uppercase tracking-widest font-medium">Avg</span>
-                              <span className="text-[10px] font-bold text-white font-mono">{globalStats.avgTime}</span>
+                              <span className="text-[7px] text-nexus-muted uppercase tracking-widest font-medium">Avg</span>
+                              <span className="text-[9px] font-bold text-white font-mono">{globalStats.avgTime}</span>
                            </div>
                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
-                               <div className="h-full bg-nexus-accent rounded-full" style={{ width: `${Math.max(5, (globalStats.avgHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}></div>
+                               <div className="h-full bg-nexus-accent rounded-full" style={{ width: `${Math.max(5, (globalStats.avgHoldNum / 120) * 100)}%` }}></div>
                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="liquid-card rounded-3xl p-4 w-full max-w-[220px] shrink-0 flex flex-col gap-2">
-                     <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                            <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">High</span>
-                            <span className="text-[10px] font-bold text-emerald-400 font-mono">{formatCurrency(globalStats.bestTrade)}</span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                            <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">Low</span>
-                            <span className="text-[10px] font-bold text-red-400 font-mono">{formatCurrency(globalStats.worstTrade)}</span>
-                        </div>
-                     </div>
+                <div className="liquid-card rounded-3xl p-3 w-full shrink-0 flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between p-1.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                        <span className="text-[7px] text-nexus-muted uppercase font-bold tracking-widest">Hi</span>
+                        <span className="text-[9px] font-bold text-emerald-400 font-mono truncate">{formatCurrency(globalStats.bestTrade)}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-1.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                        <span className="text-[7px] text-nexus-muted uppercase font-bold tracking-widest">Lo</span>
+                        <span className="text-[9px] font-bold text-red-400 font-mono truncate">{formatCurrency(globalStats.worstTrade)}</span>
+                    </div>
                 </div>
              </div>
           </div>
 
-          {/* CENTER WORKSPACE */}
-          <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0">
-            <div className="w-full h-full min-h-0 relative overflow-hidden">
+          {/* CENTER WORKSPACE - No scroll */}
+          <div className="relative flex flex-col items-center h-full order-1 lg:order-none w-full min-w-0 mx-auto shrink-0 overflow-hidden">
+            <div className="w-full h-full relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
                    key={activeTab}
@@ -459,7 +384,7 @@ const App: React.FC = () => {
                    animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
                    exit={{ opacity: 0, filter: 'blur(8px)', scale: 0.98 }}
                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                   className="absolute inset-0 w-full h-full flex flex-col"
+                   className="absolute inset-0 w-full h-full flex flex-col overflow-hidden"
                  >
                    {activeTab === 'dashboard' ? (
                      <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} monthlyStats={monthlyStats} />
@@ -471,29 +396,23 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT SECTION - Optimized for full visibility */}
-          <div className="lg:col-span-2 flex flex-col gap-4 h-full order-3 lg:order-none lg:pl-4 overflow-hidden">
-            
-            {/* Analytics Card */}
+          {/* RIGHT GUTTER - Match Left gutter visually */}
+          <div className="hidden lg:flex flex-col gap-3 items-center p-0 px-4 h-full justify-start overflow-hidden">
+             {/* Symmetry spacer */}
+          </div>
+
+          {/* RIGHT SECTION - Large Charts, No scroll */}
+          <div className="lg:col-span-1 flex flex-col gap-4 h-full order-3 lg:order-none overflow-hidden pr-1">
             <div className="w-full flex-1 min-h-0">
                 <div className="liquid-card rounded-3xl h-full flex flex-col relative overflow-hidden border-white/5 shadow-lg">
-                  <EnergyChart 
-                    trades={trades}
-                    stats={{
-                        totalPnl: globalStats.totalPnl,
-                        growthPct: globalStats.growthPct
-                    }}
-                  />
+                  <EnergyChart trades={trades} stats={{ totalPnl: globalStats.totalPnl, growthPct: globalStats.growthPct }} />
                 </div>
             </div>
-
-            {/* Insights Comparative Chart Card */}
             <div className="w-full flex-1 min-h-0">
                 <div className="liquid-card rounded-3xl h-full flex flex-col relative overflow-hidden border-white/5 shadow-lg">
                   <InsightsChart trades={trades} />
                 </div>
             </div>
-
           </div>
         </motion.div>
         ) : (
@@ -510,7 +429,7 @@ const App: React.FC = () => {
         )}
         </AnimatePresence>
 
-        {/* Floating Menu - Truly independent */}
+        {/* Floating Menu - Strictly positioned at bottom, no scroll impact */}
         <div className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none">
             <div className="flex items-center gap-6 pointer-events-auto">
                <button
