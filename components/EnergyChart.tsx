@@ -42,13 +42,11 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats }) => {
   }, [trades]);
 
   // --- Organic Radar Logic ---
-  // We'll create a "blob" style radar using 8 points representing different performance metrics
   const radarPoints = useMemo(() => {
     const center = 100;
     const count = 8;
     const step = (Math.PI * 2) / count;
     
-    // Mock performance variance based on real trade count/pnl for jitter
     const seed = trades.length % 10;
     
     const generatePath = (radiusBase: number, jitter: number, color: string) => {
@@ -94,11 +92,7 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats }) => {
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold font-mono">{formatCurrency(calculations.weekly)}</span>
-              <span className="text-[10px] text-emerald-400 font-bold">
-                {calculations.weekly >= 0 ? '↑' : '↓'} {(Math.random() * 20).toFixed(1)}%
-              </span>
             </div>
-            <p className="text-[9px] text-[#444] font-bold uppercase tracking-tight">Compared to prev week</p>
           </div>
 
           <div className="flex flex-col gap-3 mt-8">
@@ -135,12 +129,10 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats }) => {
         {/* Center Radar Section */}
         <div className="lg:col-span-6 flex items-center justify-center relative">
           <svg viewBox="0 0 200 200" className="w-full h-full max-w-[340px] drop-shadow-[0_0_30px_rgba(168,85,247,0.15)]">
-            {/* Grid Circles */}
             <circle cx="100" cy="100" r="80" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="0.5" />
             <circle cx="100" cy="100" r="55" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="0.5" />
             <circle cx="100" cy="100" r="30" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="0.5" />
             
-            {/* Axis Lines */}
             {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
               <line 
                 key={angle} 
@@ -151,7 +143,6 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats }) => {
               />
             ))}
 
-            {/* Labels */}
             <text x="100" y="10" textAnchor="middle" className="fill-[#444] text-[6px] font-bold">0</text>
             <text x="190" y="102" textAnchor="middle" className="fill-[#444] text-[6px] font-bold">15</text>
             <text x="100" y="195" textAnchor="middle" className="fill-[#444] text-[6px] font-bold">25</text>
@@ -161,11 +152,9 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats }) => {
             <text x="35" y="145" textAnchor="middle" className="fill-[#444] text-[6px] font-bold">30</text>
             <text x="35" y="55" textAnchor="middle" className="fill-[#444] text-[6px] font-bold">40</text>
 
-            {/* Waves */}
             <path d={radarPoints.purple} fill="#a855f7" fillOpacity="0.15" stroke="#a855f7" strokeWidth="2" strokeLinejoin="round" className="animate-pulse" />
             <path d={radarPoints.green} fill="#22c55e" fillOpacity="0.15" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round" />
             
-            {/* Center Logo */}
             <rect x="92" y="92" width="16" height="16" rx="4" fill="black" stroke="white" strokeOpacity="0.5" strokeWidth="0.5" />
             <path d="M100 95 L103 98 L100 101 L97 98 Z" fill="none" stroke="white" strokeWidth="0.5" />
             <path d="M100 95 L100 101 M97 98 L103 98" fill="none" stroke="white" strokeWidth="0.3" strokeOpacity="0.5" />
@@ -180,10 +169,8 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats }) => {
               <div className="text-yellow-500"><Sparkles size={10} fill="currentColor" /></div>
             </div>
             <div className="flex items-baseline gap-2 justify-end">
-              <span className="text-[9px] text-emerald-400 font-bold">↑{Math.floor(Math.random()*15)}</span>
               <span className="text-2xl font-bold font-mono">{formatCurrency(calculations.monthly)}</span>
             </div>
-            <p className="text-[9px] text-[#444] font-bold uppercase tracking-tight">Current month progress</p>
           </div>
 
           <div className="flex flex-col gap-1 items-end">
@@ -192,10 +179,8 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats }) => {
               <div className="text-red-500 font-bold text-xs">ö</div>
             </div>
             <div className="flex items-baseline gap-2 justify-end">
-              <span className="text-[9px] text-emerald-400 font-bold">↑{Math.floor(Math.random()*25)}</span>
               <span className="text-2xl font-bold font-mono">{formatCurrency(calculations.annual)}</span>
             </div>
-            <p className="text-[9px] text-[#444] font-bold uppercase tracking-tight">Year to date performance</p>
           </div>
 
           <div className="flex flex-col gap-3 mt-auto">
