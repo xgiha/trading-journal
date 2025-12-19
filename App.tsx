@@ -367,9 +367,6 @@ const App: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-nexus-accent/5 to-transparent opacity-50 pointer-events-none"></div>
             </div>
 
-            {/* Spacer to push User Identity to the absolute bottom */}
-            <div className="flex-1" />
-
             {/* 3. User Identity Card (Profile Card) */}
             <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-4 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
                 <div className="flex items-center gap-4">
@@ -435,9 +432,9 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* LEFT GUTTER - Independent Layout (Voice, Activities, Module 4) */}
-          <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
-             <div className="w-full flex flex-col gap-4 items-center">
+          {/* LEFT GUTTER - Independent Layout (Voice, Activities, Modules 4, 5, 6) */}
+          <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start overflow-y-auto custom-scrollbar">
+             <div className="w-full flex flex-col gap-4 items-center pb-4">
                 <div className="z-[60] w-full flex justify-center">
                     <VoiceChat />
                 </div>
@@ -446,10 +443,22 @@ const App: React.FC = () => {
                     <ActivityDropdown logs={activityLogs} />
                 </div>
 
-                {/* Module 4 - Placed in the Left Gutter */}
+                {/* Module 4 */}
                 <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                     <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">4</span>
+                </div>
+
+                {/* Module 5 */}
+                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">5</span>
+                </div>
+
+                {/* Module 6 */}
+                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                   <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                   <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
                 </div>
              </div>
              
@@ -481,7 +490,7 @@ const App: React.FC = () => {
           {/* RIGHT SECTION - Combined Gutter and Sidebar with balanced padding to match left side gap */}
           <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 h-full items-start order-3 lg:order-none lg:pl-4">
             
-            {/* Insights Card - Spanning both columns, horizontal size reduced by lg:pl-4 above */}
+            {/* Insights Card - Spanning both columns */}
             <div className="lg:col-span-2 w-full">
                 <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
                   <div className="flex justify-between items-start shrink-0 z-10 mb-2">
@@ -505,19 +514,10 @@ const App: React.FC = () => {
                 </div>
             </div>
             
-            {/* Bottom section of Gutter: Modules 5 and 6 */}
-            <div className="hidden lg:flex flex-col gap-4 h-full justify-end">
-                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">5</span>
-                </div>
-                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                   <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                   <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
-                </div>
-            </div>
+            {/* Empty first column where Modules 5 and 6 used to be */}
+            <div className="hidden lg:block h-full"></div>
 
-            {/* Bottom section of Sidebar: Efficiency and P&L extremes */}
+            {/* Right sidebar column: Efficiency and P&L extremes */}
             <div className="flex flex-col gap-4 h-full justify-start w-full max-w-[220px]">
                 <div className="liquid-card rounded-3xl p-5 h-[150px] shrink-0 flex flex-col relative overflow-hidden group">
                     <div className="flex justify-between items-start shrink-0 z-10">
