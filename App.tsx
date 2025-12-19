@@ -341,7 +341,7 @@ const App: React.FC = () => {
       <PaperBackground />
       
       {/* Main Dashboard Card */}
-      <div className="w-[98vw] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 transition-all duration-500">
+      <div className="w-[98vw] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 pb-32 lg:pb-36 transition-all duration-500">
         
         <AnimatePresence mode="wait">
         {currentView === 'dashboard' ? (
@@ -351,10 +351,10 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10"
+            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-end"
         >
           {/* LEFT SIDEBAR - Fixed at 220px */}
-          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full">
+          <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-end">
             {/* 1. Total P&L Card */}
             <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
             
@@ -433,7 +433,7 @@ const App: React.FC = () => {
           </div>
 
           {/* LEFT GUTTER */}
-          <div className="hidden lg:flex flex-col gap-4 items-center justify-start p-0 px-4">
+          <div className="hidden lg:flex flex-col gap-4 items-center justify-end p-0 px-4 h-full">
              <div className="z-[60] w-full flex justify-center">
                 <VoiceChat />
              </div>
@@ -444,15 +444,15 @@ const App: React.FC = () => {
              </div>
 
              {/* Placeholder Card 3 */}
-             <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden">
+             <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                 <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">3</span>
              </div>
           </div>
 
-          {/* CENTER WORKSPACE - Fixed at 800px */}
-          <div className="relative flex flex-col items-center h-[560px] lg:h-full lg:min-h-0 order-1 lg:order-none pb-24 lg:pb-0 w-full max-w-[800px] mx-auto">
-            <div className="w-full flex-1 mb-6 min-h-0 relative overflow-hidden">
+          {/* CENTER WORKSPACE - Fixed at 800px and fixed height to match sidebars */}
+          <div className="relative flex flex-col items-center h-[700px] lg:h-[700px] lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0">
+            <div className="w-full h-full min-h-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
                    key={activeTab}
@@ -473,9 +473,9 @@ const App: React.FC = () => {
           </div>
 
           {/* RIGHT GUTTER */}
-          <div className="hidden lg:flex flex-col gap-4 items-center justify-start p-0 px-4">
+          <div className="hidden lg:flex flex-col gap-4 items-center justify-end p-0 px-4 h-full">
              {[4, 5, 6].map((num) => (
-                <div key={num} className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden">
+                <div key={num} className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">{num}</span>
                 </div>
@@ -483,7 +483,7 @@ const App: React.FC = () => {
           </div>
 
           {/* RIGHT SIDEBAR - Fixed at 220px */}
-          <div className="flex flex-col gap-4 h-auto lg:h-full min-h-0 order-3 lg:order-none max-w-[220px] w-full">
+          <div className="flex flex-col gap-4 h-full min-h-0 order-3 lg:order-none max-w-[220px] w-full justify-end">
             <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
               <div className="flex justify-between items-start shrink-0 z-10 mb-2">
                  <div className="w-full">
