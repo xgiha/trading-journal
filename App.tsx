@@ -353,7 +353,7 @@ const App: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-start"
         >
-          {/* LEFT SIDEBAR - Aligned to Top (matching Journal) */}
+          {/* LEFT SIDEBAR - Performance and Profile */}
           <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-start">
             {/* 1. Total P&L Card */}
             <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
@@ -367,7 +367,10 @@ const App: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-nexus-accent/5 to-transparent opacity-50 pointer-events-none"></div>
             </div>
 
-            {/* 3. User Identity Card */}
+            {/* Spacer to push User Identity to the absolute bottom */}
+            <div className="flex-1" />
+
+            {/* 3. User Identity Card (Profile Card) */}
             <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-4 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-[#1c1c21] border border-white/10 flex items-center justify-center text-nexus-accent shadow-2xl overflow-hidden shrink-0">
@@ -432,7 +435,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* LEFT GUTTER - Independent Layout */}
+          {/* LEFT GUTTER - Independent Layout (Voice, Activities, Module 4) */}
           <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
              <div className="w-full flex flex-col gap-4 items-center">
                 <div className="z-[60] w-full flex justify-center">
@@ -442,15 +445,15 @@ const App: React.FC = () => {
                 <div className="z-[50] w-full flex justify-center">
                     <ActivityDropdown logs={activityLogs} />
                 </div>
+
+                {/* Module 4 - Placed in the Left Gutter */}
+                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">4</span>
+                </div>
              </div>
              
              <div className="flex-1" />
-
-             {/* Module 3 */}
-             <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">3</span>
-             </div>
           </div>
 
           {/* CENTER WORKSPACE - Always fixed size */}
@@ -475,100 +478,99 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT GUTTER - Independent Layout */}
-          <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
-             <div className="w-full flex flex-col gap-4 items-center">
-                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">4</span>
+          {/* RIGHT SECTION - Combined Gutter and Sidebar to allow alignment and spanning */}
+          <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 h-full items-start order-3 lg:order-none">
+            
+            {/* Insights Card - Increased size by spanning both columns */}
+            <div className="lg:col-span-2 w-full">
+                <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
+                  <div className="flex justify-between items-start shrink-0 z-10 mb-2">
+                     <div className="w-full">
+                        <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors">Insights</span>
+                        <div className="flex justify-between items-center w-full">
+                             <div className="flex flex-col">
+                                <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Balance</span>
+                                <span className="text-xs font-bold text-white tracking-tight">${globalStats.currentBalance.toLocaleString()}</span>
+                             </div>
+                             <div className="flex flex-col items-end">
+                                <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Norm/News</span>
+                                <span className="text-xs font-bold text-white">{globalStats.normalCount}/{globalStats.newsCount}</span>
+                             </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div className="flex-1 w-full relative min-h-0 -mx-2 mt-2">
+                     <EnergyChart data={performanceChartData} />
+                  </div>
                 </div>
+            </div>
+            
+            {/* Bottom section of Gutter: Modules 5 and 6 */}
+            <div className="hidden lg:flex flex-col gap-4 h-full justify-end">
                 <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                     <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">5</span>
                 </div>
-             </div>
-
-             <div className="flex-1" />
-
-             <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
-             </div>
-          </div>
-
-          {/* RIGHT SIDEBAR - Separated Logic (Aligned to Bottom) */}
-          <div className="flex flex-col gap-4 h-full min-h-0 order-3 lg:order-none max-w-[220px] w-full justify-end">
-            <div className="liquid-card rounded-3xl p-5 h-[300px] shrink-0 flex flex-col relative overflow-hidden group">
-              <div className="flex justify-between items-start shrink-0 z-10 mb-2">
-                 <div className="w-full">
-                    <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-2 group-hover:text-white transition-colors">Insights</span>
-                    <div className="flex justify-between items-center w-full">
-                         <div className="flex flex-col">
-                            <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Balance</span>
-                            <span className="text-xs font-bold text-white tracking-tight">${globalStats.currentBalance.toLocaleString()}</span>
-                         </div>
-                         <div className="flex flex-col items-end">
-                            <span className="text-[8px] text-nexus-muted uppercase font-bold opacity-40">Norm/News</span>
-                            <span className="text-xs font-bold text-white">{globalStats.normalCount}/{globalStats.newsCount}</span>
-                         </div>
-                    </div>
-                 </div>
-              </div>
-              <div className="flex-1 w-full relative min-h-0 -mx-2 mt-2">
-                 <EnergyChart data={performanceChartData} />
-              </div>
-            </div>
-            
-            <div className="liquid-card rounded-3xl p-5 h-[150px] shrink-0 flex flex-col relative overflow-hidden group">
-                <div className="flex justify-between items-start shrink-0 z-10">
-                    <div>
-                        <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">Efficiency</span>
-                        <div className="flex items-center gap-1.5">
-                             <Clock size={12} className="text-nexus-accent" />
-                             <span className="text-[10px] font-bold text-white">Hold Time</span>
-                        </div>
-                    </div>
-                </div>
-                <div className="flex-1 w-full relative min-h-0 mt-3 flex flex-col justify-center gap-2">
-                    <div className="flex flex-col gap-1">
-                       <div className="flex justify-between items-end">
-                          <span className="text-[8px] text-nexus-muted uppercase tracking-widest font-medium">Avg</span>
-                          <span className="text-[10px] font-bold text-white font-mono">{globalStats.avgTime}</span>
-                       </div>
-                       <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
-                           <div className="h-full bg-nexus-accent rounded-full" style={{ width: `${Math.max(5, (globalStats.avgHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}></div>
-                       </div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                       <div className="flex justify-between items-end">
-                          <span className="text-[8px] text-nexus-muted uppercase tracking-widest font-medium">Peak</span>
-                          <span className="text-[10px] font-bold text-white font-mono">{globalStats.longestHold}</span>
-                       </div>
-                       <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
-                           <div className="h-full bg-blue-500 rounded-full opacity-60" style={{ width: '100%' }}></div>
-                       </div>
-                    </div>
+                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                   <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                   <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
                 </div>
             </div>
 
-            <div className="liquid-card rounded-3xl p-4 shrink-0 flex flex-col gap-2">
-                 <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                        <div className="flex items-center gap-2">
-                           <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500"><ArrowUpRight size={10} /></div>
-                           <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">High</span>
+            {/* Bottom section of Sidebar: Efficiency and P&L extremes */}
+            <div className="flex flex-col gap-4 h-full justify-start w-full max-w-[220px]">
+                <div className="liquid-card rounded-3xl p-5 h-[150px] shrink-0 flex flex-col relative overflow-hidden group">
+                    <div className="flex justify-between items-start shrink-0 z-10">
+                        <div>
+                            <span className="text-[9px] uppercase tracking-widest text-nexus-muted block mb-0.5 group-hover:text-white transition-colors">Efficiency</span>
+                            <div className="flex items-center gap-1.5">
+                                 <Clock size={12} className="text-nexus-accent" />
+                                 <span className="text-[10px] font-bold text-white">Hold Time</span>
+                            </div>
                         </div>
-                        <span className="text-[10px] font-bold text-emerald-400 font-mono">{formatCurrency(globalStats.bestTrade)}</span>
                     </div>
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                        <div className="flex items-center gap-2">
-                           <div className="p-1 rounded-full bg-red-500/20 text-red-500"><ArrowDownRight size={10} /></div>
-                           <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">Low</span>
+                    <div className="flex-1 w-full relative min-h-0 mt-3 flex flex-col justify-center gap-2">
+                        <div className="flex flex-col gap-1">
+                           <div className="flex justify-between items-end">
+                              <span className="text-[8px] text-nexus-muted uppercase tracking-widest font-medium">Avg</span>
+                              <span className="text-[10px] font-bold text-white font-mono">{globalStats.avgTime}</span>
+                           </div>
+                           <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
+                               <div className="h-full bg-nexus-accent rounded-full" style={{ width: `${Math.max(5, (globalStats.avgHoldNum / (globalStats.longestHoldNum || 1)) * 100)}%` }}></div>
+                           </div>
                         </div>
-                        <span className="text-[10px] font-bold text-red-400 font-mono">{formatCurrency(globalStats.worstTrade)}</span>
+                        <div className="flex flex-col gap-1">
+                           <div className="flex justify-between items-end">
+                              <span className="text-[8px] text-nexus-muted uppercase tracking-widest font-medium">Peak</span>
+                              <span className="text-[10px] font-bold text-white font-mono">{globalStats.longestHold}</span>
+                           </div>
+                           <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex">
+                               <div className="h-full bg-blue-500 rounded-full opacity-60" style={{ width: '100%' }}></div>
+                           </div>
+                        </div>
                     </div>
-                 </div>
+                </div>
+
+                <div className="liquid-card rounded-3xl p-4 shrink-0 flex flex-col gap-2">
+                     <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                            <div className="flex items-center gap-2">
+                               <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-500"><ArrowUpRight size={10} /></div>
+                               <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">High</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-emerald-400 font-mono">{formatCurrency(globalStats.bestTrade)}</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                            <div className="flex items-center gap-2">
+                               <div className="p-1 rounded-full bg-red-500/20 text-red-500"><ArrowDownRight size={10} /></div>
+                               <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest">Low</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-red-400 font-mono">{formatCurrency(globalStats.worstTrade)}</span>
+                        </div>
+                     </div>
+                </div>
             </div>
+
           </div>
         </motion.div>
         ) : (
