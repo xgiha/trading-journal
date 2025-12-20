@@ -14,7 +14,7 @@ export function ActivityDropdown({ logs }: ActivityDropdownProps) {
 
   const getIcon = (type: ActivityLog['type']) => {
     switch (type) {
-      case 'add': return <Zap className="h-3.5 w-3.5" />;
+      case 'add': return < Zap className="h-3.5 w-3.5" />;
       case 'edit': return <Edit3 className="h-3.5 w-3.5" />;
       case 'delete': return <Trash2 className="h-3.5 w-3.5" />;
       default: return <ShieldCheck className="h-3.5 w-3.5" />;
@@ -39,7 +39,7 @@ export function ActivityDropdown({ logs }: ActivityDropdownProps) {
         "w-full max-w-[220px] shadow-2xl overflow-hidden cursor-pointer select-none",
         "bg-[#0c0c0e]/80 backdrop-blur-3xl border border-white/5 shadow-black/50 isolate",
         "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-        isOpen ? "rounded-3xl h-[400px]" : "rounded-[2rem] h-[56px]",
+        isOpen ? "rounded-3xl h-[320px]" : "rounded-[2rem] h-[56px]",
       )}
       onClick={() => setIsOpen(!isOpen)}
     >
