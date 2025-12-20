@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ChevronLeft, ChevronRight, Plus, Activity, Trophy } from 'lucide-react';
 import { Trade } from '../types';
@@ -181,12 +182,12 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col gap-4">
+    <div className="w-full h-full p-4 flex flex-col gap-4 liquid-card rounded-3xl relative overflow-hidden">
       {/* Controls Header Row - Responsive Wrap */}
       <div className="flex flex-wrap md:flex-nowrap items-center gap-2 shrink-0 w-full">
          
          {/* Month Nav Pill */}
-         <div className="liquid-card rounded-full p-1.5 pr-6 flex items-center gap-4 hover:bg-white/5 transition-colors">
+         <div className="bg-white/5 border border-white/5 rounded-full p-1.5 pr-6 flex items-center gap-4 hover:bg-white/10 transition-colors">
             <div className="flex gap-1">
                 <button onClick={prevMonth} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-nexus-muted hover:text-white transition-colors">
                 <ChevronLeft size={16} />
@@ -201,7 +202,7 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
          </div>
 
          {/* Compact Monthly Stats Pill - Responsive Layout */}
-         <div className="liquid-card rounded-full p-1.5 px-4 flex items-center justify-between gap-6 h-[46px] ml-auto w-full md:w-auto mt-2 md:mt-0">
+         <div className="bg-white/5 border border-white/5 rounded-full p-1.5 px-4 flex items-center justify-between gap-6 h-[46px] ml-auto w-full md:w-auto mt-2 md:mt-0">
             <div className="flex items-center gap-2">
                <span className={`text-sm font-bold ${monthlyStats.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {formatCurrency(monthlyStats.totalPnl)}
