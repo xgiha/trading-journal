@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useMemo } from 'react';
 import { 
   ArrowUpRight, 
@@ -184,7 +185,7 @@ export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTab
 
   return (
     <div className="w-full h-full p-4 md:p-6 flex flex-col liquid-card rounded-3xl relative overflow-hidden">
-      {/* Header Section */}
+      {/* Header Section - Fixed Height */}
       <div className="shrink-0 flex flex-col gap-5 mb-4">
         <div className="flex justify-between items-center px-2">
             <h2 className="text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>
@@ -213,7 +214,7 @@ export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTab
         </div>
       </div>
 
-      {/* Main Content Area - Strictly NO INTERNAL SCROLLING */}
+      {/* Main Content Area - Strictly NO SCROLLING */}
       <div className="flex-1 relative w-full overflow-hidden">
         <div className="w-full h-full overflow-hidden">
           <div className="min-w-[600px] w-full h-full flex flex-col">
@@ -248,36 +249,34 @@ export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTab
                 )}
               </motion.div>
             </AnimatePresence>
-
-            {/* SPACER BEFORE PAGINATION AREA */}
-            <div className="mt-auto h-12" />
-
-            {/* PAGINATION AREA - Placed in the specific blue box region */}
-            <div className="flex justify-end w-full px-4 mb-4">
-                <div className="bg-[#0c0c0e] border border-white/10 rounded-2xl p-2.5 flex items-center gap-6 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-                    <span className="text-[10px] text-nexus-muted font-bold uppercase tracking-[0.2em] px-4 min-w-[120px] text-center">
-                        PAGE {currentPage} / {totalPages}
-                    </span>
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={goToPrevPage} 
-                            disabled={currentPage === 1}
-                            className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white border border-white/5 hover:bg-white/10 transition-all active:scale-90 disabled:opacity-5"
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                        <button 
-                            onClick={goToNextPage} 
-                            disabled={currentPage === totalPages}
-                            className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white border border-white/5 hover:bg-white/10 transition-all active:scale-90 disabled:opacity-5"
-                        >
-                            <ChevronRight size={18} />
-                        </button>
-                    </div>
-                </div>
-            </div>
+            
+            {/* PHYSICAL SPACER: This forces a physical gap between the list and bottom UI */}
+            <div className="mt-auto h-24 shrink-0" aria-hidden="true" />
           </div>
         </div>
+      </div>
+
+      {/* Pagination Controls - Detached from rows and clearly visible */}
+      <div className="absolute bottom-6 right-8 flex items-center gap-6 z-20 pointer-events-auto bg-[#111]/90 backdrop-blur-2xl p-3 rounded-[1.2rem] border border-white/10 shadow-2xl">
+         <span className="text-[10px] text-nexus-muted uppercase tracking-[0.2em] font-bold opacity-80 px-2 min-w-[100px] text-center">
+           PAGE {currentPage} / {totalPages}
+         </span>
+         <div className="flex gap-2.5">
+            <button 
+              onClick={goToPrevPage} 
+              disabled={currentPage === 1}
+              className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white border border-white/10 hover:bg-white/15 transition-all active:scale-90 disabled:opacity-5 shadow-lg"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button 
+              onClick={goToNextPage} 
+              disabled={currentPage === totalPages}
+              className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white border border-white/10 hover:bg-white/15 transition-all active:scale-90 disabled:opacity-5 shadow-lg"
+            >
+              <ChevronRight size={18} />
+            </button>
+         </div>
       </div>
     </div>
   );

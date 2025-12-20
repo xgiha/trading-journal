@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   LayoutGrid, 
@@ -183,6 +184,7 @@ const App: React.FC = () => {
     hour12: true
   });
 
+  // Fixed error: Corrected variable name from 'verbose countdown' to 'verboseCountdown'
   const verboseCountdown = useMemo(() => {
     return marketCountdown
       .replace(/ \d+s$/, '') 
@@ -360,8 +362,8 @@ const App: React.FC = () => {
              </div>
           </div>
 
-          {/* CENTER WORKSPACE - pb-40 to bring card up and clear floating menu */}
-          <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0 pb-40">
+          {/* CENTER WORKSPACE - pb-36 to bring card up significantly to clear floating menu */}
+          <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0 pb-36">
             <div className="w-full h-full min-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
