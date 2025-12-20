@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo } from 'react';
 import { 
   ArrowUpRight, 
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trade } from '../types';
+import MorphingPageDots from './MorphingPageDots';
 
 interface JournalTableProps {
   trades: Trade[];
@@ -180,12 +180,9 @@ export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTab
 
   const groupedTrades = useMemo(() => groupTradesByDate(currentTrades), [currentTrades]);
 
-  const goToNextPage = () => setCurrentPage(p => Math.min(totalPages, p + 1));
-  const goToPrevPage = () => setCurrentPage(p => Math.max(1, p - 1));
-
   return (
     <div className="w-full h-full p-4 md:p-6 flex flex-col liquid-card rounded-3xl relative overflow-hidden">
-      {/* Header Section - Fixed Height */}
+      {/* Header Section */}
       <div className="shrink-0 flex flex-col gap-5 mb-4">
         <div className="flex justify-between items-center px-2">
             <h2 className="text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>
@@ -214,10 +211,10 @@ export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTab
         </div>
       </div>
 
-      {/* Main Content Area - Strictly NO SCROLLING */}
+      {/* Main Content Area - Strictly NO INTERNAL SCROLLING */}
       <div className="flex-1 relative w-full overflow-hidden">
         <div className="w-full h-full overflow-hidden">
-          <div className="min-w-[600px] w-full h-full flex flex-col">
+          <div className="min-w-[600px] w-full h-full flex flex-col relative pb-16">
              <AnimatePresence mode="wait">
               <motion.div
                 key={currentPage}
@@ -249,34 +246,17 @@ export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTab
                 )}
               </motion.div>
             </AnimatePresence>
-            
-            {/* PHYSICAL SPACER: This forces a physical gap between the list and bottom UI */}
-            <div className="mt-auto h-24 shrink-0" aria-hidden="true" />
+
+            {/* NEW PAGINATION - Anchored correctly inside the card */}
+            <div className="absolute bottom-2 left-0 right-0 z-50 flex justify-center items-center">
+                <MorphingPageDots 
+                  total={totalPages} 
+                  page={currentPage - 1} 
+                  setPage={(p) => setCurrentPage(p + 1)} 
+                />
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Pagination Controls - Detached from rows and clearly visible */}
-      <div className="absolute bottom-6 right-8 flex items-center gap-6 z-20 pointer-events-auto bg-[#111]/90 backdrop-blur-2xl p-3 rounded-[1.2rem] border border-white/10 shadow-2xl">
-         <span className="text-[10px] text-nexus-muted uppercase tracking-[0.2em] font-bold opacity-80 px-2 min-w-[100px] text-center">
-           PAGE {currentPage} / {totalPages}
-         </span>
-         <div className="flex gap-2.5">
-            <button 
-              onClick={goToPrevPage} 
-              disabled={currentPage === 1}
-              className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white border border-white/10 hover:bg-white/15 transition-all active:scale-90 disabled:opacity-5 shadow-lg"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button 
-              onClick={goToNextPage} 
-              disabled={currentPage === totalPages}
-              className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white border border-white/10 hover:bg-white/15 transition-all active:scale-90 disabled:opacity-5 shadow-lg"
-            >
-              <ChevronRight size={18} />
-            </button>
-         </div>
       </div>
     </div>
   );
