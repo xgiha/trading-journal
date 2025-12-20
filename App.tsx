@@ -42,6 +42,9 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'psychology'>('dashboard');
   const [activeTab, setActiveTab] = useState('dashboard');
   
+  // State to manage which card is expanded in the sidebar
+  const [expandedSidebarCard, setExpandedSidebarCard] = useState<'voice' | 'activity'>('voice');
+
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
 
   const addActivity = (type: ActivityLog['type'], title: string, description: string) => {
@@ -312,12 +315,17 @@ const App: React.FC = () => {
           <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-start overflow-y-auto custom-scrollbar pr-1">
             <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
             
-            <div className="shrink-0 flex justify-center">
-              <VoiceChat />
-            </div>
-
-            <div className="shrink-0 flex justify-center">
-              <ActivityDropdown logs={activityLogs} />
+            {/* Unified Toggle Container for VoiceChat and ActivityDropdown */}
+            <div className="flex flex-col gap-4">
+              <VoiceChat 
+                isOpen={expandedSidebarCard === 'voice'} 
+                onToggle={() => setExpandedSidebarCard('voice')} 
+              />
+              <ActivityDropdown 
+                logs={activityLogs} 
+                isOpen={expandedSidebarCard === 'activity'} 
+                onToggle={() => setExpandedSidebarCard('activity')} 
+              />
             </div>
 
             {/* Market Status Card - Moved to Bottom (mt-auto) */}

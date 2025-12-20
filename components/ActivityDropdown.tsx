@@ -1,5 +1,5 @@
 
-import React, { useState } from "react"
+import React from "react"
 import { Bell, ChevronUp, Zap, Edit3, Trash2, ShieldCheck } from "lucide-react"
 import { ActivityLog } from "../types"
 
@@ -7,11 +7,11 @@ const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Bool
 
 interface ActivityDropdownProps {
   logs: ActivityLog[];
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-export function ActivityDropdown({ logs }: ActivityDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false)
-
+export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownProps) {
   const getIcon = (type: ActivityLog['type']) => {
     switch (type) {
       case 'add': return < Zap className="h-3.5 w-3.5" />;
@@ -41,7 +41,7 @@ export function ActivityDropdown({ logs }: ActivityDropdownProps) {
         "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
         isOpen ? "rounded-3xl h-[320px]" : "rounded-[2rem] h-[56px]",
       )}
-      onClick={() => setIsOpen(!isOpen)}
+      onClick={() => !isOpen && onToggle()}
     >
       {/* Header */}
       <div className="flex items-center gap-3 p-2 h-[56px]">

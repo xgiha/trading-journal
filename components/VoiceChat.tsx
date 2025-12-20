@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { ChevronDown, X } from "lucide-react";
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
@@ -21,7 +21,7 @@ const participants: Participant[] = [
   { id: "7", name: "Afshin", avatar: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/attachments/gen-images/public/man-with-sunglasses-red-shirt-blue-background-KvK2BMFg07EE8rLsTSQ8891UfCcSIV.jpg" },
 ];
 
-const COLLAPSED_WIDTH = 210; // Adjusted for sidebar fitting
+const COLLAPSED_WIDTH = 210; 
 const EXPANDED_WIDTH = 340; 
 const EXPANDED_HEIGHT = 400;
 
@@ -107,31 +107,34 @@ function getAvatarPosition(index: number, isExpanded: boolean) {
   }
 }
 
-export function VoiceChat() {
-  const [isExpanded, setIsExpanded] = useState(false);
+interface VoiceChatProps {
+  isOpen: boolean;
+  onToggle: () => void;
+}
 
+export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
   return (
     <div
-      onClick={() => !isExpanded && setIsExpanded(true)}
+      onClick={() => !isOpen && onToggle()}
       className={cn(
         "relative bg-[#0c0c0e]/80 backdrop-blur-3xl shadow-2xl border border-white/5 overflow-hidden isolate",
         "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-        !isExpanded && "cursor-pointer hover:border-white/10 hover:bg-[#111113]",
+        !isOpen && "cursor-pointer hover:border-white/10 hover:bg-[#111113]",
       )}
       style={{
-        width: isExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH,
-        height: isExpanded ? EXPANDED_HEIGHT : 56,
-        borderRadius: isExpanded ? 32 : 999,
+        width: isOpen ? EXPANDED_WIDTH : COLLAPSED_WIDTH,
+        height: isOpen ? EXPANDED_HEIGHT : 56,
+        borderRadius: isOpen ? 32 : 999,
         zIndex: 100,
       }}
     >
-      <AudioWaveIcon isExpanded={isExpanded} />
+      <AudioWaveIcon isExpanded={isOpen} />
 
       <div
         className={cn(
           "absolute flex items-center gap-0.5 text-nexus-muted",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-          isExpanded ? "opacity-0 pointer-events-none" : "opacity-100",
+          isOpen ? "opacity-0 pointer-events-none" : "opacity-100",
         )}
         style={{
           right: 14,
@@ -147,10 +150,10 @@ export function VoiceChat() {
         className={cn(
           "absolute inset-x-0 top-0 flex items-center justify-between px-5 pt-5 pb-3",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-          isExpanded ? "opacity-100" : "opacity-0 pointer-events-none",
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         style={{
-          transitionDelay: isExpanded ? "100ms" : "0ms",
+          transitionDelay: isOpen ? "100ms" : "0ms",
         }}
       >
         <div className="w-8" />
@@ -158,7 +161,8 @@ export function VoiceChat() {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setIsExpanded(false);
+            // In the combined logic, we don't allow closing both, so clicking X 
+            // is essentially no-op or we could keep it to signify action
           }}
           className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"
         >
@@ -170,14 +174,14 @@ export function VoiceChat() {
         className={cn(
           "absolute left-6 right-6 h-px bg-white/5",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-          isExpanded ? "opacity-100" : "opacity-0",
+          isOpen ? "opacity-100" : "opacity-0",
         )}
         style={{ top: 58 }}
       />
 
       {participants.map((participant, index) => {
-        const pos = getAvatarPosition(index, isExpanded);
-        const delay = isExpanded ? index * 30 : (6 - index) * 20;
+        const pos = getAvatarPosition(index, isOpen);
+        const delay = isOpen ? index * 30 : (6 - index) * 20;
 
         return (
           <div
@@ -187,9 +191,9 @@ export function VoiceChat() {
               left: pos.x,
               top: pos.y,
               width: pos.size,
-              height: isExpanded ? pos.size + 28 : pos.size,
+              height: isOpen ? pos.size + 28 : pos.size,
               opacity: pos.opacity,
-              zIndex: isExpanded ? 1 : 4 - index,
+              zIndex: isOpen ? 1 : 4 - index,
               transitionDelay: `${delay}ms`,
             }}
           >
@@ -207,17 +211,17 @@ export function VoiceChat() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <SpeakingIndicator show={isExpanded && !!participant.isSpeaking} />
+              <SpeakingIndicator show={isOpen && !!participant.isSpeaking} />
 
               <span
                 className={cn(
                   "absolute text-[11px] font-bold text-nexus-muted whitespace-nowrap",
                   "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-                  isExpanded ? "opacity-100" : "opacity-0",
+                  isOpen ? "opacity-100" : "opacity-0",
                 )}
                 style={{
                   top: pos.size + 6,
-                  transitionDelay: isExpanded ? `${150 + index * 30}ms` : "0ms",
+                  transitionDelay: isOpen ? `${150 + index * 30}ms` : "0ms",
                 }}
               >
                 {participant.name}
@@ -232,11 +236,11 @@ export function VoiceChat() {
           "absolute left-6 right-6 bg-nexus-accent text-black py-3 rounded-2xl font-bold text-[11px] uppercase tracking-widest",
           "shadow-xl hover:brightness-110 active:scale-[0.98]",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-          isExpanded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none",
+          isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none",
         )}
         style={{
           bottom: 50,
-          transitionDelay: isExpanded ? "200ms" : "0ms",
+          transitionDelay: isOpen ? "200ms" : "0ms",
         }}
       >
         Join Session
@@ -246,11 +250,11 @@ export function VoiceChat() {
         className={cn(
           "absolute inset-x-0 text-center text-[10px] text-nexus-muted/60 font-bold uppercase tracking-widest",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-          isExpanded ? "opacity-100" : "opacity-0",
+          isOpen ? "opacity-100" : "opacity-0",
         )}
         style={{
           bottom: 20,
-          transitionDelay: isExpanded ? "250ms" : "0ms",
+          transitionDelay: isOpen ? "250ms" : "0ms",
         }}
       >
         Connecting to Nexus Stream...
