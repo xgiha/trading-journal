@@ -1,4 +1,3 @@
-
 import React from "react"
 import { Bell, ChevronUp, Zap, Edit3, Trash2, ShieldCheck } from "lucide-react"
 import { ActivityLog } from "../types"
@@ -39,7 +38,7 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
         "w-full max-w-[220px] shadow-2xl overflow-hidden cursor-pointer select-none",
         "bg-[#0c0c0e]/80 backdrop-blur-3xl border border-white/5 shadow-black/50 isolate",
         "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-        isOpen ? "rounded-3xl h-[320px]" : "rounded-[2rem] h-[56px]",
+        isOpen ? "rounded-3xl h-[360px]" : "rounded-[2rem] h-[56px]",
       )}
       onClick={() => !isOpen && onToggle()}
     >
