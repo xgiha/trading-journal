@@ -21,12 +21,12 @@ const participants: Participant[] = [
   { id: "7", name: "Afshin", avatar: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/attachments/gen-images/public/man-with-sunglasses-red-shirt-blue-background-KvK2BMFg07EE8rLsTSQ8891UfCcSIV.jpg" },
 ];
 
-const COLLAPSED_WIDTH = 210; 
-const EXPANDED_WIDTH = 340; 
-const EXPANDED_HEIGHT = 400;
+const COLLAPSED_WIDTH = 220; 
+const EXPANDED_WIDTH = 220; 
+const EXPANDED_HEIGHT = 320;
 
 const AVATAR_SIZE_COLLAPSED = 34;
-const AVATAR_SIZE_EXPANDED = 56;
+const AVATAR_SIZE_EXPANDED = 48;
 const AVATAR_OVERLAP = -10;
 
 function SpeakingIndicator({ show }: { show: boolean }) {
@@ -81,27 +81,20 @@ function getAvatarPosition(index: number, isExpanded: boolean) {
       scale: 1,
     }
   } else {
-    const gridStartX = 28;
+    // Adjusted for a 220px width container
+    const gridStartX = 24;
     const gridStartY = 70;
-    const colWidth = 80;
-    const rowHeight = 95;
+    const colWidth = 60;
+    const rowHeight = 80;
 
-    let col: number;
-    let row: number;
-
-    if (index < 4) {
-      col = index;
-      row = 0;
-    } else {
-      col = index - 4;
-      row = 1;
-    }
+    const col = index % 3;
+    const row = Math.floor(index / 3);
 
     return {
       x: gridStartX + col * colWidth,
       y: gridStartY + row * rowHeight,
       size: AVATAR_SIZE_EXPANDED,
-      opacity: 1,
+      opacity: index < 6 ? 1 : 0, // Limit to 6 to fit nicely in reduced height
       scale: 1,
     }
   }
@@ -148,7 +141,7 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
 
       <div
         className={cn(
-          "absolute inset-x-0 top-0 flex items-center justify-between px-5 pt-5 pb-3",
+          "absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-5 pb-3",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
@@ -156,17 +149,15 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
           transitionDelay: isOpen ? "100ms" : "0ms",
         }}
       >
-        <div className="w-8" />
-        <h2 className="text-[13px] font-bold text-white uppercase tracking-widest">Live Voice</h2>
+        <div className="w-6" />
+        <h2 className="text-[11px] font-bold text-white uppercase tracking-widest">Live Voice</h2>
         <button
           onClick={(e) => {
             e.stopPropagation();
-            // In the combined logic, we don't allow closing both, so clicking X 
-            // is essentially no-op or we could keep it to signify action
           }}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+          className="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"
         >
-          <X className="w-4 h-4 text-nexus-muted" />
+          <X className="w-3 h-3 text-nexus-muted" />
         </button>
       </div>
 
@@ -181,7 +172,7 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
 
       {participants.map((participant, index) => {
         const pos = getAvatarPosition(index, isOpen);
-        const delay = isOpen ? index * 30 : (6 - index) * 20;
+        const delay = isOpen ? index * 30 : (participants.length - 1 - index) * 20;
 
         return (
           <div
@@ -191,9 +182,9 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
               left: pos.x,
               top: pos.y,
               width: pos.size,
-              height: isOpen ? pos.size + 28 : pos.size,
+              height: isOpen ? pos.size + 20 : pos.size,
               opacity: pos.opacity,
-              zIndex: isOpen ? 1 : 4 - index,
+              zIndex: isOpen ? 1 : participants.length - index,
               transitionDelay: `${delay}ms`,
             }}
           >
@@ -215,12 +206,12 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
 
               <span
                 className={cn(
-                  "absolute text-[11px] font-bold text-nexus-muted whitespace-nowrap",
+                  "absolute text-[9px] font-bold text-nexus-muted whitespace-nowrap",
                   "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                   isOpen ? "opacity-100" : "opacity-0",
                 )}
                 style={{
-                  top: pos.size + 6,
+                  top: pos.size + 4,
                   transitionDelay: isOpen ? `${150 + index * 30}ms` : "0ms",
                 }}
               >
@@ -233,13 +224,13 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
 
       <button
         className={cn(
-          "absolute left-6 right-6 bg-nexus-accent text-black py-3 rounded-2xl font-bold text-[11px] uppercase tracking-widest",
+          "absolute left-4 right-4 bg-nexus-accent text-black py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest",
           "shadow-xl hover:brightness-110 active:scale-[0.98]",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
           isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none",
         )}
         style={{
-          bottom: 50,
+          bottom: 40,
           transitionDelay: isOpen ? "200ms" : "0ms",
         }}
       >
@@ -248,16 +239,16 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
 
       <p
         className={cn(
-          "absolute inset-x-0 text-center text-[10px] text-nexus-muted/60 font-bold uppercase tracking-widest",
+          "absolute inset-x-0 text-center text-[8px] text-nexus-muted/60 font-bold uppercase tracking-widest",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
           isOpen ? "opacity-100" : "opacity-0",
         )}
         style={{
-          bottom: 20,
+          bottom: 16,
           transitionDelay: isOpen ? "250ms" : "0ms",
         }}
       >
-        Connecting to Nexus Stream...
+        Nexus Stream Active
       </p>
     </div>
   );
