@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   LayoutGrid, 
@@ -42,7 +41,6 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'psychology'>('dashboard');
   const [activeTab, setActiveTab] = useState('dashboard');
   
-  // State to manage which card is expanded in the sidebar
   const [expandedSidebarCard, setExpandedSidebarCard] = useState<'voice' | 'activity'>('voice');
 
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
@@ -192,12 +190,6 @@ const App: React.FC = () => {
       .replace(/(\d+)m/, '$1 minutes');
   }, [marketCountdown]);
 
-  const formatCurrency = (val: number) => {
-    const sign = val < 0 ? '-' : '';
-    const absVal = Math.abs(val);
-    return `${sign}$${absVal.toLocaleString()}`;
-  };
-
   const globalStats = useMemo(() => {
     let totalPnl = 0, maxPnl = -Infinity, minPnl = Infinity, totalDurationMinutes = 0, timedTradeCount = 0, minDuration = Infinity, maxDuration = 0, newsCount = 0, normalCount = 0, wins = 0;
     if (trades.length === 0) return { totalPnl: 0, bestTrade: 0, worstTrade: 0, avgTime: '0m', growthPct: 0, shortestHold: '0m', longestHold: '0m', avgHoldNum: 0, shortestHoldNum: 0, longestHoldNum: 0, avgTradePnl: 0, newsCount: 0, normalCount: 0, currentBalance: 50000, winRate: 0, totalTrades: 0 };
@@ -309,49 +301,51 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-start"
+            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-start h-full"
         >
           {/* LEFT SIDEBAR */}
-          <div className="flex flex-col gap-4 h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full justify-start overflow-y-auto custom-scrollbar pr-1">
-            <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-            
-            {/* Unified Toggle Container for VoiceChat and ActivityDropdown */}
-            <div className="flex flex-col gap-4">
-              <VoiceChat 
-                isOpen={expandedSidebarCard === 'voice'} 
-                onToggle={() => setExpandedSidebarCard('voice')} 
-              />
-              <ActivityDropdown 
-                logs={activityLogs} 
-                isOpen={expandedSidebarCard === 'activity'} 
-                onToggle={() => setExpandedSidebarCard('activity')} 
-              />
+          <div className="flex flex-col h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full overflow-hidden">
+            <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1 pb-4">
+              <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+              
+              <div className="flex flex-col gap-4">
+                <VoiceChat 
+                  isOpen={expandedSidebarCard === 'voice'} 
+                  onToggle={() => setExpandedSidebarCard('voice')} 
+                />
+                <ActivityDropdown 
+                  logs={activityLogs} 
+                  isOpen={expandedSidebarCard === 'activity'} 
+                  onToggle={() => setExpandedSidebarCard('activity')} 
+                />
+              </div>
             </div>
 
-            {/* Market Status Card - Moved to Bottom (mt-auto) */}
-            <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-3 transition-all hover:bg-white/[0.04] cursor-default border border-white/5 mt-auto">
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-2 bg-nexus-card border border-white/10 rounded-xl text-[10px] font-bold text-white uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-2xl z-[110]">
-                  {isMarketOpen ? `Closes in ${verboseCountdown}` : `Opens in ${verboseCountdown}`}
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-nexus-card border-r border-b border-white/10 rotate-45"></div>
-                </div>
+            <div className="shrink-0 mt-2">
+              <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-3 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
+                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-2 bg-nexus-card border border-white/10 rounded-xl text-[10px] font-bold text-white uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-2xl z-[110]">
+                    {isMarketOpen ? `Closes in ${verboseCountdown}` : `Opens in ${verboseCountdown}`}
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-nexus-card border-r border-b border-white/10 rotate-45"></div>
+                  </div>
 
-                <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                        <h1 className="text-[10px] font-bold tracking-widest uppercase text-white drop-shadow-md">
-                            {isMarketOpen ? 'Market Open' : 'Market Closed'}
-                        </h1>
-                        <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-mono mt-0.5">
-                            UTC +5:30 Colombo {colomboTime}
-                        </span>
-                    </div>
-                    <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md shrink-0">
-                        <div className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
-                    </div>
-                </div>
+                  <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                          <h1 className="text-[10px] font-bold tracking-widest uppercase text-white drop-shadow-md">
+                              {isMarketOpen ? 'Market Open' : 'Market Closed'}
+                          </h1>
+                          <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-mono mt-0.5">
+                              UTC +5:30 Colombo {colomboTime}
+                          </span>
+                      </div>
+                      <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md shrink-0">
+                          <div className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
+                      </div>
+                  </div>
+              </div>
             </div>
           </div>
 
-          {/* LEFT GUTTER - Space remains static */}
+          {/* LEFT GUTTER */}
           <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
              <div className="w-full flex flex-col gap-4 items-center pb-4">
                 <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
@@ -366,9 +360,9 @@ const App: React.FC = () => {
              </div>
           </div>
 
-          {/* CENTER WORKSPACE */}
-          <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0">
-            <div className="w-full h-full min-h-0 relative overflow-hidden">
+          {/* CENTER WORKSPACE - pb-40 to bring card up and clear floating menu */}
+          <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0 pb-40">
+            <div className="w-full h-full min-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
                    key={activeTab}

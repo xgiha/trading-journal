@@ -55,10 +55,8 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
     const absVal = Math.abs(val);
     const sign = val < 0 ? '-' : '';
 
-    // If magnitude is >= 10,000, show as Xk (e.g. 10.5k)
     if (absVal >= 10000) {
         const kVal = absVal / 1000;
-        // toFixed(1) gives 10.5, replace ensures 10.0 becomes 10
         const formatted = kVal.toFixed(1).replace(/\.0$/, '');
         return `${sign}$${formatted}k`;
     }
@@ -66,7 +64,6 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
     return `${sign}$${absVal.toLocaleString()}`;
   };
 
-  // Generate calendar grid
   const renderCalendarDays = () => {
     const totalSlots = Math.ceil((days + firstDay) / 7) * 7;
     const grid = [];
@@ -109,7 +106,7 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
               {dayTradeCount > 0 ? (
                 <div className="flex flex-col items-center justify-center flex-1">
                   <span className={`text-xs md:text-sm lg:text-base font-bold tracking-tight ${dayPnl >= 0 ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]' : 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.3)]'}`}>
-                    {formatCurrency(dayPnl)}
+                    {dayPnl >= 0 ? '+' : ''}{formatCurrency(dayPnl)}
                   </span>
                   <span className="text-[8px] md:text-[9px] uppercase tracking-widest text-nexus-muted mt-0.5 hidden md:block">
                     {dayTradeCount} {dayTradeCount === 1 ? 'Trade' : 'Trades'}
@@ -127,9 +124,7 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
         </div>
       );
 
-      // End of week logic (Every 7 days)
       if ((i + 1) % 7 === 0) {
-        // Calculate weekly total
         let weekPnl = 0;
         let weekTradesCount = 0;
         const weekTradesList: Trade[] = [];
@@ -152,7 +147,6 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
         grid.push(
             <React.Fragment key={`row-${i}`}>
                {currentWeek}
-               {/* Weekly Summary Column - Hidden on mobile, shown on md+ */}
                <div 
                 onClick={() => weekTradesCount > 0 && onViewWeekClick(weekTradesList, weekLabel)}
                 className={`hidden md:flex rounded-lg md:rounded-xl p-1 md:p-2 flex-col items-center justify-center transition-all border border-white/5 relative overflow-hidden aspect-square ${
@@ -165,7 +159,7 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
                   {weekTradesCount > 0 && (
                       <>
                         <span className={`text-xs md:text-lg lg:text-xl font-bold tracking-tighter z-10 ${weekPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                             {formatCurrency(weekPnl)}
+                             {weekPnl >= 0 ? '+' : ''}{formatCurrency(weekPnl)}
                         </span>
                         <span className="text-[8px] md:text-[10px] uppercase tracking-widest text-nexus-muted mt-1 z-10 hidden md:block">
                             {weekTradesCount} {weekTradesCount === 1 ? 'Trade' : 'Trades'}
@@ -182,69 +176,59 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
   };
 
   return (
-    <div className="w-full h-full p-4 flex flex-col gap-4 liquid-card rounded-3xl relative overflow-hidden">
-      {/* Controls Header Row - Responsive Wrap */}
-      <div className="flex flex-wrap md:flex-nowrap items-center gap-2 shrink-0 w-full">
-         
-         {/* Month Nav Pill */}
-         <div className="bg-white/5 border border-white/5 rounded-full p-1.5 pr-6 flex items-center gap-4 hover:bg-white/10 transition-colors">
-            <div className="flex gap-1">
-                <button onClick={prevMonth} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-nexus-muted hover:text-white transition-colors">
-                <ChevronLeft size={16} />
+    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 liquid-card rounded-3xl relative overflow-hidden">
+      {/* Header Row - Clean layout matching screenshot */}
+      <div className="flex items-center justify-between shrink-0 w-full px-2">
+         {/* Month Controls */}
+         <div className="flex items-center gap-4 bg-white/5 rounded-full px-4 py-1.5 border border-white/5">
+            <div className="flex gap-2">
+                <button onClick={prevMonth} className="text-nexus-muted hover:text-white transition-colors">
+                    <ChevronLeft size={16} />
                 </button>
-                <button onClick={nextMonth} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-nexus-muted hover:text-white transition-colors">
-                <ChevronRight size={16} />
+                <button onClick={nextMonth} className="text-nexus-muted hover:text-white transition-colors">
+                    <ChevronRight size={16} />
                 </button>
             </div>
-            <span className="text-sm font-bold text-white tracking-wider uppercase whitespace-nowrap">
+            <span className="text-[12px] font-bold text-white tracking-[0.2em] uppercase whitespace-nowrap">
                {currentDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
             </span>
          </div>
 
-         {/* Compact Monthly Stats Pill - Responsive Layout */}
-         <div className="bg-white/5 border border-white/5 rounded-full p-1.5 px-4 flex items-center justify-between gap-6 h-[46px] ml-auto w-full md:w-auto mt-2 md:mt-0">
+         {/* Consolidated Stats */}
+         <div className="flex items-center gap-6 bg-white/5 rounded-full px-6 py-2 border border-white/5 shadow-inner">
             <div className="flex items-center gap-2">
-               <span className={`text-sm font-bold ${monthlyStats.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {formatCurrency(monthlyStats.totalPnl)}
+               <span className={`text-[12px] font-bold font-mono ${monthlyStats.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {monthlyStats.totalPnl >= 0 ? '+' : ''}{formatCurrency(monthlyStats.totalPnl)}
                </span>
-               <span className="text-[9px] uppercase tracking-widest text-nexus-muted">P&L</span>
+               <span className="text-[9px] uppercase tracking-widest text-nexus-muted font-bold opacity-60">P&L</span>
             </div>
-            
-            <div className="w-px h-4 bg-white/10"></div>
-            
+            <div className="w-px h-3 bg-white/10"></div>
             <div className="flex items-center gap-2">
-               <span className="text-sm font-bold text-white">{monthlyStats.count}</span>
-               <span className="text-[9px] uppercase tracking-widest text-nexus-muted hidden md:inline">Trades</span>
-               <Activity size={12} className="text-nexus-muted md:hidden" />
+               <span className="text-[12px] font-bold text-white font-mono">{monthlyStats.count}</span>
+               <span className="text-[9px] uppercase tracking-widest text-nexus-muted font-bold opacity-60">Trades</span>
             </div>
-
-            <div className="w-px h-4 bg-white/10"></div>
-
+            <div className="w-px h-3 bg-white/10"></div>
             <div className="flex items-center gap-2">
-               <span className="text-sm font-bold text-white">{monthlyStats.winRate.toFixed(0)}%</span>
-               <span className="text-[9px] uppercase tracking-widest text-nexus-muted hidden md:inline">Win Rate</span>
-               <Trophy size={12} className="text-nexus-muted md:hidden" />
+               <span className="text-[12px] font-bold text-white font-mono">{monthlyStats.winRate.toFixed(0)}%</span>
+               <span className="text-[9px] uppercase tracking-widest text-nexus-muted font-bold opacity-60">Win Rate</span>
             </div>
          </div>
-
       </div>
 
       {/* Grid Container */}
       <div className="flex-1 flex flex-col min-h-0">
-        {/* Grid Header */}
-        <div className="grid grid-cols-7 md:grid-cols-8 gap-1 md:gap-2 mb-2 shrink-0 px-1">
+        <div className="grid grid-cols-7 md:grid-cols-8 gap-2 mb-3 shrink-0 px-2">
             {WEEKDAYS.map(d => (
-            <div key={d} className="text-center text-[10px] uppercase tracking-widest text-nexus-muted font-bold opacity-60">
+            <div key={d} className="text-center text-[10px] uppercase tracking-[0.2em] text-nexus-muted font-bold opacity-40">
                 {d}
             </div>
             ))}
-            <div className="hidden md:block text-center text-[10px] uppercase tracking-widest text-nexus-accent font-bold opacity-80">
-            Total
+            <div className="hidden md:block text-center text-[10px] uppercase tracking-[0.2em] text-nexus-accent font-bold opacity-80">
+                Total
             </div>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7 md:grid-cols-8 gap-1 md:gap-2 flex-1 auto-rows-min overflow-y-auto custom-scrollbar px-1 content-start">
+        <div className="grid grid-cols-7 md:grid-cols-8 gap-2 flex-1 auto-rows-min overflow-y-auto custom-scrollbar px-2 content-start pb-4">
             {renderCalendarDays()}
         </div>
       </div>
