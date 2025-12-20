@@ -20,8 +20,8 @@ interface JournalTableProps {
   onViewDay: (date: string) => void;
 }
 
-// Strictly limit to 5 trades per page to prevent any scrolling
-const ITEMS_PER_PAGE = 5;
+// Strictly limit to 4 trades per page to ensure no overlapping with the pagination controls
+const ITEMS_PER_PAGE = 4;
 
 const groupTradesByDate = (trades: Trade[]) => {
   const groups: { [key: string]: Trade[] } = {};
@@ -214,7 +214,7 @@ export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTab
       {/* Main Content Area - Strictly NO INTERNAL SCROLLING */}
       <div className="flex-1 relative w-full overflow-hidden">
         <div className="w-full h-full overflow-hidden">
-          <div className="min-w-[600px] w-full h-full flex flex-col relative pb-16">
+          <div className="min-w-[600px] w-full h-full flex flex-col relative pb-20">
              <AnimatePresence mode="wait">
               <motion.div
                 key={currentPage}
@@ -247,13 +247,18 @@ export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTab
               </motion.div>
             </AnimatePresence>
 
-            {/* NEW PAGINATION - Anchored correctly inside the card */}
-            <div className="absolute bottom-2 left-0 right-0 z-50 flex justify-center items-center">
-                <MorphingPageDots 
-                  total={totalPages} 
-                  page={currentPage - 1} 
-                  setPage={(p) => setCurrentPage(p + 1)} 
-                />
+            {/* SEPARATED PAGINATION AREA */}
+            <div className="absolute bottom-0 left-0 right-0 z-50 flex flex-col items-center">
+                {/* Horizontal line separation */}
+                <div className="w-full h-px bg-white/5 mb-1" />
+                
+                <div className="w-full py-2 flex justify-center items-center">
+                    <MorphingPageDots 
+                      total={totalPages} 
+                      page={currentPage - 1} 
+                      setPage={(p) => setCurrentPage(p + 1)} 
+                    />
+                </div>
             </div>
           </div>
         </div>
