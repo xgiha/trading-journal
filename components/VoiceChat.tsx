@@ -50,7 +50,7 @@ function AudioWaveIcon({ isExpanded }: { isExpanded: boolean }) {
   return (
     <div
       className={cn(
-        "absolute w-8 h-8 rounded-full bg-white flex items-center justify-center",
+        "absolute w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-lg",
         "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
         isExpanded ? "opacity-0 scale-75" : "opacity-100 scale-100",
       )}
@@ -108,17 +108,23 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
     <div
       onClick={() => !isOpen && onToggle()}
       className={cn(
-        "relative bg-[#0c0c0e]/80 backdrop-blur-3xl shadow-2xl border border-white/5 overflow-hidden isolate",
+        "relative bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden isolate",
         "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-        !isOpen && "cursor-pointer hover:border-white/10 hover:bg-[#111113]",
+        !isOpen && "cursor-pointer hover:border-white/20 hover:bg-white/[0.06]",
       )}
       style={{
         width: isOpen ? EXPANDED_WIDTH : COLLAPSED_WIDTH,
         height: isOpen ? EXPANDED_HEIGHT : 56,
-        borderRadius: isOpen ? 32 : 999,
+        borderRadius: isOpen ? 40 : 999,
         zIndex: 100,
       }}
     >
+      {/* Visual Effects Layers matching TotalPnlCard */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
+      <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
+      <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-40 blur-3xl pointer-events-none -z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
+
       <AudioWaveIcon isExpanded={isOpen} />
 
       <div
@@ -139,7 +145,7 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
 
       <div
         className={cn(
-          "absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-5 pb-3",
+          "absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-5 pb-3 z-30",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
@@ -154,11 +160,11 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
             e.stopPropagation();
             onToggle();
           }}
-          className="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+          className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/10"
         >
           <ChevronUp 
             className={cn(
-              "w-3 h-3 text-nexus-muted transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
+              "w-3 h-3 text-white transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
               isOpen ? "rotate-0" : "rotate-180"
             )} 
           />
@@ -167,7 +173,7 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
 
       <div
         className={cn(
-          "absolute left-6 right-6 h-px bg-white/5",
+          "absolute left-6 right-6 h-px bg-white/10 z-30",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
           isOpen ? "opacity-100" : "opacity-0",
         )}
@@ -181,20 +187,20 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
         return (
           <div
             key={participant.id}
-            className="absolute transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
+            className="absolute transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] z-10"
             style={{
               left: pos.x,
               top: pos.y,
               width: pos.size,
               height: isOpen ? pos.size + 20 : pos.size,
               opacity: pos.opacity,
-              zIndex: isOpen ? 1 : participants.length - index,
+              zIndex: isOpen ? 10 : participants.length - index,
               transitionDelay: `${delay}ms`,
             }}
           >
             <div className="relative flex flex-col items-center">
               <div
-                className="rounded-full overflow-hidden ring-[2px] ring-[#0c0c0e] shadow-lg transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
+                className="rounded-full overflow-hidden ring-[2px] ring-[#0c0c0e] shadow-lg transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] border border-white/10"
                 style={{
                   width: pos.size,
                   height: pos.size,
@@ -229,7 +235,7 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
       <button
         className={cn(
           "absolute left-4 right-4 bg-nexus-accent text-black py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest",
-          "shadow-xl hover:brightness-110 active:scale-[0.98]",
+          "shadow-xl hover:brightness-110 active:scale-[0.98] z-40",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
           isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none",
         )}
@@ -243,7 +249,7 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
 
       <p
         className={cn(
-          "absolute inset-x-0 text-center text-[8px] text-nexus-muted/60 font-bold uppercase tracking-widest",
+          "absolute inset-x-0 text-center text-[8px] text-nexus-muted/60 font-bold uppercase tracking-widest z-40",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
           isOpen ? "opacity-100" : "opacity-0",
         )}

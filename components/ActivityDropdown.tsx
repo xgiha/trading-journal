@@ -35,16 +35,22 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
   return (
     <div
       className={cn(
-        "w-full max-w-[220px] shadow-2xl overflow-hidden cursor-pointer select-none",
-        "bg-[#0c0c0e]/80 backdrop-blur-3xl border border-white/5 shadow-black/50 isolate",
+        "w-full max-w-[220px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden cursor-pointer select-none isolate relative",
+        "bg-white/[0.03] backdrop-blur-2xl border border-white/10",
         "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
         isOpen ? "rounded-3xl h-[440px]" : "rounded-[2rem] h-[56px]",
-        !isOpen && "hover:border-white/10 hover:bg-[#111113]",
+        !isOpen && "hover:bg-white/[0.06] hover:border-white/20",
       )}
       onClick={() => !isOpen && onToggle()}
     >
+      {/* Visual Effects Layers matching TotalPnlCard */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
+      <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
+      <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-3xl pointer-events-none -z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
+
       {/* Header */}
-      <div className="flex items-center gap-3 p-2 h-[56px]">
+      <div className="flex items-center gap-3 p-2 h-[56px] relative z-30">
         <div className="relative">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10 transition-colors duration-300">
                 <Bell className="h-4 w-4 text-nexus-muted" />
@@ -72,11 +78,11 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
               e.stopPropagation();
               onToggle();
             }}
-            className="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/10"
           >
             <ChevronUp
               className={cn(
-                "h-3 w-3 text-nexus-muted transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                "h-3 w-3 text-white transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
                 isOpen ? "rotate-0" : "rotate-180",
               )}
             />
@@ -84,12 +90,20 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
         </div>
       </div>
 
+      <div
+        className={cn(
+          "absolute left-6 right-6 h-px bg-white/10 z-30 transition-opacity duration-300",
+          isOpen ? "opacity-100" : "opacity-0",
+        )}
+        style={{ top: 58 }}
+      />
+
       {/* Activity List */}
       <div
         className={cn(
-          "grid",
+          "grid relative z-30",
           "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+          isOpen ? "grid-rows-[1fr] opacity-100 pt-4" : "grid-rows-[0fr] opacity-0 pt-0",
         )}
       >
         <div className="overflow-hidden">
