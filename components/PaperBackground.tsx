@@ -7,7 +7,12 @@ const PaperBackground: React.FC = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const gl = canvas.getContext('webgl');
+    const gl = canvas.getContext('webgl', { 
+      alpha: false, 
+      depth: false, 
+      antialias: false, 
+      preserveDrawingBuffer: false 
+    });
     if (!gl) return;
 
     const vertexShaderSource = `
@@ -18,11 +23,11 @@ const PaperBackground: React.FC = () => {
     `;
 
     const fragmentShaderSource = `
-      precision highp float;
+      precision mediump float;
       uniform vec2 resolution;
       uniform float time;
 
-      // Simplex noise function
+      // Optimized Simplex noise
       vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
       vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
       vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -55,25 +60,23 @@ const PaperBackground: React.FC = () => {
 
       void main() {
         vec2 st = gl_FragCoord.xy / resolution.xy;
-        float t = time * 0.1;
+        float t = time * 0.05; // Slower for elegance and performance perception
         
-        // Liquid distortion
-        float noise1 = snoise(st * 3.0 + t);
-        float noise2 = snoise(st * 6.0 - t * 1.5);
+        float noise1 = snoise(st * 2.0 + t);
+        float noise2 = snoise(st * 4.0 - t * 1.2);
         
         float finalNoise = (noise1 + noise2 * 0.5);
         
-        // Deep elegant dark blue/black colors
-        vec3 color1 = vec3(0.05, 0.05, 0.08); // Dark background
-        vec3 color2 = vec3(0.1, 0.12, 0.2);   // Subtle blue accent
-        vec3 color3 = vec3(0.0, 0.0, 0.0);    // Deep black
+        vec3 color1 = vec3(0.04, 0.04, 0.06); 
+        vec3 color2 = vec3(0.08, 0.1, 0.18);   
+        vec3 color3 = vec3(0.0, 0.0, 0.0);    
         
-        vec3 finalColor = mix(color1, color2, finalNoise * 0.5 + 0.5);
-        finalColor = mix(finalColor, color3, st.y * 0.8);
+        vec3 finalColor = mix(color1, color2, finalNoise * 0.4 + 0.4);
+        finalColor = mix(finalColor, color3, st.y * 0.7);
 
-        // Subtle grain
+        // Static grain is cheaper than dynamic grain
         float grain = fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453);
-        finalColor += grain * 0.03;
+        finalColor += grain * 0.02;
 
         gl_FragColor = vec4(finalColor, 1.0);
       }
@@ -104,30 +107,51 @@ const PaperBackground: React.FC = () => {
     const timeLocation = gl.getUniformLocation(program, 'time');
 
     let startTime = Date.now();
+    let animationFrameId: number;
+
+    const updateCanvasSize = () => {
+      // PERFORMANCE OPTIMIZATION: Render at 1/2 resolution (4x fewer pixels)
+      // For a blurred background, high pixel density is unnecessary.
+      const scaleFactor = 0.5;
+      const width = Math.floor(window.innerWidth * scaleFactor);
+      const height = Math.floor(window.innerHeight * scaleFactor);
+      
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        gl.viewport(0, 0, width, height);
+      }
+    };
 
     const render = () => {
-      if (!canvas) return;
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      gl.viewport(0, 0, canvas.width, canvas.height);
+      updateCanvasSize();
       gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
       gl.uniform1f(timeLocation, (Date.now() - startTime) / 1000);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
-      requestAnimationFrame(render);
+      animationFrameId = requestAnimationFrame(render);
     };
 
     render();
 
     const handleResize = () => {
-       canvas.width = window.innerWidth;
-       canvas.height = window.innerHeight;
+       updateCanvasSize();
     };
+    
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
 
   }, []);
 
-  return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-50 pointer-events-none" />;
+  return (
+    <canvas 
+      ref={canvasRef} 
+      className="fixed top-0 left-0 w-full h-full -z-50 pointer-events-none"
+      style={{ imageRendering: 'auto' }} // Ensure smooth upscaling
+    />
+  );
 };
 
 export default PaperBackground;
