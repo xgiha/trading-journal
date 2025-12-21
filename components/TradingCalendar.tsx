@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronLeft, ChevronRight, Plus, Activity, Trophy } from 'lucide-react';
 import { Trade } from '../types';
@@ -19,7 +18,7 @@ interface TradingCalendarProps {
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-export const TradingCalendar: React.FC<TradingCalendarProps> = ({ 
+const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({ 
   trades, 
   currentDate, 
   onMonthChange,
@@ -235,3 +234,5 @@ export const TradingCalendar: React.FC<TradingCalendarProps> = ({
     </div>
   );
 };
+
+export const TradingCalendar = React.memo(TradingCalendarComponent);

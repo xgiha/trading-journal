@@ -161,7 +161,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
     );
 };
 
-export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTableProps) => {
+const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const sortedTrades = useMemo(() => {
@@ -266,3 +266,5 @@ export const JournalTable = ({ trades, onEdit, onDelete, onViewDay }: JournalTab
     </div>
   );
 };
+
+export const JournalTable = React.memo(JournalTableComponent);

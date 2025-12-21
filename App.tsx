@@ -34,16 +34,22 @@ const TABS = [
 ];
 
 const App: React.FC = () => {
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [isMarketOpen, setIsMarketOpen] = useState(false);
-  const [marketCountdown, setMarketCountdown] = useState<string>('');
-  
   const [currentView, setCurrentView] = useState<'dashboard' | 'psychology'>('dashboard');
   const [activeTab, setActiveTab] = useState('dashboard');
-  
+  // Removed null state to ensure one is always open per request
   const [expandedSidebarCard, setExpandedSidebarCard] = useState<'voice' | 'activity'>('voice');
-
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+
+  const toggleSidebar = (target: 'voice' | 'activity') => {
+    setExpandedSidebarCard(prev => {
+      // If we click the toggle of the already open card, flip to the other one
+      if (prev === target) {
+        return target === 'voice' ? 'activity' : 'voice';
+      }
+      // Otherwise, open the one we clicked
+      return target;
+    });
+  };
 
   const addActivity = (type: ActivityLog['type'], title: string, description: string) => {
     const newLog: ActivityLog = {
@@ -129,67 +135,6 @@ const App: React.FC = () => {
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  useEffect(() => {
-    const updateTimeAndMarketStatus = () => {
-      const now = new Date();
-      setCurrentTime(now);
-
-      const day = now.getUTCDay();
-      const hour = now.getUTCHours();
-      let isOpen = true;
-
-      if (day === 6) isOpen = false; 
-      if (day === 5 && hour >= 22) isOpen = false;
-      if (day === 0 && hour < 23) isOpen = false;
-      if ((day >= 1 && day <= 4) && (hour === 22)) isOpen = false;
-
-      setIsMarketOpen(isOpen);
-
-      let targetDate = new Date(now);
-      if (isOpen) {
-          targetDate.setUTCHours(22, 0, 0, 0);
-          if (day === 0) targetDate.setUTCDate(targetDate.getUTCDate() + 1);
-          else if (hour >= 22) targetDate.setUTCDate(targetDate.getUTCDate() + 1);
-      } else {
-          if (day === 6 || (day === 5 && hour >= 22) || (day === 0 && hour < 23)) {
-              targetDate.setUTCHours(23, 0, 0, 0);
-              const daysUntilSunday = (7 - day) % 7; 
-              if (day !== 0) targetDate.setUTCDate(targetDate.getUTCDate() + daysUntilSunday); 
-          } else {
-              targetDate.setUTCHours(23, 0, 0, 0);
-          }
-      }
-
-      const diff = targetDate.getTime() - now.getTime();
-      if (diff > 0) {
-          const h = Math.floor(diff / (1000 * 60 * 60));
-          const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          const s = Math.floor((diff % (1000 * 60)) / 1000);
-          setMarketCountdown(`${h}h ${m}m ${s}s`);
-      } else {
-          setMarketCountdown("00h 00m 00s");
-      }
-    };
-
-    updateTimeAndMarketStatus();
-    const timer = setInterval(updateTimeAndMarketStatus, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const colomboTime = currentTime.toLocaleTimeString('en-US', {
-    timeZone: 'Asia/Colombo',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
-
-  const verboseCountdown = useMemo(() => {
-    return marketCountdown
-      .replace(/ \d+s$/, '') 
-      .replace(/(\d+)h/, '$1 hours and')
-      .replace(/(\d+)m/, '$1 minutes');
-  }, [marketCountdown]);
-
   const globalStats = useMemo(() => {
     let totalPnl = 0, maxPnl = -Infinity, minPnl = Infinity, totalDurationMinutes = 0, timedTradeCount = 0, minDuration = Infinity, maxDuration = 0, newsCount = 0, normalCount = 0, wins = 0;
     if (trades.length === 0) return { totalPnl: 0, bestTrade: 0, worstTrade: 0, avgTime: '0m', growthPct: 0, shortestHold: '0m', longestHold: '0m', avgHoldNum: 0, shortestHoldNum: 0, longestHoldNum: 0, avgTradePnl: 0, newsCount: 0, normalCount: 0, currentBalance: 50000, winRate: 0, totalTrades: 0 };
@@ -210,11 +155,8 @@ const App: React.FC = () => {
     const avgMinutes = timedTradeCount > 0 ? Math.floor(totalDurationMinutes / timedTradeCount) : 0;
     const formatDur = (m: number) => { if (m === Infinity || m === 0) return '0m'; const h = Math.floor(m / 60); const mins = m % 60; if (h > 0) return `${h}h ${mins}m`; return `${mins}m`; };
     const initialBalance = 50000;
-    const currentBalance = initialBalance + totalPnl;
     const growthPct = (totalPnl / initialBalance) * 100;
-    const avgTradePnl = trades.length > 0 ? totalPnl / trades.length : 0;
-    const winRate = (wins / trades.length) * 100;
-    return { totalPnl, bestTrade: maxPnl === -Infinity ? 0 : maxPnl, worstTrade: minPnl === Infinity ? 0 : minPnl, avgTime: formatDur(avgMinutes), growthPct, shortestHold: minDuration === Infinity ? '0m' : formatDur(minDuration), longestHold: formatDur(maxDuration), shortestHoldNum: minDuration === Infinity ? 0 : minDuration, longestHoldNum: maxDuration, avgHoldNum: avgMinutes, avgTradePnl, newsCount, normalCount, currentBalance, winRate, totalTrades: trades.length };
+    return { totalPnl, bestTrade: maxPnl === -Infinity ? 0 : maxPnl, worstTrade: minPnl === Infinity ? 0 : minPnl, avgTime: formatDur(avgMinutes), growthPct, shortestHold: minDuration === Infinity ? '0m' : formatDur(minDuration), longestHold: formatDur(maxDuration), totalTrades: trades.length };
   }, [trades]);
 
   const monthlyStats = useMemo(() => {
@@ -297,10 +239,10 @@ const App: React.FC = () => {
         {currentView === 'dashboard' ? (
         <motion.div 
             key="dashboard-grid"
-            initial={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0, scale: 0.99 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, scale: 0.99 }}
+            transition={{ duration: 0.2 }}
             className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-start h-full"
         >
           {/* LEFT SIDEBAR */}
@@ -311,36 +253,13 @@ const App: React.FC = () => {
               <div className="flex flex-col gap-4">
                 <VoiceChat 
                   isOpen={expandedSidebarCard === 'voice'} 
-                  onToggle={() => setExpandedSidebarCard('voice')} 
+                  onToggle={() => toggleSidebar('voice')} 
                 />
                 <ActivityDropdown 
                   logs={activityLogs} 
                   isOpen={expandedSidebarCard === 'activity'} 
-                  onToggle={() => setExpandedSidebarCard('activity')} 
+                  onToggle={() => toggleSidebar('activity')} 
                 />
-              </div>
-            </div>
-
-            <div className="shrink-0 mt-2">
-              <div className="group relative liquid-card rounded-3xl p-5 shrink-0 flex flex-col gap-3 transition-all hover:bg-white/[0.04] cursor-default border border-white/5">
-                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-2 bg-nexus-card border border-white/10 rounded-xl text-[10px] font-bold text-white uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-2xl z-[110]">
-                    {isMarketOpen ? `Closes in ${verboseCountdown}` : `Opens in ${verboseCountdown}`}
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-nexus-card border-r border-b border-white/10 rotate-45"></div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                          <h1 className="text-[10px] font-bold tracking-widest uppercase text-white drop-shadow-md">
-                              {isMarketOpen ? 'Market Open' : 'Market Closed'}
-                          </h1>
-                          <span className="text-[9px] text-nexus-muted uppercase tracking-widest font-mono mt-0.5">
-                              UTC +5:30 Colombo {colomboTime}
-                          </span>
-                      </div>
-                      <div className="w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center backdrop-blur-md shrink-0">
-                          <div className={`w-1.5 h-1.5 rounded-full ${isMarketOpen ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'} animate-pulse`}></div>
-                      </div>
-                  </div>
               </div>
             </div>
           </div>
@@ -360,16 +279,16 @@ const App: React.FC = () => {
              </div>
           </div>
 
-          {/* CENTER WORKSPACE - pb-24 gives card more height while clearing floating menu */}
+          {/* CENTER WORKSPACE */}
           <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0 pb-24">
             <div className="w-full h-full min-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
                  <motion.div
                    key={activeTab}
-                   initial={{ opacity: 0, filter: 'blur(8px)', scale: 0.98 }}
-                   animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
-                   exit={{ opacity: 0, filter: 'blur(8px)', scale: 0.98 }}
-                   transition={{ duration: 0.3, ease: "easeInOut" }}
+                   initial={{ opacity: 0, scale: 0.99 }}
+                   animate={{ opacity: 1, scale: 1 }}
+                   exit={{ opacity: 0, scale: 0.99 }}
+                   transition={{ duration: 0.2, ease: "easeOut" }}
                    className="absolute inset-0 w-full h-full flex flex-col"
                  >
                    {activeTab === 'dashboard' ? (
@@ -399,10 +318,10 @@ const App: React.FC = () => {
         ) : (
              <motion.div 
                key="psychology-view"
-               initial={{ opacity: 0, scale: 0.98 }}
+               initial={{ opacity: 0, scale: 0.99 }}
                animate={{ opacity: 1, scale: 1 }}
-               exit={{ opacity: 0, scale: 0.98 }}
-               transition={{ duration: 0.3 }}
+               exit={{ opacity: 0, scale: 0.99 }}
+               transition={{ duration: 0.2 }}
                className="flex-1 w-full h-full flex items-center justify-center overflow-hidden"
              >
                  <PsychologyPage trades={trades} onBack={() => setCurrentView('dashboard')} />

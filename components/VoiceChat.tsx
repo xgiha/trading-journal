@@ -1,6 +1,5 @@
-
 import React from "react";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronUp } from "lucide-react";
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
@@ -81,7 +80,6 @@ function getAvatarPosition(index: number, isExpanded: boolean) {
       scale: 1,
     }
   } else {
-    // Adjusted for a 220px width container
     const gridStartX = 24;
     const gridStartY = 70;
     const colWidth = 60;
@@ -94,7 +92,7 @@ function getAvatarPosition(index: number, isExpanded: boolean) {
       x: gridStartX + col * colWidth,
       y: gridStartY + row * rowHeight,
       size: AVATAR_SIZE_EXPANDED,
-      opacity: index < 6 ? 1 : 0, // Limit to 6 to fit nicely in reduced height
+      opacity: index < 6 ? 1 : 0, 
       scale: 1,
     }
   }
@@ -136,7 +134,7 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
         }}
       >
         <span className="text-xs font-bold font-mono">+3</span>
-        <ChevronDown className="w-3 h-3" />
+        <ChevronUp className="w-3 h-3 rotate-180" />
       </div>
 
       <div
@@ -154,10 +152,16 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
         <button
           onClick={(e) => {
             e.stopPropagation();
+            onToggle();
           }}
           className="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"
         >
-          <X className="w-3 h-3 text-nexus-muted" />
+          <ChevronUp 
+            className={cn(
+              "w-3 h-3 text-nexus-muted transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
+              isOpen ? "rotate-0" : "rotate-180"
+            )} 
+          />
         </button>
       </div>
 

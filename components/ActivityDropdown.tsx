@@ -29,8 +29,8 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
     }
   };
 
-  // Only show last 5 activities
-  const displayLogs = [...logs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+  // Only show last 8 activities instead of 5 to take advantage of the increased height
+  const displayLogs = [...logs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 8);
 
   return (
     <div
@@ -38,7 +38,8 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
         "w-full max-w-[220px] shadow-2xl overflow-hidden cursor-pointer select-none",
         "bg-[#0c0c0e]/80 backdrop-blur-3xl border border-white/5 shadow-black/50 isolate",
         "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-        isOpen ? "rounded-3xl h-[360px]" : "rounded-[2rem] h-[56px]",
+        isOpen ? "rounded-3xl h-[440px]" : "rounded-[2rem] h-[56px]",
+        !isOpen && "hover:border-white/10 hover:bg-[#111113]",
       )}
       onClick={() => !isOpen && onToggle()}
     >
@@ -56,7 +57,7 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
           <h3 className="text-[11px] font-bold text-white uppercase tracking-wider">Activities</h3>
           <p
             className={cn(
-              "text-[9px] text-nexus-muted uppercase font-bold tracking-widest opacity-60",
+              "text-[9px] text-nexus-muted uppercase font-bold tracking-widest opacity-60 truncate",
               "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
               isOpen ? "opacity-0 max-h-0 mt-0" : "opacity-100 max-h-6 mt-0.5",
             )}
@@ -64,13 +65,22 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
             {logs.length} Recent Events
           </p>
         </div>
+        
         <div className="flex h-8 w-8 items-center justify-center">
-          <ChevronUp
-            className={cn(
-              "h-4 w-4 text-nexus-muted transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-              isOpen ? "rotate-0" : "rotate-180",
-            )}
-          />
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle();
+            }}
+            className="w-6 h-6 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+          >
+            <ChevronUp
+              className={cn(
+                "h-3 w-3 text-nexus-muted transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                isOpen ? "rotate-0" : "rotate-180",
+              )}
+            />
+          </button>
         </div>
       </div>
 
@@ -115,14 +125,14 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
                   </div>
                 ))
               ) : (
-                <div className="py-12 text-center flex flex-col items-center gap-2 opacity-30">
+                <div className="py-20 text-center flex flex-col items-center gap-2 opacity-30">
                     <ShieldCheck size={24} className="text-nexus-muted" />
                     <span className="text-[9px] uppercase font-bold tracking-[0.2em]">Stream is empty</span>
                 </div>
               )}
             </div>
             {displayLogs.length > 0 && (
-                <div className="mt-4 text-center">
+                <div className="mt-6 text-center">
                     <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest opacity-40">End of recent stream</span>
                 </div>
             )}

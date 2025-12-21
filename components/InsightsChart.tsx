@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Settings } from 'lucide-react';
@@ -168,4 +167,4 @@ const InsightsChart: React.FC<InsightsChartProps> = ({ trades }) => {
   );
 };
 
-export default InsightsChart;
+export default React.memo(InsightsChart);
