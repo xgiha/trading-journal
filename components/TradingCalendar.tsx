@@ -175,9 +175,15 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
   };
 
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 liquid-card rounded-3xl relative overflow-hidden">
+    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] relative overflow-hidden isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+      {/* Glossy Highlights */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
+      <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
+      <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/10 to-transparent opacity-30 blur-3xl pointer-events-none -z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
+
       {/* Header Row - Clean layout matching screenshot */}
-      <div className="flex items-center justify-between shrink-0 w-full px-2">
+      <div className="flex items-center justify-between shrink-0 w-full px-2 z-10">
          {/* Month Controls */}
          <div className="flex items-center gap-4 bg-white/5 rounded-full px-4 py-1.5 border border-white/5">
             <div className="flex gap-2">
@@ -215,7 +221,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
       </div>
 
       {/* Grid Container */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-0 z-10">
         <div className="grid grid-cols-7 md:grid-cols-8 gap-2 mb-3 shrink-0 px-2">
             {WEEKDAYS.map(d => (
             <div key={d} className="text-center text-[10px] uppercase tracking-[0.2em] text-nexus-muted font-bold opacity-40">

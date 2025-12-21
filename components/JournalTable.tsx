@@ -181,9 +181,15 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
   const groupedTrades = useMemo(() => groupTradesByDate(currentTrades), [currentTrades]);
 
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col liquid-card rounded-3xl relative overflow-hidden">
+    <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] relative overflow-hidden isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+      {/* Glossy Highlights */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
+      <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
+      <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/10 to-transparent opacity-30 blur-3xl pointer-events-none -z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
+
       {/* Header Section */}
-      <div className="shrink-0 flex flex-col gap-5 mb-4">
+      <div className="shrink-0 flex flex-col gap-5 mb-4 z-10">
         <div className="flex justify-between items-center px-2">
             <h2 className="text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>
             <div className="flex gap-2">
@@ -212,7 +218,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
       </div>
 
       {/* Main Content Area - Strictly NO INTERNAL SCROLLING */}
-      <div className="flex-1 relative w-full overflow-hidden">
+      <div className="flex-1 relative w-full overflow-hidden z-10">
         <div className="w-full h-full overflow-hidden">
           <div className="min-w-[600px] w-full h-full flex flex-col relative pb-20">
              <AnimatePresence mode="wait">
