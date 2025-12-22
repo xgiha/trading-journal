@@ -202,10 +202,9 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.99 }}
             transition={{ duration: 0.2 }}
-            // Wings are now 484px (220 sidebar + 24 gap + 240 gutter) to fill horizontal space while remaining centered
             className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[484px_1fr_484px] gap-4 md:gap-6 z-10 items-start h-full"
         >
-          {/* LEFT WING: Sidebar (220) + Gap (24) + Gutter (240) = 484px */}
+          {/* LEFT WING */}
           <div className="flex h-full min-h-0 order-2 lg:order-none w-full overflow-hidden gap-6">
             {/* Sidebar */}
             <div className="flex flex-col h-full min-h-0 w-[220px] shrink-0">
@@ -226,26 +225,29 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Left Gutter: Wider cards to fill the gap */}
+            {/* Left Gutter: Redesigned Cards 4, 5, 6 with Transparency Effect */}
             <div className="hidden lg:flex flex-col gap-4 items-stretch w-[240px] shrink-0 h-full justify-start overflow-hidden">
                <div className="w-full flex flex-col gap-4 items-stretch pb-4">
-                  <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                      <span className="text-nexus-muted font-bold text-4xl group-hover:text-white transition-colors z-10">4</span>
-                  </div>
-                  <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                      <span className="text-nexus-muted font-bold text-4xl group-hover:text-white transition-colors z-10">5</span>
-                  </div>
-                  <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                     <span className="text-nexus-muted font-bold text-4xl group-hover:text-white transition-colors z-10">6</span>
-                  </div>
+                  {[4, 5, 6].map((num) => (
+                    <div key={num} className="relative w-full h-[140px] shrink-0 group">
+                      <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] flex items-center justify-center isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 hover:bg-white/[0.06] hover:border-white/20">
+                        {/* Glossy Highlights */}
+                        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
+                        <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
+                        {/* Inner Glow */}
+                        <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-3xl pointer-events-none -z-10"></div>
+                        {/* Background Texture */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
+                        
+                        <span className="text-nexus-muted font-bold text-4xl group-hover:text-white transition-colors z-30">{num}</span>
+                      </div>
+                    </div>
+                  ))}
                </div>
             </div>
           </div>
 
-          {/* CENTER WORKSPACE: Flex-1 and centered perfectly */}
+          {/* CENTER WORKSPACE */}
           <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0 pb-24">
             <div className="w-full h-full min-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
@@ -267,7 +269,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT WING: Symmetric to Left Wing (484px) */}
+          {/* RIGHT WING */}
           <div className="flex flex-col h-full order-3 lg:order-none w-[484px] shrink-0 overflow-hidden gap-6">
             <div className="flex-1 min-h-0">
                 <InsightCard trades={trades} />
