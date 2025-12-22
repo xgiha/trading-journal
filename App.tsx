@@ -16,6 +16,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import EnergyChart from './components/EnergyChart';
+import InsightCard from './components/InsightCard';
 import PaperBackground from './components/PaperBackground';
 import { TradingCalendar } from './components/TradingCalendar';
 import { JournalTable } from './components/JournalTable';
@@ -132,7 +133,7 @@ const App: React.FC = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const globalStats = useMemo(() => {
-    let totalPnl = 0, maxPnl = -Infinity, minPnl = Infinity, growthPct = 0;
+    let totalPnl = 0, growthPct = 0;
     if (trades.length === 0) return { totalPnl: 0, growthPct: 0 };
     trades.forEach(t => {
       totalPnl += t.pnl;
@@ -201,43 +202,46 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.99 }}
             transition={{ duration: 0.2 }}
-            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_minmax(340px,1fr)] gap-4 md:gap-6 z-10 items-start h-full"
+            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[384px_1fr_384px] gap-4 md:gap-6 z-10 items-start h-full"
         >
-          {/* LEFT SIDEBAR */}
-          <div className="flex flex-col h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full overflow-hidden">
-            <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1 pb-4">
-              <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-              
-              <div className="flex flex-col gap-4">
-                <VoiceChat 
-                  isOpen={expandedSidebarCard === 'voice'} 
-                  onToggle={() => toggleSidebar('voice')} 
-                />
-                <ActivityDropdown 
-                  logs={activityLogs} 
-                  isOpen={expandedSidebarCard === 'activity'} 
-                  onToggle={() => toggleSidebar('activity')} 
-                />
+          {/* LEFT WING: Sidebar (220) + Gap (24) + Gutter (140) = 384px */}
+          <div className="flex h-full min-h-0 order-2 lg:order-none w-full overflow-hidden gap-6">
+            {/* Sidebar */}
+            <div className="flex flex-col h-full min-h-0 w-[220px] shrink-0">
+              <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1 pb-4">
+                <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+                
+                <div className="flex flex-col gap-4">
+                  <VoiceChat 
+                    isOpen={expandedSidebarCard === 'voice'} 
+                    onToggle={() => toggleSidebar('voice')} 
+                  />
+                  <ActivityDropdown 
+                    logs={activityLogs} 
+                    isOpen={expandedSidebarCard === 'activity'} 
+                    onToggle={() => toggleSidebar('activity')} 
+                  />
+                </div>
               </div>
+            </div>
+
+            {/* Left Gutter */}
+            <div className="hidden lg:flex flex-col gap-4 items-stretch w-[140px] shrink-0 h-full justify-start overflow-hidden">
+               <div className="w-full flex flex-col gap-4 items-stretch pb-4">
+                  <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                      <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">4</span>
+                  </div>
+                  <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                      <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">5</span>
+                  </div>
+                  <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                     <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
+                  </div>
+               </div>
             </div>
           </div>
 
-          {/* LEFT GUTTER */}
-          <div className="hidden lg:flex flex-col gap-4 items-stretch p-0 px-4 h-full justify-start">
-             <div className="w-full flex flex-col gap-4 items-stretch pb-4">
-                <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">4</span>
-                </div>
-                <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">5</span>
-                </div>
-                <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                   <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
-                </div>
-             </div>
-          </div>
-
-          {/* CENTER WORKSPACE */}
+          {/* CENTER WORKSPACE: Flex-1 and centered perfectly */}
           <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0 pb-24">
             <div className="w-full h-full min-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
@@ -259,9 +263,14 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT SIDEBAR (SINGLE MODULE) */}
-          <div className="flex flex-col h-full order-3 lg:order-none w-full overflow-hidden">
-            <EnergyChart trades={trades} stats={{ totalPnl: globalStats.totalPnl, growthPct: globalStats.growthPct }} />
+          {/* RIGHT WING: Symmetric to Left Wing, Split into two vertical cards */}
+          <div className="flex flex-col h-full order-3 lg:order-none w-[384px] shrink-0 overflow-hidden gap-6">
+            <div className="flex-1 min-h-0">
+                <InsightCard trades={trades} />
+            </div>
+            <div className="flex-1 min-h-0">
+                <EnergyChart trades={trades} stats={{ totalPnl: globalStats.totalPnl, growthPct: globalStats.growthPct }} />
+            </div>
           </div>
         </motion.div>
         ) : (
