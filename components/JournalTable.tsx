@@ -91,23 +91,23 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
     };
 
     return (
-        <div className="relative h-16 w-full min-w-[600px] mb-2 rounded-2xl select-none touch-pan-y overflow-hidden shrink-0">
-            <div className="absolute inset-0 flex justify-between items-center px-6 bg-white/5 backdrop-blur-md rounded-2xl border border-white/5 z-0">
+        <div className="relative h-20 w-full min-w-[600px] mb-2 rounded-[30px] select-none touch-pan-y overflow-hidden shrink-0">
+            <div className="absolute inset-0 flex justify-between items-center px-10 bg-white/5 backdrop-blur-md rounded-[30px] border border-white/5 z-0">
                 <button 
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onEdit(trade); setOffset(0); }}
                     className={`flex items-center gap-2 text-green-500 transition-all active:scale-95 ${offset > 0 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}
                 >
-                    <Edit2 size={16} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Edit</span>
+                    <Edit2 size={18} />
+                    <span className="text-[11px] font-bold uppercase tracking-wider">Edit</span>
                 </button>
                 <button 
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onDelete(trade.id); setOffset(0); }}
                     className={`flex items-center gap-2 text-red-500 transition-all active:scale-95 ${offset < 0 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'}`}
                 >
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Delete</span>
-                    <Trash2 size={16} />
+                    <span className="text-[11px] font-bold uppercase tracking-wider">Delete</span>
+                    <Trash2 size={18} />
                 </button>
             </div>
 
@@ -117,42 +117,42 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
                 onPointerLeave={() => { if(isDragging.current) onPointerUp({ pointerId: 0 } as any) }}
-                className="absolute inset-0 bg-[#0F0F0F] border border-white/5 rounded-2xl flex items-center transition-transform duration-300 ease-out cursor-pointer hover:border-white/20 hover:bg-[#141414] z-10"
+                className="absolute inset-0 bg-[#0F0F0F] border border-white/5 rounded-[30px] flex items-center transition-transform duration-300 ease-out cursor-pointer hover:border-white/20 hover:bg-[#141414] z-10"
                 style={{ transform: `translateX(${offset}px)` }}
             >
-                <div className="w-12 flex flex-col gap-1 justify-center items-center shrink-0 border-r border-white/5 h-full">
-                    {isNewsTrade ? <Zap size={14} className="text-yellow-500 fill-yellow-500" /> : <div className="w-1 h-1 rounded-full bg-[#222]"></div>}
-                    {hasNotes && <FileText size={10} className="text-[#444]" />}
+                <div className="w-16 flex flex-col gap-1 justify-center items-center shrink-0 border-r border-white/5 h-full">
+                    {isNewsTrade ? <Zap size={16} className="text-yellow-500 fill-yellow-500" /> : <div className="w-1.5 h-1.5 rounded-full bg-[#333]"></div>}
+                    {hasNotes && <FileText size={12} className="text-[#555]" />}
                 </div>
 
-                <div className="flex-1 grid grid-cols-7 gap-4 items-center px-6 h-full">
-                    <div className="font-mono text-xs text-white font-bold truncate tracking-wide">{trade.pair}</div>
-                    <div className={`text-right font-mono text-xs font-bold truncate ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>{trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(2)}</div>
-                    <div className="text-xs text-[#AAA] font-mono truncate text-right">{trade.size || '-'}</div>
+                <div className="flex-1 grid grid-cols-7 gap-4 items-center px-10 h-full">
+                    <div className="font-mono text-base text-white font-bold truncate tracking-wide">{trade.pair}</div>
+                    <div className={`text-right font-mono text-base font-bold truncate ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>{trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(2)}</div>
+                    <div className="text-base text-[#AAA] font-mono truncate text-right">{trade.size || '-'}</div>
                     <div className="flex flex-col gap-0.5 justify-center">
-                        <div className="flex items-center gap-2 text-[9px]">
-                            <span className="w-5 text-[#444] font-bold">IN</span>
-                            <span className="font-mono text-white/70">{trade.entryTime}</span>
+                        <div className="flex items-center gap-2 text-[11px]">
+                            <span className="w-6 text-[#444] font-bold">IN</span>
+                            <span className="font-mono text-white/80 text-sm">{trade.entryTime}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-[9px]">
-                            <span className="w-5 text-[#444] font-bold">OUT</span>
-                            <span className="font-mono text-white/70">{trade.exitTime || '-'}</span>
+                        <div className="flex items-center gap-2 text-[11px]">
+                            <span className="w-6 text-[#444] font-bold">OUT</span>
+                            <span className="font-mono text-white/80 text-sm">{trade.exitTime || '-'}</span>
                         </div>
                     </div>
                     <div className="flex flex-col gap-0.5 justify-center">
-                        <div className="flex items-center gap-2 text-[9px]">
-                            <span className="w-5 text-[#444] font-bold">IN</span>
-                            <span className="font-mono text-white/70">{trade.entryPrice || '-'}</span>
+                        <div className="flex items-center gap-2 text-[11px]">
+                            <span className="w-6 text-[#444] font-bold">IN</span>
+                            <span className="font-mono text-white/80 text-sm">{trade.entryPrice || '-'}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-[9px]">
-                            <span className="w-5 text-[#444] font-bold">OUT</span>
-                            <span className="font-mono text-white/70">{trade.exitPrice || '-'}</span>
+                        <div className="flex items-center gap-2 text-[11px]">
+                            <span className="w-6 text-[#444] font-bold">OUT</span>
+                            <span className="font-mono text-white/80 text-sm">{trade.exitPrice || '-'}</span>
                         </div>
                     </div>
-                    <div className="text-right text-xs text-[#666] font-mono truncate">${(trade.fee || 0).toFixed(2)}</div>
+                    <div className="text-right text-base text-[#666] font-mono truncate">${(trade.fee || 0).toFixed(2)}</div>
                     <div className="flex justify-center">
-                        <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full border ${trade.type === 'Long' ? 'bg-green-500/5 text-green-500 border-green-500/10' : 'bg-red-500/5 text-red-500 border-red-500/10'}`}>
-                          {trade.type === 'Long' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                        <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full border ${trade.type === 'Long' ? 'bg-green-500/5 text-green-500 border-green-500/10' : 'bg-red-500/5 text-red-500 border-red-500/10'}`}>
+                          {trade.type === 'Long' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                         </div>
                     </div>
                 </div>
@@ -201,9 +201,9 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
         {/* Table Headers */}
         <div className="overflow-x-auto pb-1 -mx-4 px-6 no-scrollbar">
            <div className="min-w-[600px]">
-              <div className="flex items-center w-full text-[10px] text-[#555] uppercase tracking-[0.2em] font-bold bg-[#1A1A1A] border border-white/5 rounded-2xl py-3 px-2 shadow-inner">
-                  <div className="w-12 shrink-0"></div>
-                  <div className="flex-1 grid grid-cols-7 gap-4 px-4">
+              <div className="flex items-center w-full text-[10px] text-[#555] uppercase tracking-[0.2em] font-bold bg-[#1A1A1A] border border-white/5 rounded-[30px] py-3 px-2 shadow-inner">
+                  <div className="w-16 shrink-0"></div>
+                  <div className="flex-1 grid grid-cols-7 gap-4 px-8">
                       <div>Symbol</div>
                       <div className="text-right">P&L</div>
                       <div className="text-right">Size</div>
@@ -234,7 +234,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
                   groupedTrades.map(([date, dateTrades]) => (
                     <div key={date} className="w-full">
                       <div className="mt-2 mb-3 pl-4">
-                          <span className="text-[11px] font-bold text-nexus-accent uppercase tracking-[0.3em] opacity-80">
+                          <span className="text-[12px] font-bold text-nexus-accent uppercase tracking-[0.3em] opacity-80">
                               {getDateLabel(date)}
                           </span>
                       </div>
@@ -255,9 +255,6 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
 
             {/* SEPARATED PAGINATION AREA */}
             <div className="absolute bottom-0 left-0 right-0 z-50 flex flex-col items-center">
-                {/* Horizontal line separation */}
-                <div className="w-full h-px bg-white/5 mb-1" />
-                
                 <div className="w-full py-2 flex justify-center items-center">
                     <MorphingPageDots 
                       total={totalPages} 
