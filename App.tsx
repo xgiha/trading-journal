@@ -16,7 +16,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import EnergyChart from './components/EnergyChart';
-import InsightsChart from './components/InsightsChart';
 import PaperBackground from './components/PaperBackground';
 import { TradingCalendar } from './components/TradingCalendar';
 import { JournalTable } from './components/JournalTable';
@@ -36,17 +35,14 @@ const TABS = [
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'psychology'>('dashboard');
   const [activeTab, setActiveTab] = useState('dashboard');
-  // Removed null state to ensure one is always open per request
   const [expandedSidebarCard, setExpandedSidebarCard] = useState<'voice' | 'activity'>('voice');
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
 
   const toggleSidebar = (target: 'voice' | 'activity') => {
     setExpandedSidebarCard(prev => {
-      // If we click the toggle of the already open card, flip to the other one
       if (prev === target) {
         return target === 'voice' ? 'activity' : 'voice';
       }
-      // Otherwise, open the one we clicked
       return target;
     });
   };
@@ -136,27 +132,14 @@ const App: React.FC = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const globalStats = useMemo(() => {
-    let totalPnl = 0, maxPnl = -Infinity, minPnl = Infinity, totalDurationMinutes = 0, timedTradeCount = 0, minDuration = Infinity, maxDuration = 0, newsCount = 0, normalCount = 0, wins = 0;
-    if (trades.length === 0) return { totalPnl: 0, bestTrade: 0, worstTrade: 0, avgTime: '0m', growthPct: 0, shortestHold: '0m', longestHold: '0m', avgHoldNum: 0, shortestHoldNum: 0, longestHoldNum: 0, avgTradePnl: 0, newsCount: 0, normalCount: 0, currentBalance: 50000, winRate: 0, totalTrades: 0 };
+    let totalPnl = 0, maxPnl = -Infinity, minPnl = Infinity, growthPct = 0;
+    if (trades.length === 0) return { totalPnl: 0, growthPct: 0 };
     trades.forEach(t => {
       totalPnl += t.pnl;
-      if (t.pnl > maxPnl) maxPnl = t.pnl;
-      if (t.pnl < minPnl) minPnl = t.pnl;
-      if (t.pnl > 0) wins++;
-      if (t.newsEvent) newsCount++; else normalCount++;
-      if (t.exitTime && t.entryTime && t.entryTime !== '00:00:00' && t.exitTime !== '00:00:00') {
-         const [h1, m1] = t.entryTime.split(':').map(Number);
-         const [h2, m2] = t.exitTime.split(':').map(Number);
-         let minutes = (h2 * 60 + m2) - (h1 * 60 + m1);
-         if (minutes < 0) minutes += 24 * 60; 
-         if (minutes > 0 && minutes < 1440) { totalDurationMinutes += minutes; timedTradeCount++; if (minutes < minDuration) minDuration = minutes; if (minutes > maxDuration) maxDuration = minutes; }
-      }
     });
-    const avgMinutes = timedTradeCount > 0 ? Math.floor(totalDurationMinutes / timedTradeCount) : 0;
-    const formatDur = (m: number) => { if (m === Infinity || m === 0) return '0m'; const h = Math.floor(m / 60); const mins = m % 60; if (h > 0) return `${h}h ${mins}m`; return `${mins}m`; };
     const initialBalance = 50000;
-    const growthPct = (totalPnl / initialBalance) * 100;
-    return { totalPnl, bestTrade: maxPnl === -Infinity ? 0 : maxPnl, worstTrade: minPnl === Infinity ? 0 : minPnl, avgTime: formatDur(avgMinutes), growthPct, shortestHold: minDuration === Infinity ? '0m' : formatDur(minDuration), longestHold: formatDur(maxDuration), totalTrades: trades.length };
+    growthPct = (totalPnl / initialBalance) * 100;
+    return { totalPnl, growthPct };
   }, [trades]);
 
   const monthlyStats = useMemo(() => {
@@ -178,50 +161,25 @@ const App: React.FC = () => {
   const handleEditTrade = (trade: Trade) => { setSelectedDate(trade.date); setEditingTrade(trade); setIsAddModalOpen(true); };
   
   const handleDeleteTrade = (tradeId: string) => { 
-    const tradeToDelete = trades.find(t => t.id === tradeId);
-    let updatedTrades: Trade[] = []; 
-    setTrades(prev => { 
-        updatedTrades = prev.filter(t => t.id !== tradeId); 
-        return updatedTrades; 
-    }); 
+    const updatedTrades = trades.filter(t => t.id !== tradeId); 
+    setTrades(updatedTrades);
     syncToCloud(updatedTrades); 
-    if (tradeToDelete) {
-        addActivity('delete', 'Entry Removed', `Deleted ${tradeToDelete.pair} ${tradeToDelete.type} from history.`);
-    }
   };
 
   const handleViewDayClick = (date: string) => { setSelectedDate(date); setSelectedTrades(trades.filter(t => t.date === date)); setIsDetailModalOpen(true); };
   const handleViewWeekClick = (weekTrades: Trade[], weekLabel: string) => { setSelectedDate(weekLabel); setSelectedTrades(weekTrades); setIsDetailModalOpen(true); };
   
   const handleAddOrUpdateTrade = (tradeData: Trade) => { 
-    const currentTrades = trades; 
+    const existingIndex = trades.findIndex(t => t.id === tradeData.id); 
     let newTrades: Trade[] = []; 
-    const existingIndex = currentTrades.findIndex(t => t.id === tradeData.id); 
-    
     if (existingIndex >= 0) { 
-        newTrades = [...currentTrades]; 
+        newTrades = [...trades]; 
         newTrades[existingIndex] = tradeData; 
-        addActivity('edit', 'Journal Updated', `Entry for ${tradeData.pair} has been modified.`);
     } else { 
-        newTrades = [...currentTrades, tradeData]; 
-        addActivity('add', 'Trade Executed', `${tradeData.pair} ${tradeData.type} position recorded.`);
+        newTrades = [...trades, tradeData]; 
     } 
-    
     setTrades(newTrades); 
     syncToCloud(newTrades); 
-    
-    if (selectedDate === tradeData.date) { 
-        setSelectedTrades(prev => { 
-            const existingIndex = prev.findIndex(t => t.id === tradeData.id); 
-            if (existingIndex >= 0) { 
-                const newSelected = [...prev]; 
-                newSelected[existingIndex] = tradeData; 
-                return newSelected; 
-            } else { 
-                return [...prev, tradeData]; 
-            } 
-        }); 
-    } 
   };
 
   const handleTabChange = (tabId: string) => { setCurrentView('dashboard'); setActiveTab(tabId); };
@@ -243,7 +201,7 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.99 }}
             transition={{ duration: 0.2 }}
-            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_1fr_220px] gap-4 md:gap-0 z-10 items-start h-full"
+            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[220px_1fr_800px_minmax(340px,1fr)] gap-4 md:gap-6 z-10 items-start h-full"
         >
           {/* LEFT SIDEBAR */}
           <div className="flex flex-col h-full min-h-0 order-2 lg:order-none max-w-[220px] w-full overflow-hidden">
@@ -265,15 +223,15 @@ const App: React.FC = () => {
           </div>
 
           {/* LEFT GUTTER */}
-          <div className="hidden lg:flex flex-col gap-4 items-center p-0 px-4 h-full justify-start">
-             <div className="w-full flex flex-col gap-4 items-center pb-4">
-                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+          <div className="hidden lg:flex flex-col gap-4 items-stretch p-0 px-4 h-full justify-start">
+             <div className="w-full flex flex-col gap-4 items-stretch pb-4">
+                <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                     <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">4</span>
                 </div>
-                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                     <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">5</span>
                 </div>
-                <div className="liquid-card rounded-3xl p-6 w-full max-w-[220px] h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
+                <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
                    <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
                 </div>
              </div>
@@ -301,18 +259,9 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT SECTION */}
-          <div className="lg:col-span-2 flex flex-col gap-4 h-full order-3 lg:order-none lg:pl-4 overflow-hidden">
-            <div className="w-full flex-1 min-h-0">
-                <div className="liquid-card rounded-3xl h-full flex flex-col relative overflow-hidden border-white/5 shadow-lg">
-                  <EnergyChart trades={trades} stats={{ totalPnl: globalStats.totalPnl, growthPct: globalStats.growthPct }} />
-                </div>
-            </div>
-            <div className="w-full flex-1 min-h-0">
-                <div className="liquid-card rounded-3xl h-full flex flex-col relative overflow-hidden border-white/5 shadow-lg">
-                  <InsightsChart trades={trades} />
-                </div>
-            </div>
+          {/* RIGHT SIDEBAR (SINGLE MODULE) */}
+          <div className="flex flex-col h-full order-3 lg:order-none w-full overflow-hidden">
+            <EnergyChart trades={trades} stats={{ totalPnl: globalStats.totalPnl, growthPct: globalStats.growthPct }} />
           </div>
         </motion.div>
         ) : (
