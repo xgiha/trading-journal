@@ -202,9 +202,10 @@ const App: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.99 }}
             transition={{ duration: 0.2 }}
-            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[384px_1fr_384px] gap-4 md:gap-6 z-10 items-start h-full"
+            // Wings are now 484px (220 sidebar + 24 gap + 240 gutter) to fill horizontal space while remaining centered
+            className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[484px_1fr_484px] gap-4 md:gap-6 z-10 items-start h-full"
         >
-          {/* LEFT WING: Sidebar (220) + Gap (24) + Gutter (140) = 384px */}
+          {/* LEFT WING: Sidebar (220) + Gap (24) + Gutter (240) = 484px */}
           <div className="flex h-full min-h-0 order-2 lg:order-none w-full overflow-hidden gap-6">
             {/* Sidebar */}
             <div className="flex flex-col h-full min-h-0 w-[220px] shrink-0">
@@ -225,17 +226,20 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Left Gutter */}
-            <div className="hidden lg:flex flex-col gap-4 items-stretch w-[140px] shrink-0 h-full justify-start overflow-hidden">
+            {/* Left Gutter: Wider cards to fill the gap */}
+            <div className="hidden lg:flex flex-col gap-4 items-stretch w-[240px] shrink-0 h-full justify-start overflow-hidden">
                <div className="w-full flex flex-col gap-4 items-stretch pb-4">
                   <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                      <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">4</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                      <span className="text-nexus-muted font-bold text-4xl group-hover:text-white transition-colors z-10">4</span>
                   </div>
                   <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                      <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">5</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                      <span className="text-nexus-muted font-bold text-4xl group-hover:text-white transition-colors z-10">5</span>
                   </div>
                   <div className="liquid-card rounded-3xl p-6 w-full h-[140px] flex items-center justify-center group hover:border-nexus-accent/30 transition-all duration-300 relative overflow-hidden shrink-0">
-                     <span className="text-nexus-muted font-bold text-3xl group-hover:text-white transition-colors z-10">6</span>
+                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                     <span className="text-nexus-muted font-bold text-4xl group-hover:text-white transition-colors z-10">6</span>
                   </div>
                </div>
             </div>
@@ -263,8 +267,8 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT WING: Symmetric to Left Wing, Split into two vertical cards */}
-          <div className="flex flex-col h-full order-3 lg:order-none w-[384px] shrink-0 overflow-hidden gap-6">
+          {/* RIGHT WING: Symmetric to Left Wing (484px) */}
+          <div className="flex flex-col h-full order-3 lg:order-none w-[484px] shrink-0 overflow-hidden gap-6">
             <div className="flex-1 min-h-0">
                 <InsightCard trades={trades} />
             </div>
