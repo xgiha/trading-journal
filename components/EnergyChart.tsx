@@ -59,7 +59,7 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={handleContainerLeave}
       className={cn(
-        "group relative w-full h-full p-6 rounded-[2.5rem] bg-white/[0.03] backdrop-blur-2xl border border-white/10 transition-all duration-500 hover:bg-white/[0.06] hover:border-white/20 flex flex-col justify-between overflow-hidden isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
+        "group relative w-full h-full p-6 rounded-[2.5rem] bg-white/[0.03] backdrop-blur-[120px] border border-white/10 transition-all duration-500 hover:bg-white/[0.06] hover:border-white/20 flex flex-col justify-between overflow-hidden isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
         className
       )}
     >

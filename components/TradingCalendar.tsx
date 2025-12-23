@@ -175,7 +175,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
   };
 
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] relative overflow-hidden isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 bg-white/[0.03] backdrop-blur-[120px] border border-white/10 rounded-[2.5rem] relative overflow-hidden isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
       {/* Glossy Highlights */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
       <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>

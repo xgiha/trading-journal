@@ -25,7 +25,7 @@ const TotalPnlCardComponent: React.FC<TotalPnlCardProps> = ({ totalPnl, growthPc
   return (
     <div className="relative w-full aspect-square group">
       <div
-        className="absolute inset-0 bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
+        className="absolute inset-0 bg-white/[0.03] backdrop-blur-[120px] border border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
       >
         {/* Glossy Highlights (Static) */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"></div>

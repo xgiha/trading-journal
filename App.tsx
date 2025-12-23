@@ -225,12 +225,12 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Left Gutter: Redesigned Cards 4, 5, 6 with Transparency Effect */}
+            {/* Left Gutter: Redesigned Cards 4, 5, 6 with Intense Blur */}
             <div className="hidden lg:flex flex-col gap-4 items-stretch w-[240px] shrink-0 h-full justify-start overflow-hidden">
                <div className="w-full flex flex-col gap-4 items-stretch pb-4">
                   {[4, 5, 6].map((num) => (
                     <div key={num} className="relative w-full h-[140px] shrink-0 group">
-                      <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] flex items-center justify-center isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 hover:bg-white/[0.06] hover:border-white/20">
+                      <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-[120px] border border-white/10 rounded-[2.5rem] flex items-center justify-center isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 hover:bg-white/[0.06] hover:border-white/20">
                         {/* Glossy Highlights */}
                         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
                         <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
