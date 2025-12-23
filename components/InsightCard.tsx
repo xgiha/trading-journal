@@ -62,7 +62,8 @@ const InsightCard: React.FC<InsightCardProps> = ({ trades, className }) => {
       {/* Header */}
       <div className="flex items-center justify-between z-30 shrink-0 mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-nexus-accent shadow-[0_0_8px_#ffa600]" />
+          {/* White blinking dot */}
+          <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" />
           <span className="text-[11px] font-bold text-nexus-muted tracking-[0.2em] uppercase">Growth Chart</span>
         </div>
         <div className="flex items-baseline gap-1">
@@ -81,8 +82,8 @@ const InsightCard: React.FC<InsightCardProps> = ({ trades, className }) => {
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.2}/>
-                <stop offset="95%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0}/>
+                <stop offset="5%" stopColor="white" stopOpacity={0.2}/>
+                <stop offset="95%" stopColor="white" stopOpacity={0}/>
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.03)" strokeDasharray="3 3" />
@@ -112,7 +113,7 @@ const InsightCard: React.FC<InsightCardProps> = ({ trades, className }) => {
             <Area 
               type="monotone" 
               dataKey="pnl" 
-              stroke={isPositive ? "#10b981" : "#ef4444"} 
+              stroke="white" 
               strokeWidth={2} 
               fill="url(#equityGradient)"
               dot={false}

@@ -15,48 +15,71 @@ const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Bool
 
 const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [displayValue, setDisplayValue] = useState<string | null>(null);
-  const [isHovering, setIsHovering] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Generate dynamic chart data based on trades
+  // Generate strictly Monday-Sunday data for the CURRENT calendar week
   const chartData = useMemo(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const now = new Date();
-    const result = [];
+    const today = new Date();
+    
+    // Calculate the most recent Monday
+    // getDay() returns 0 for Sunday, 1 for Monday, etc.
+    const dayOfWeek = today.getDay(); 
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - diffToMonday);
+    monday.setHours(0, 0, 0, 0);
 
-    // Calculate last 7 days activity
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(now.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      const dayName = days[(d.getDay() + 6) % 7]; 
+    const result = [];
+    let weekTotal = 0;
+
+    for (let i = 0; i < 7; i++) {
+      const currentDay = new Date(monday);
+      currentDay.setDate(monday.getDate() + i);
+      
+      // Generate YYYY-MM-DD string using local time components to match trade.date format
+      const y = currentDay.getFullYear();
+      const m = String(currentDay.getMonth() + 1).padStart(2, '0');
+      const d = String(currentDay.getDate()).padStart(2, '0');
+      const dateStr = `${y}-${m}-${d}`;
       
       const dayTrades = trades.filter(t => t.date === dateStr);
-      // Map activity to a 0-100 range.
-      const value = dayTrades.length > 0 ? Math.min(60 + (dayTrades.length * 10), 100) : (40 + Math.random() * 20);
+      const dayPnl = dayTrades.reduce((sum, t) => sum + t.pnl, 0);
+      
+      weekTotal += dayPnl;
 
       result.push({
-        label: dayName,
-        value: Math.round(value),
-        display: Math.round(value).toString()
+        label: days[i],
+        value: dayPnl,
+        dateStr: dateStr,
+        display: dayPnl >= 0 ? `+$${dayPnl.toLocaleString()}` : `-$${Math.abs(dayPnl).toLocaleString()}`
       });
     }
-    return result;
+
+    return { 
+      bars: result, 
+      weekTotal 
+    };
   }, [trades]);
 
-  const maxValue = Math.max(...chartData.map((d) => d.value));
+  // Determine what value to show in the header (Week Total vs Hovered Day P&L)
+  const headerValue = hoveredIndex !== null 
+    ? chartData.bars[hoveredIndex].value 
+    : chartData.weekTotal;
+
+  const isPositiveValue = headerValue >= 0;
+
+  // Calculate max absolute value among daily profits for this week to normalize bar heights
+  const maxAbsValue = Math.max(...chartData.bars.map((d) => Math.abs(d.value)), 100);
 
   const handleContainerLeave = () => {
-    setIsHovering(false);
     setHoveredIndex(null);
-    setTimeout(() => setDisplayValue(null), 150);
   };
 
   return (
     <div
       ref={containerRef}
-      onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={handleContainerLeave}
       className={cn(
         "group relative w-full h-full p-6 rounded-[2.5rem] bg-white/[0.03] backdrop-blur-[120px] border border-white/10 transition-all duration-500 hover:bg-white/[0.06] hover:border-white/20 flex flex-col justify-between overflow-hidden isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
@@ -72,33 +95,30 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
       {/* Header */}
       <div className="flex items-center justify-between z-30 shrink-0 mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-          <span className="text-[11px] font-bold text-nexus-muted tracking-[0.2em] uppercase">Activity</span>
+          {/* White blinking dot */}
+          <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" />
+          <span className="text-[11px] font-bold text-nexus-muted tracking-[0.2em] uppercase">Weekly Chart</span>
         </div>
         <div className="relative h-7 flex items-baseline">
           <span
             className={cn(
-              "text-2xl font-bold tabular-nums transition-all duration-300 ease-out",
-              isHovering && displayValue !== null ? "text-white" : "text-white/60",
+              "text-2xl font-bold tabular-nums transition-all duration-300 ease-out text-white"
             )}
           >
-            {displayValue !== null ? displayValue : "85"}
+            {isPositiveValue ? '+' : '-'}${Math.abs(headerValue).toLocaleString()}
           </span>
-          <span
-            className={cn(
-              "text-[10px] font-bold text-nexus-muted transition-opacity duration-300 ml-0.5",
-              displayValue !== null || !isHovering ? "opacity-60" : "opacity-0",
-            )}
-          >
-            %
+          <span className="text-[9px] font-bold text-nexus-muted/40 uppercase tracking-widest ml-1.5">
+            EQUITY
           </span>
         </div>
       </div>
 
       {/* Bar Chart Section */}
-      <div className="flex-1 flex items-end gap-3 relative z-30 mb-4 px-2">
-        {chartData.map((item, index) => {
-          const heightPct = (item.value / maxValue) * 100;
+      <div className="flex-1 flex items-end gap-3 relative z-30 mb-2 px-2">
+        {chartData.bars.map((item, index) => {
+          // Normalize bar heights based on daily profit/loss magnitude
+          // We add a floor of 5% so even small or zero values are slightly visible
+          const heightPct = (Math.abs(item.value) / maxAbsValue) * 85 + 5; 
           const isHovered = hoveredIndex === index;
           const isAnyHovered = hoveredIndex !== null;
           const isNeighbor = hoveredIndex !== null && (index === hoveredIndex - 1 || index === hoveredIndex + 1);
@@ -109,25 +129,30 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
               className="relative flex-1 flex flex-col items-center justify-end h-full"
               onMouseEnter={() => {
                 setHoveredIndex(index);
-                setDisplayValue(item.display);
               }}
             >
               <div
                 className={cn(
-                  "w-full rounded-full cursor-pointer transition-all duration-300 ease-out origin-bottom",
+                  "w-full rounded-full cursor-pointer transition-all duration-300 ease-out origin-bottom flex items-center justify-center overflow-hidden",
                   isHovered
-                    ? "bg-white/40 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+                    ? "bg-white shadow-[0_0_20px_rgba(255,255,255,0.4)]" // Solid white on hover
                     : isNeighbor
                       ? "bg-white/10"
                       : isAnyHovered
                         ? "bg-white/5"
-                        : "bg-white/10",
+                        : "bg-white/15",
                 )}
                 style={{
                   height: `${heightPct}%`,
-                  transform: isHovered ? "scaleX(1.1) scaleY(1.01)" : "scaleX(1)",
+                  transform: isHovered ? "scaleX(1.1)" : "scaleX(1)",
                 }}
-              />
+              >
+                 {isHovered && (
+                    <span className="text-black font-bold text-[9px] whitespace-nowrap [writing-mode:vertical-rl] rotate-180 drop-shadow-sm py-2">
+                       {item.display}
+                    </span>
+                 )}
+              </div>
 
               <span
                 className={cn(
@@ -140,19 +165,6 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
             </div>
           );
         })}
-      </div>
-
-      {/* Footer Details */}
-      <div className="pt-4 border-t border-white/5 z-30">
-          <div className="flex flex-col gap-1">
-             <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-nexus-muted">
-                <span>System Health</span>
-                <span className="text-emerald-400">99.2%</span>
-             </div>
-             <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500/30 w-[99.2%]" />
-             </div>
-          </div>
       </div>
     </div>
   );
