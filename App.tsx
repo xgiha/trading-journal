@@ -17,7 +17,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import EnergyChart from './components/EnergyChart';
 import InsightCard from './components/InsightCard';
-import PaperBackground from './components/PaperBackground';
 import { TradingCalendar } from './components/TradingCalendar';
 import { JournalTable } from './components/JournalTable';
 import PsychologicalAnalysis from './components/PsychologicalAnalysis';
@@ -191,8 +190,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
-      <PaperBackground />
-      
       <div className="w-[98vw] h-auto lg:h-full glass-panel rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 pb-6 lg:pb-10 transition-all duration-500">
         
         <AnimatePresence mode="wait">
