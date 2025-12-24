@@ -128,8 +128,8 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      {/* CARD 1 & 2: Performance Matrix (Merged) */}
-      <StatCard title="Trade Performance" className="h-[296px]">
+      {/* CARD 1 & 2: Performance Matrix (Merged) - Increased height by 24px */}
+      <StatCard title="Trade Performance" className="h-[320px]">
         <div className="flex-1 grid grid-cols-2 gap-4 mt-1">
           {/* Best Trade */}
           <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
@@ -173,7 +173,7 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
       </StatCard>
 
       {/* CARD 3: Most / Least Profitable Days */}
-      <StatCard title="Daily Records" className="h-[140px]">
+      <StatCard title="Daily Records" className="h-[164px]">
         <div className="flex-1 flex flex-col justify-center gap-3">
             <div className="flex justify-between items-center bg-white/5 rounded-xl p-2 px-3 border border-white/5">
                 <div className="flex flex-col">
@@ -192,8 +192,8 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
         </div>
       </StatCard>
 
-      {/* CARD 4: Time & Strategy */}
-      <StatCard title="Logic & Efficiency" className="h-[210px]">
+      {/* CARD 4: Time & Strategy - Increased height by 24px */}
+      <StatCard title="Logic & Efficiency" className="h-[234px]">
         <div className="flex-1 flex flex-col gap-3 mt-1">
             <div className="grid grid-cols-2 gap-2">
                 <div className="bg-white/5 rounded-xl p-2 border border-white/5">
