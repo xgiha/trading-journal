@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud, Loader2, Edit2, FileText } from 'lucide-react';
+import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud, Loader2, Edit2, FileText, Target } from 'lucide-react';
 import { Trade } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -374,6 +374,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
     fees: '',
     direction: 'Long',
     pnl: '',
+    strategy: '',
     images: [] as string[],
     notes: '',
   });
@@ -412,6 +413,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           fees: formatNumber(tradeToEdit.fee?.toString() || '0'),
           direction: tradeToEdit.type,
           pnl: formatNumber(tradeToEdit.pnl.toString()),
+          strategy: tradeToEdit.strategy || '',
           images: initialImages,
           notes: tradeToEdit.notes || '',
       });
@@ -430,6 +432,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           fees: '',
           direction: 'Long',
           pnl: '',
+          strategy: '',
           images: [],
           notes: '',
       });
@@ -456,6 +459,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       fee: parseFloat(unformatNumber(formData.fees)) || 0,
       type: formData.direction as 'Long' | 'Short',
       pnl: isNaN(pnlValue) ? 0 : pnlValue,
+      strategy: formData.strategy,
       images: formData.images,
       image: formData.images[0], // Backward compat
       notes: formData.notes
@@ -615,6 +619,21 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                   <ArrowDownRight size={14} />
                   <span className="text-[10px] font-bold uppercase tracking-wider">Short</span>
                 </button>
+            </div>
+
+            {/* Strategy Field */}
+            <div className="col-span-2 relative bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-1 focus-within:border-nexus-accent transition-colors h-[72px]">
+                 <label htmlFor="strategy" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <Target size={10} /> Strategy
+                 </label>
+                 <input 
+                   type="text" 
+                   className="w-full bg-transparent text-sm text-white font-medium placeholder-white/10 focus:outline-none text-left"
+                   placeholder="e.g., VWAP Rejection, Fair Value Gap"
+                   id="strategy"
+                   value={formData.strategy}
+                   onChange={e => setFormData({...formData, strategy: e.target.value})}
+                 />
             </div>
 
             {/* 4. Lots (Was Size) */}
@@ -965,7 +984,12 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                                      {/* Info */}
                                      <div className="flex-1 min-w-0">
                                          <div className="flex justify-between items-center mb-0.5">
-                                             <span className="text-white font-mono font-bold text-sm">{trade.pair}</span>
+                                             <div className="flex flex-col">
+                                                 <span className="text-white font-mono font-bold text-sm">{trade.pair}</span>
+                                                 {trade.strategy && (
+                                                     <span className="text-[8px] text-nexus-accent font-bold uppercase tracking-wider">{trade.strategy}</span>
+                                                 )}
+                                             </div>
                                              <span className={`font-mono font-bold text-sm ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                                  {trade.pnl >= 0 ? '+' : ''}{trade.pnl}
                                              </span>

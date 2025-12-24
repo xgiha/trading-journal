@@ -31,8 +31,8 @@ export interface Trade {
   pnl: number;
   
   // Journal Details
-  entryTime: string; // HH:mm
-  exitTime?: string; // HH:mm
+  entryTime: string; // HH:mm:ss
+  exitTime?: string; // HH:mm:ss
   entryPrice?: number;
   exitPrice?: number;
   size?: string;
@@ -40,6 +40,9 @@ export interface Trade {
   
   // News Trade
   newsEvent?: string; // If defined, it's a news trade
+  
+  // Strategy
+  strategy?: string;
   
   image?: string; // Base64 or URL (Legacy support)
   images?: string[]; // Multiple images support

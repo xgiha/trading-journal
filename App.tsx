@@ -26,6 +26,7 @@ import PsychologyPage from './components/PsychologyPage';
 import { VoiceChat } from './components/VoiceChat';
 import TotalPnlCard from './components/TotalPnlCard';
 import { ActivityDropdown } from './components/ActivityDropdown';
+import TradeStats from './components/TradeStats';
 import { Trade, ActivityLog } from './types';
 
 const TABS = [
@@ -72,12 +73,12 @@ const App: React.FC = () => {
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     return [
-      { id: '1', date: `${year}-${month}-02`, pair: 'XAU/USD', pnl: 450, entryTime: '09:30', exitTime: '10:15', type: 'Long', entryPrice: 2045.50, exitPrice: 2050.00, size: '2.0', fee: 12, notes: 'Stuck to the plan perfectly. Waited for the setup.' },
-      { id: '2', date: `${year}-${month}-02`, pair: 'EUR/USD', pnl: -120, entryTime: '14:15', exitTime: '14:45', type: 'Short', entryPrice: 1.0850, exitPrice: 1.0865, size: '1.5', fee: 5, notes: 'Got nervous and exited early. Should have held.' },
-      { id: '3', date: `${year}-${month}-05`, pair: 'BTC/USD', pnl: 1250, entryTime: '11:00', exitTime: '18:00', type: 'Long', entryPrice: 42100, exitPrice: 43500, size: '0.5', fee: 45, newsEvent: 'ETF Approval', notes: 'Great flow state today. Saw the move coming.' },
-      { id: '4', date: `${year}-${month}-09`, pair: 'NVDA', pnl: -300, entryTime: '10:00', exitTime: '10:30', type: 'Long', entryPrice: 850.20, exitPrice: 845.00, size: '100 Shares', fee: 2, notes: 'FOMO entry. Chased the green candle.' },
-      { id: '5', date: `${year}-${month}-09`, pair: 'TSLA', pnl: 800, entryTime: '15:45', exitTime: '15:55', type: 'Short', entryPrice: 175.50, exitPrice: 172.00, size: '200 Shares', fee: 4, notes: 'Quick scalp, followed rules.' },
-      { id: '6', date: `${year}-${month}-12`, pair: 'ES', pnl: -500, entryTime: '10:00', exitTime: '10:15', type: 'Short', entryPrice: 5100, exitPrice: 5110, size: '1', fee: 5, notes: 'Tried to make back losses. Revenge trading.' },
+      { id: '1', date: `${year}-${month}-02`, pair: 'XAU/USD', pnl: 450, entryTime: '09:30:00', exitTime: '10:15:00', type: 'Long', entryPrice: 2045.50, exitPrice: 2050.00, size: '2.0', fee: 12, strategy: 'VWAP Rejection', notes: 'Stuck to the plan perfectly. Waited for the setup.' },
+      { id: '2', date: `${year}-${month}-02`, pair: 'EUR/USD', pnl: -120, entryTime: '14:15:00', exitTime: '14:45:00', type: 'Short', entryPrice: 1.0850, exitPrice: 1.0865, size: '1.5', fee: 5, strategy: 'Fair Value Gap', notes: 'Got nervous and exited early. Should have held.' },
+      { id: '3', date: `${year}-${month}-05`, pair: 'BTC/USD', pnl: 1250, entryTime: '11:00:00', exitTime: '18:00:00', type: 'Long', entryPrice: 42100, exitPrice: 43500, size: '0.5', fee: 45, strategy: 'Break & Retest', newsEvent: 'ETF Approval', notes: 'Great flow state today. Saw the move coming.' },
+      { id: '4', date: `${year}-${month}-09`, pair: 'NVDA', pnl: -300, entryTime: '10:00:00', exitTime: '10:30:00', type: 'Long', entryPrice: 850.20, exitPrice: 845.00, size: '100 Shares', fee: 2, strategy: 'VWAP Rejection', notes: 'FOMO entry. Chased the green candle.' },
+      { id: '5', date: `${year}-${month}-09`, pair: 'TSLA', pnl: 800, entryTime: '15:45:00', exitTime: '15:55:00', type: 'Short', entryPrice: 175.50, exitPrice: 172.00, size: '200 Shares', fee: 4, strategy: 'Scalp', notes: 'Quick scalp, followed rules.' },
+      { id: '6', date: `${year}-${month}-12`, pair: 'ES', pnl: -500, entryTime: '10:00:00', exitTime: '10:15:00', type: 'Short', entryPrice: 5100, exitPrice: 5110, size: '1', fee: 5, strategy: 'Trend Continuity', notes: 'Tried to make back losses. Revenge trading.' },
     ];
   });
 
@@ -225,24 +226,10 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Left Gutter: Redesigned Cards 4, 5, 6 with Intense Blur */}
+            {/* Stats Cards Gutter */}
             <div className="hidden lg:flex flex-col gap-4 items-stretch w-[240px] shrink-0 h-full justify-start overflow-hidden">
-               <div className="w-full flex flex-col gap-4 items-stretch pb-4">
-                  {[4, 5, 6].map((num) => (
-                    <div key={num} className="relative w-full h-[140px] shrink-0 group">
-                      <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-[120px] border border-white/10 rounded-[2.5rem] flex items-center justify-center isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 hover:bg-white/[0.06] hover:border-white/20">
-                        {/* Glossy Highlights */}
-                        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
-                        <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-                        {/* Inner Glow */}
-                        <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-3xl pointer-events-none -z-10"></div>
-                        {/* Background Texture */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
-                        
-                        <span className="text-nexus-muted font-bold text-4xl group-hover:text-white transition-colors z-30">{num}</span>
-                      </div>
-                    </div>
-                  ))}
+               <div className="w-full flex flex-col gap-4 items-stretch pb-4 custom-scrollbar overflow-y-auto">
+                  <TradeStats trades={trades} />
                </div>
             </div>
           </div>
@@ -298,13 +285,24 @@ const App: React.FC = () => {
             <div className="flex items-center gap-6 pointer-events-auto">
                <button
                   onClick={handlePsychologyClick}
-                  className={`liquid-card w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group shadow-2xl relative ${currentView === 'psychology' ? 'bg-white/10 text-purple-400' : 'text-nexus-muted hover:text-white hover:bg-white/10'}`}
+                  className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group shadow-2xl relative overflow-hidden bg-white/[0.03] backdrop-blur-[120px] border border-white/10 isolate ${currentView === 'psychology' ? 'text-purple-400 border-purple-500/30' : 'text-nexus-muted hover:text-white'}`}
                >
-                   <Brain size={24} className="group-hover:text-purple-400 transition-colors" />
+                   {/* Glossy Highlights */}
+                   <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
+                   <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
+                   <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-2xl pointer-events-none -z-10"></div>
+                   <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
+                   <Brain size={24} className="group-hover:text-purple-400 transition-colors z-10" />
                </button>
 
-               <div className="relative liquid-card p-1.5 rounded-full flex items-center justify-center shadow-2xl isolate overflow-hidden w-[280px]">
-                  <div className="relative flex items-center justify-center w-full">
+               <div className="relative p-1.5 rounded-full flex items-center justify-center shadow-2xl isolate overflow-hidden w-[280px] bg-white/[0.03] backdrop-blur-[120px] border border-white/10">
+                  {/* Glossy Highlights */}
+                  <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
+                  <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
+                  <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-3xl pointer-events-none -z-10"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
+
+                  <div className="relative flex items-center justify-center w-full z-10">
                     {TABS.map((tab) => (
                       <button
                         key={`bg-${tab.id}`}
@@ -344,10 +342,16 @@ const App: React.FC = () => {
 
                <button 
                   onClick={handleAddTradeBtnClick}
-                  className="liquid-card rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white hover:bg-white/10 transition-all active:scale-95 duration-100 group shadow-2xl px-8 py-4 overflow-hidden whitespace-nowrap"
+                  className="relative rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white transition-all active:scale-95 duration-100 group shadow-2xl px-8 py-4 overflow-hidden whitespace-nowrap bg-white/[0.03] backdrop-blur-[120px] border border-white/10 isolate"
                >
-                    <Plus size={20} className="group-hover:text-nexus-accent transition-colors shrink-0" />
-                    <span className="text-sm font-bold uppercase tracking-widest shrink-0">Add Trade</span>
+                    {/* Glossy Highlights */}
+                    <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
+                    <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
+                    <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-2xl pointer-events-none -z-10"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
+                    
+                    <Plus size={20} className="group-hover:text-nexus-accent transition-colors shrink-0 z-10" />
+                    <span className="text-sm font-bold uppercase tracking-widest shrink-0 z-10">Add Trade</span>
                </button>
             </div>
         </div>

@@ -78,7 +78,7 @@ const TotalPnlCardComponent: React.FC<TotalPnlCardProps> = ({ totalPnl, growthPc
         </div>
 
         {/* Market Status Pill - Positioned at Very Bottom */}
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center z-10">
           <MarketStatusCard />
         </div>
 
