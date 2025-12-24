@@ -20,7 +20,6 @@ interface JournalTableProps {
   onViewDay: (date: string) => void;
 }
 
-// Strictly limit to 4 trades per page to ensure no overlapping with the pagination controls
 const ITEMS_PER_PAGE = 4;
 
 const groupTradesByDate = (trades: Trade[]) => {
@@ -38,10 +37,8 @@ const getDateLabel = (dateStr: string) => {
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-
   if (date.toDateString() === today.toDateString()) return 'Today';
   if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-  
   return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
 };
 
@@ -79,7 +76,6 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
         isDragging.current = false;
         ref.current?.releasePointerCapture(e.pointerId);
         const moveDist = Math.abs(e.clientX - dragStartX.current);
-
         if (moveDist < 5) {
              if (offset !== 0) setOffset(0);
              else onViewDay(trade.date);
@@ -104,7 +100,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
                 <button 
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onDelete(trade.id); setOffset(0); }}
-                    className={`flex items-center gap-2 text-red-500 transition-all active:scale-95 ${offset < 0 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'}`}
+                    className={`flex items-center gap-2 text-red-500 transition-all active:scale-95 ${offset < 0 ? 'opacity-100 translate-x-[2px]' : 'opacity-0 translate-x-4 pointer-events-none'}`}
                 >
                     <span className="text-[11px] font-bold uppercase tracking-wider">Delete</span>
                     <Trash2 size={18} />
@@ -163,7 +159,6 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
 
 const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
-
   const sortedTrades = useMemo(() => {
     return [...trades].sort((a, b) => {
       const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
@@ -177,18 +172,14 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return sortedTrades.slice(start, start + ITEMS_PER_PAGE);
   }, [sortedTrades, currentPage]);
-
   const groupedTrades = useMemo(() => groupTradesByDate(currentTrades), [currentTrades]);
 
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] relative overflow-hidden isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-      {/* Glossy Highlights */}
+    <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] relative overflow-hidden isolate">
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
       <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/10 to-transparent opacity-30 blur-3xl pointer-events-none -z-10"></div>
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
 
-      {/* Header Section */}
       <div className="shrink-0 flex flex-col gap-5 mb-4 z-10">
         <div className="flex justify-between items-center px-2">
             <h2 className="text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>
@@ -197,8 +188,6 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
                 <button className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-nexus-muted hover:text-white transition-all">Export</button>
             </div>
         </div>
-        
-        {/* Table Headers */}
         <div className="overflow-x-auto pb-1 -mx-4 px-6 no-scrollbar">
            <div className="min-w-[600px]">
               <div className="flex items-center w-full text-[10px] text-[#555] uppercase tracking-[0.2em] font-bold bg-[#1A1A1A] border border-white/5 rounded-[30px] py-3 px-2 shadow-inner">
@@ -217,7 +206,6 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
         </div>
       </div>
 
-      {/* Main Content Area - Strictly NO INTERNAL SCROLLING */}
       <div className="flex-1 relative w-full overflow-hidden z-10">
         <div className="w-full h-full overflow-hidden">
           <div className="min-w-[600px] w-full h-full flex flex-col relative pb-20">
@@ -252,8 +240,6 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
                 )}
               </motion.div>
             </AnimatePresence>
-
-            {/* SEPARATED PAGINATION AREA */}
             <div className="absolute bottom-0 left-0 right-0 z-50 flex flex-col items-center">
                 <div className="w-full py-2 flex justify-center items-center">
                     <MorphingPageDots 

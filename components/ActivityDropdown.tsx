@@ -29,27 +29,22 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
     }
   };
 
-  // Only show last 8 activities instead of 5 to take advantage of the increased height
   const displayLogs = [...logs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 8);
 
   return (
     <div
       className={cn(
-        "w-full max-w-[220px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden cursor-pointer select-none isolate relative",
+        "w-full max-w-[220px] overflow-hidden cursor-pointer select-none isolate relative",
         "bg-white/[0.03] backdrop-blur-2xl border border-white/10",
         "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
         isOpen ? "rounded-3xl h-[440px]" : "rounded-[2rem] h-[56px]",
-        !isOpen && "hover:bg-white/[0.06] hover:border-white/20",
       )}
       onClick={() => !isOpen && onToggle()}
     >
-      {/* Visual Effects Layers matching TotalPnlCard */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
       <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-3xl pointer-events-none -z-10"></div>
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
 
-      {/* Header */}
       <div className="flex items-center gap-3 p-2 h-[56px] relative z-30">
         <div className="relative">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10 transition-colors duration-300">
@@ -78,7 +73,7 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
               e.stopPropagation();
               onToggle();
             }}
-            className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/10"
+            className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 transition-colors border border-white/10"
           >
             <ChevronUp
               className={cn(
@@ -98,7 +93,6 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
         style={{ top: 58 }}
       />
 
-      {/* Activity List */}
       <div
         className={cn(
           "grid relative z-30",
@@ -145,11 +139,6 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
                 </div>
               )}
             </div>
-            {displayLogs.length > 0 && (
-                <div className="mt-6 text-center">
-                    <span className="text-[8px] text-nexus-muted uppercase font-bold tracking-widest opacity-40">End of recent stream</span>
-                </div>
-            )}
           </div>
         </div>
       </div>

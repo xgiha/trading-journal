@@ -17,38 +17,27 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Generate strictly Monday-Sunday data for the CURRENT calendar week
   const chartData = useMemo(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const today = new Date();
-    
-    // Calculate the most recent Monday
-    // getDay() returns 0 for Sunday, 1 for Monday, etc.
     const dayOfWeek = today.getDay(); 
     const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    
     const monday = new Date(today);
     monday.setDate(today.getDate() - diffToMonday);
     monday.setHours(0, 0, 0, 0);
 
     const result = [];
     let weekTotal = 0;
-
     for (let i = 0; i < 7; i++) {
       const currentDay = new Date(monday);
       currentDay.setDate(monday.getDate() + i);
-      
-      // Generate YYYY-MM-DD string using local time components to match trade.date format
       const y = currentDay.getFullYear();
       const m = String(currentDay.getMonth() + 1).padStart(2, '0');
       const d = String(currentDay.getDate()).padStart(2, '0');
       const dateStr = `${y}-${m}-${d}`;
-      
       const dayTrades = trades.filter(t => t.date === dateStr);
       const dayPnl = dayTrades.reduce((sum, t) => sum + t.pnl, 0);
-      
       weekTotal += dayPnl;
-
       result.push({
         label: days[i],
         value: dayPnl,
@@ -56,21 +45,14 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
         display: dayPnl >= 0 ? `+$${dayPnl.toLocaleString()}` : `-$${Math.abs(dayPnl).toLocaleString()}`
       });
     }
-
-    return { 
-      bars: result, 
-      weekTotal 
-    };
+    return { bars: result, weekTotal };
   }, [trades]);
 
-  // Determine what value to show in the header (Week Total vs Hovered Day P&L)
   const headerValue = hoveredIndex !== null 
     ? chartData.bars[hoveredIndex].value 
     : chartData.weekTotal;
 
   const isPositiveValue = headerValue >= 0;
-
-  // Calculate max absolute value among daily profits for this week to normalize bar heights
   const maxAbsValue = Math.max(...chartData.bars.map((d) => Math.abs(d.value)), 100);
 
   const handleContainerLeave = () => {
@@ -82,20 +64,16 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
       ref={containerRef}
       onMouseLeave={handleContainerLeave}
       className={cn(
-        "group relative w-full h-full p-6 rounded-[2.5rem] bg-white/[0.03] backdrop-blur-[120px] border border-white/10 transition-all duration-500 hover:bg-white/[0.06] hover:border-white/20 flex flex-col justify-between overflow-hidden isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
+        "group relative w-full h-full p-6 rounded-[2.5rem] bg-white/[0.03] backdrop-blur-[120px] border border-white/10 transition-all duration-500 flex flex-col justify-between overflow-hidden isolate",
         className
       )}
     >
-      {/* Visual Effects Layers */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
       <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-3xl pointer-events-none -z-10"></div>
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
 
-      {/* Header */}
       <div className="flex items-center justify-between z-30 shrink-0 mb-4">
         <div className="flex items-center gap-2">
-          {/* White blinking dot */}
           <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" />
           <span className="text-[11px] font-bold text-nexus-muted tracking-[0.2em] uppercase">Weekly Chart</span>
         </div>
@@ -113,16 +91,12 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
         </div>
       </div>
 
-      {/* Bar Chart Section */}
       <div className="flex-1 flex items-end gap-3 relative z-30 mb-2 px-2">
         {chartData.bars.map((item, index) => {
-          // Normalize bar heights based on daily profit/loss magnitude
-          // We add a floor of 5% so even small or zero values are slightly visible
           const heightPct = (Math.abs(item.value) / maxAbsValue) * 85 + 5; 
           const isHovered = hoveredIndex === index;
           const isAnyHovered = hoveredIndex !== null;
           const isNeighbor = hoveredIndex !== null && (index === hoveredIndex - 1 || index === hoveredIndex + 1);
-
           return (
             <div
               key={`${item.label}-${index}`}
@@ -135,7 +109,7 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
                 className={cn(
                   "w-full rounded-full cursor-pointer transition-all duration-300 ease-out origin-bottom flex items-center justify-center overflow-hidden",
                   isHovered
-                    ? "bg-white shadow-[0_0_20px_rgba(255,255,255,0.4)]" // Solid white on hover
+                    ? "bg-white shadow-[0_0_20px_rgba(255,255,255,0.4)]" 
                     : isNeighbor
                       ? "bg-white/10"
                       : isAnyHovered
@@ -153,7 +127,6 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
                     </span>
                  )}
               </div>
-
               <span
                 className={cn(
                   "text-[10px] font-bold mt-3 transition-all duration-300 uppercase tracking-widest",

@@ -12,24 +12,14 @@ const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Bool
 
 const InsightCard: React.FC<InsightCardProps> = ({ trades, className }) => {
   const chartData = useMemo(() => {
-    // Group and aggregate by date for the equity curve
     const dailyMap = new Map<string, number>();
     const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
     sortedTrades.forEach(t => {
       dailyMap.set(t.date, (dailyMap.get(t.date) || 0) + t.pnl);
     });
-
     let cumulative = 0;
     const sortedDates = Array.from(dailyMap.keys()).sort();
-    
-    // Start with a zero baseline
-    const initialPoint = {
-      name: 'Initial',
-      pnl: 0,
-      fullDate: ''
-    };
-
+    const initialPoint = { name: 'Initial', pnl: 0, fullDate: '' };
     const points = sortedDates.map(date => {
       cumulative += dailyMap.get(date)!;
       const d = new Date(date);
@@ -39,30 +29,24 @@ const InsightCard: React.FC<InsightCardProps> = ({ trades, className }) => {
         fullDate: date
       };
     });
-
     return [initialPoint, ...points];
   }, [trades]);
 
   const currentPnl = chartData[chartData.length - 1]?.pnl || 0;
-  const isPositive = currentPnl >= 0;
 
   return (
     <div
       className={cn(
-        "group relative w-full h-full p-6 rounded-[2.5rem] bg-white/[0.03] backdrop-blur-[120px] border border-white/10 transition-all duration-500 hover:bg-white/[0.06] hover:border-white/20 flex flex-col justify-between overflow-hidden isolate shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
+        "group relative w-full h-full p-6 rounded-[2.5rem] bg-white/[0.03] backdrop-blur-[120px] border border-white/10 transition-all duration-500 flex flex-col justify-between overflow-hidden isolate",
         className
       )}
     >
-      {/* Visual Effects Layers */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
       <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-3xl pointer-events-none -z-10"></div>
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
 
-      {/* Header */}
       <div className="flex items-center justify-between z-30 shrink-0 mb-4">
         <div className="flex items-center gap-2">
-          {/* White blinking dot */}
           <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" />
           <span className="text-[11px] font-bold text-nexus-muted tracking-[0.2em] uppercase">Growth Chart</span>
         </div>
@@ -76,7 +60,6 @@ const InsightCard: React.FC<InsightCardProps> = ({ trades, className }) => {
         </div>
       </div>
 
-      {/* Chart Section */}
       <div className="flex-1 w-full relative z-30 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>

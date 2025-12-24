@@ -204,11 +204,9 @@ const App: React.FC = () => {
         >
           {/* LEFT WING */}
           <div className="flex h-full min-h-0 order-2 lg:order-none w-full overflow-hidden gap-6">
-            {/* Sidebar */}
             <div className="flex flex-col h-full min-h-0 w-[220px] shrink-0">
               <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1 pb-4">
                 <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                
                 <div className="flex flex-col gap-4">
                   <VoiceChat 
                     isOpen={expandedSidebarCard === 'voice'} 
@@ -223,7 +221,6 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Stats Cards Gutter */}
             <div className="hidden lg:flex flex-col gap-4 items-stretch w-[240px] shrink-0 h-full justify-start overflow-hidden">
                <div className="w-full flex flex-col gap-4 items-stretch pb-4 custom-scrollbar overflow-y-auto">
                   <TradeStats trades={trades} />
@@ -231,7 +228,6 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* CENTER WORKSPACE */}
           <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0 pb-24">
             <div className="w-full h-full min-0 relative overflow-hidden">
                <AnimatePresence mode="wait">
@@ -253,7 +249,6 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT WING */}
           <div className="flex flex-col h-full order-3 lg:order-none w-[484px] shrink-0 overflow-hidden gap-6">
             <div className="flex-1 min-h-0">
                 <InsightCard trades={trades} />
@@ -277,26 +272,21 @@ const App: React.FC = () => {
         )}
         </AnimatePresence>
 
-        {/* Floating Menu */}
         <div className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none">
             <div className="flex items-center gap-6 pointer-events-auto">
                <button
                   onClick={handlePsychologyClick}
-                  className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group shadow-2xl relative overflow-hidden bg-white/[0.03] backdrop-blur-[120px] border border-white/10 isolate ${currentView === 'psychology' ? 'text-purple-400 border-purple-500/30' : 'text-nexus-muted hover:text-white'}`}
+                  className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group relative overflow-hidden bg-white/[0.03] backdrop-blur-[120px] border border-white/10 isolate ${currentView === 'psychology' ? 'text-purple-400 border-purple-500/30' : 'text-nexus-muted'}`}
                >
-                   {/* Glossy Highlights */}
                    <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
                    <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-                   <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-2xl pointer-events-none -z-10"></div>
                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
-                   <Brain size={24} className="group-hover:text-purple-400 transition-colors z-10" />
+                   <Brain size={24} className="z-10" />
                </button>
 
-               <div className="relative p-1.5 rounded-full flex items-center justify-center shadow-2xl isolate overflow-hidden w-[280px] bg-white/[0.03] backdrop-blur-[120px] border border-white/10">
-                  {/* Glossy Highlights */}
+               <div className="relative p-1.5 rounded-full flex items-center justify-center isolate overflow-hidden w-[280px] bg-white/[0.03] backdrop-blur-[120px] border border-white/10">
                   <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
                   <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-                  <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-3xl pointer-events-none -z-10"></div>
                   <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
 
                   <div className="relative flex items-center justify-center w-full z-10">
@@ -304,7 +294,7 @@ const App: React.FC = () => {
                       <button
                         key={`bg-${tab.id}`}
                         onClick={() => handleTabChange(tab.id)}
-                        className="flex-1 py-3 rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white/60 transition-colors duration-200 z-10"
+                        className="flex-1 py-3 rounded-full flex items-center justify-center gap-2 text-nexus-muted transition-colors duration-200 z-10"
                       >
                         <tab.icon size={18} className="shrink-0" />
                         <span className="text-sm font-medium tracking-tight">{tab.label}</span>
@@ -313,7 +303,7 @@ const App: React.FC = () => {
                   </div>
 
                   <motion.div
-                    className="absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-6px)] z-20 pointer-events-none overflow-hidden rounded-full border border-white/20 bg-white/10 backdrop-blur-xl shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+                    className="absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-6px)] z-20 pointer-events-none overflow-hidden rounded-full border border-white/20 bg-white/10 backdrop-blur-xl"
                     initial={false}
                     animate={{ x: `${activeIndex * 100}%` }}
                     transition={{ type: "spring", stiffness: 450, damping: 38, mass: 0.8 }}
@@ -339,15 +329,12 @@ const App: React.FC = () => {
 
                <button 
                   onClick={handleAddTradeBtnClick}
-                  className="relative rounded-full flex items-center justify-center gap-2 text-nexus-muted hover:text-white transition-all active:scale-95 duration-100 group shadow-2xl px-8 py-4 overflow-hidden whitespace-nowrap bg-white/[0.03] backdrop-blur-[120px] border border-white/10 isolate"
+                  className="relative rounded-full flex items-center justify-center gap-2 text-nexus-muted transition-all active:scale-95 duration-100 group px-8 py-4 overflow-hidden whitespace-nowrap bg-white/[0.03] backdrop-blur-[120px] border border-white/10 isolate"
                >
-                    {/* Glossy Highlights */}
                     <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
                     <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-                    <div className="absolute inset-0 bg-gradient-radial from-nexus-accent/5 to-transparent opacity-30 blur-2xl pointer-events-none -z-10"></div>
                     <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
-                    
-                    <Plus size={20} className="group-hover:text-nexus-accent transition-colors shrink-0 z-10" />
+                    <Plus size={20} className="shrink-0 z-10" />
                     <span className="text-sm font-bold uppercase tracking-widest shrink-0 z-10">Add Trade</span>
                </button>
             </div>
