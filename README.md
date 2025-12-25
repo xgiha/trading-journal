@@ -6,10 +6,6 @@
 
 A structured trading journal powered by AI to help traders review decisions, track behavior, and improve consistency — not just P&L.
 
-<p align="center">
-  <img src="assets/banner.png" alt="Trading Journal Banner" />
-</p>
-
 ## Why this exists
 
 Most traders don’t fail because of strategy.
@@ -37,15 +33,6 @@ It’s a mirror.
 
 ---
 
-## Screenshots
-
-<p align="center">
-  <img src="assets/screenshot-1.png" width="400" />
-  <img src="assets/screenshot-2.png" width="400" />
-</p>
-
----
-
 ## Tech Stack
 
 - **Frontend:** React + TypeScript
@@ -65,8 +52,8 @@ Expect breaking changes as features and analysis logic improve.
 
 ## Philosophy
 
-You don’t improve by trading more.
-You improve by reviewing better.
+- You don’t improve by trading more.
+- You improve by reviewing better.
 
 If this journal makes you uncomfortable sometimes, it’s doing its job.
 
