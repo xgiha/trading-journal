@@ -143,7 +143,7 @@ const App: React.FC = () => {
             >
               {/* LEFT WING */}
               <div className="flex flex-row h-full overflow-hidden gap-4 lg:gap-6">
-                <div className="flex flex-col gap-4 w-[220px] shrink-0 overflow-y-auto custom-scrollbar pr-1 pb-20">
+                <div className="flex flex-col gap-4 w-[220px] shrink-0 pb-20">
                   <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
                   <div className="flex flex-col gap-4">
                     <VoiceChat 
@@ -157,7 +157,7 @@ const App: React.FC = () => {
                     />
                   </div>
                 </div>
-                <div className="hidden lg:flex flex-col gap-4 w-[220px] shrink-0 overflow-y-auto custom-scrollbar pr-1 pb-20">
+                <div className="hidden lg:flex flex-col gap-4 w-[220px] shrink-0 pb-20">
                   <TradeStats trades={trades} />
                 </div>
               </div>
@@ -197,7 +197,7 @@ const App: React.FC = () => {
               </div>
 
               {/* RIGHT WING */}
-              <div className="flex flex-col h-full w-full max-w-[460px] gap-4 lg:gap-6 overflow-y-auto custom-scrollbar pr-1 pb-20">
+              <div className="flex flex-col h-full w-full max-w-[460px] gap-4 lg:gap-6 pb-20">
                 <div className="flex-1 min-h-[250px]">
                     <InsightCard trades={trades} />
                 </div>
@@ -205,7 +205,6 @@ const App: React.FC = () => {
                     <EnergyChart trades={trades} stats={globalStats} />
                 </div>
               </div>
-              {/* Fix for line 208: Corrected closing tag from '物件Div' to 'MotionDiv' */}
             </MotionDiv>
         </AnimatePresence>
 
