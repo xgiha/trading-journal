@@ -106,7 +106,7 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      <StatCard title="Trade Performance" className="h-[320px]">
+      <StatCard title="Trade Performance" className="h-[360px]">
         <div className="flex-1 grid grid-cols-2 gap-4 mt-1">
           <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
             <div className="flex items-center gap-1.5 mb-1">
