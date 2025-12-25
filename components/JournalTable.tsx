@@ -93,17 +93,17 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onEdit(trade); setOffset(0); }}
                     className={`flex items-center gap-2 text-green-500 transition-all active:scale-95 ${offset > 0 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}
+                    aria-label="Edit trade"
                 >
-                    <Edit2 size={18} />
-                    <span className="text-[11px] font-bold uppercase tracking-wider">Edit</span>
+                    <Edit2 size={22} />
                 </button>
                 <button 
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onDelete(trade.id); setOffset(0); }}
                     className={`flex items-center gap-2 text-red-500 transition-all active:scale-95 ${offset < 0 ? 'opacity-100 translate-x-[2px]' : 'opacity-0 translate-x-4 pointer-events-none'}`}
+                    aria-label="Delete trade"
                 >
-                    <span className="text-[11px] font-bold uppercase tracking-wider">Delete</span>
-                    <Trash2 size={18} />
+                    <Trash2 size={22} />
                 </button>
             </div>
 
