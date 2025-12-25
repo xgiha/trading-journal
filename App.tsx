@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   LayoutGrid, 
@@ -9,7 +8,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import EnergyChart from './components/EnergyChart';
-// Fix: Use named import for InsightCard as it is exported as a named constant, not as a default export.
 import { InsightCard } from './components/InsightCard';
 import { TradingCalendar } from './components/TradingCalendar';
 import { JournalTable } from './components/JournalTable';
@@ -31,6 +29,18 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [expandedSidebarCard, setExpandedSidebarCard] = useState<'voice' | 'activity'>('voice');
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+
+  const addActivity = useCallback((type: ActivityLog['type'], title: string, description: string) => {
+    const newLog: ActivityLog = {
+      id: `act-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type,
+      title,
+      description,
+      time: 'Just Now',
+      timestamp: Date.now()
+    };
+    setActivityLogs(prev => [newLog, ...prev]);
+  }, []);
 
   const toggleSidebar = useCallback((target: 'voice' | 'activity') => {
     setExpandedSidebarCard(prev => prev === target ? (target === 'voice' ? 'activity' : 'voice') : target);
@@ -99,11 +109,15 @@ const App: React.FC = () => {
   
   const handleDeleteTrade = useCallback((tradeId: string) => { 
     setTrades(prev => {
+      const trade = prev.find(t => t.id === tradeId);
+      if (trade) {
+        addActivity('delete', 'Trade Deleted', `${trade.pair} ${trade.type} position removed.`);
+      }
       const updated = prev.filter(t => t.id !== tradeId);
       syncToCloud(updated);
       return updated;
     });
-  }, [syncToCloud]);
+  }, [syncToCloud, addActivity]);
 
   const handleViewDayClick = useCallback((date: string) => { 
     setSelectedDate(date); 
@@ -120,12 +134,17 @@ const App: React.FC = () => {
   const handleAddOrUpdateTrade = useCallback((tradeData: Trade) => { 
     setTrades(prev => {
       const existingIndex = prev.findIndex(t => t.id === tradeData.id); 
+      if (existingIndex >= 0) {
+        addActivity('edit', 'Trade Updated', `${tradeData.pair} details modified.`);
+      } else {
+        addActivity('add', 'Trade Added', `New ${tradeData.type} position on ${tradeData.pair}.`);
+      }
       let newTrades = existingIndex >= 0 ? [...prev] : [...prev, tradeData];
       if (existingIndex >= 0) newTrades[existingIndex] = tradeData;
       syncToCloud(newTrades);
       return newTrades;
     });
-  }, [syncToCloud]);
+  }, [syncToCloud, addActivity]);
 
   const handleTabChange = useCallback((tabId: string) => { 
     setCurrentView('dashboard'); 
@@ -155,9 +174,9 @@ const App: React.FC = () => {
               {/* LEFT WING */}
               <div className="flex h-full min-h-0 order-2 lg:order-none w-full overflow-hidden gap-6">
                 <div className="flex flex-col h-full min-h-0 w-[220px] shrink-0">
-                  <div className="flex-1 flex flex-col gap-4 overflow-hidden pr-1 pb-4">
+                  <div className="flex-1 flex flex-col gap-4 overflow-hidden pr-1 pb-4 h-full">
                     <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                    <div className="flex flex-col gap-4">
+                    <div className="flex-1 flex flex-col gap-4 min-h-0">
                       <VoiceChat 
                         isOpen={expandedSidebarCard === 'voice'} 
                         onToggle={() => toggleSidebar('voice')} 

@@ -30,17 +30,17 @@ export function ActivityDropdownComponent({ logs, isOpen, onToggle }: ActivityDr
     }
   };
 
-  const displayLogs = [...logs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 8);
+  const displayLogs = [...logs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 15);
 
   return (
     <div
       className={cn(
-        "w-full max-w-[220px] overflow-hidden cursor-pointer select-none relative bg-white/[0.03] border border-white/10 transition-all duration-300",
-        isOpen ? "rounded-3xl" : "rounded-[2rem]",
+        "w-full max-w-[220px] overflow-hidden cursor-pointer select-none relative bg-white/[0.03] border border-white/10 transition-all duration-300 flex flex-col min-h-0",
+        isOpen ? "rounded-3xl flex-1" : "rounded-[2rem] h-[56px]",
       )}
       onClick={() => !isOpen && onToggle()}
     >
-      <div className="flex items-center gap-3 p-2 h-[56px] relative z-30">
+      <div className="flex items-center gap-3 p-2 h-[56px] shrink-0 relative z-30">
         <div className="relative">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10">
                 <Bell className="h-4 w-4 text-nexus-muted" />
@@ -65,38 +65,43 @@ export function ActivityDropdownComponent({ logs, isOpen, onToggle }: ActivityDr
         </button>
       </div>
 
-      <motion.div
-        initial={false}
-        animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="relative z-30 overflow-hidden"
-      >
-        <div className="px-2 pb-4 pt-4 border-t border-white/10 mx-4">
-          <div className="space-y-1">
-            {displayLogs.length > 0 ? (
-              displayLogs.map((activity, index) => (
-                <div key={activity.id} className="flex items-start gap-3 rounded-2xl p-2.5 hover:bg-white/5 border border-transparent hover:border-white/5">
-                  <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border", getIconStyles(activity.type))}>
-                    {getIcon(activity.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center mb-0.5">
-                      <h4 className="text-[10px] font-bold text-white uppercase tracking-tight">{activity.title}</h4>
-                      <span className="text-[8px] text-nexus-muted font-mono opacity-50">{activity.time}</span>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="flex-1 overflow-hidden flex flex-col min-h-0"
+          >
+            <div className="px-2 pb-6 pt-4 border-t border-white/10 mx-4 overflow-y-auto flex-1 custom-scrollbar">
+              <div className="space-y-1">
+                {displayLogs.length > 0 ? (
+                  displayLogs.map((activity) => (
+                    <div key={activity.id} className="flex items-start gap-3 rounded-2xl p-2.5 hover:bg-white/5 border border-transparent hover:border-white/5">
+                      <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border", getIconStyles(activity.type))}>
+                        {getIcon(activity.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center mb-0.5">
+                          <h4 className="text-[10px] font-bold text-white uppercase tracking-tight">{activity.title}</h4>
+                          <span className="text-[8px] text-nexus-muted font-mono opacity-50">{activity.time}</span>
+                        </div>
+                        <p className="text-[10px] text-nexus-muted truncate opacity-80 leading-tight">{activity.description}</p>
+                      </div>
                     </div>
-                    <p className="text-[10px] text-nexus-muted truncate opacity-80 leading-tight">{activity.description}</p>
+                  ))
+                ) : (
+                  <div className="py-20 text-center flex flex-col items-center gap-2 opacity-30">
+                      <ShieldCheck size={24} className="text-nexus-muted" />
+                      <span className="text-[9px] uppercase font-bold tracking-[0.2em]">Stream is empty</span>
                   </div>
-                </div>
-              ))
-            ) : (
-              <div className="py-20 text-center flex flex-col items-center gap-2 opacity-30">
-                  <ShieldCheck size={24} className="text-nexus-muted" />
-                  <span className="text-[9px] uppercase font-bold tracking-[0.2em]">Stream is empty</span>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-      </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -21,8 +21,8 @@ const participants: Participant[] = [
 ];
 
 const COLLAPSED_WIDTH = 220; 
-const EXPANDED_WIDTH = 220; 
-const EXPANDED_HEIGHT = 320;
+const COLLAPSED_HEIGHT = 56;
+const EXPANDED_HEIGHT = 380;
 const AVATAR_SIZE_COLLAPSED = 34;
 const AVATAR_SIZE_EXPANDED = 48;
 const AVATAR_OVERLAP = -10;
@@ -105,14 +105,14 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
     <div
       onClick={() => !isOpen && onToggle()}
       className={cn(
-        "relative bg-white/[0.03] border border-white/10 overflow-hidden",
+        "relative bg-white/[0.03] border border-white/10 overflow-hidden shrink-0",
         "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
         "cursor-pointer",
+        isOpen ? "rounded-3xl" : "rounded-[999px]",
       )}
       style={{
-        width: isOpen ? EXPANDED_WIDTH : COLLAPSED_WIDTH,
-        height: isOpen ? EXPANDED_HEIGHT : 56,
-        borderRadius: isOpen ? 40 : 999,
+        width: COLLAPSED_WIDTH,
+        height: isOpen ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT,
         zIndex: 100,
       }}
     >
@@ -136,7 +136,7 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
 
       <div
         className={cn(
-          "absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-5 pb-3 z-30",
+          "absolute left-0 right-0 flex items-center justify-between px-4 pt-5 pb-3 z-30",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
@@ -171,86 +171,85 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
         style={{ top: 58 }}
       />
 
-      {participants.map((participant, index) => {
-        const pos = getAvatarPosition(index, isOpen);
-        const delay = isOpen ? index * 30 : (participants.length - 1 - index) * 20;
+      <div className="absolute inset-0">
+        {participants.map((participant, index) => {
+          const pos = getAvatarPosition(index, isOpen);
+          const delay = isOpen ? index * 30 : (participants.length - 1 - index) * 20;
 
-        return (
-          <div
-            key={participant.id}
-            className="absolute transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] z-10"
-            style={{
-              left: pos.x,
-              top: pos.y,
-              width: pos.size,
-              height: isOpen ? pos.size + 20 : pos.size,
-              opacity: pos.opacity,
-              zIndex: isOpen ? 10 : participants.length - index,
-              transitionDelay: `${delay}ms`,
-            }}
-          >
-            <div className="relative flex flex-col items-center">
-              <div
-                className="rounded-full overflow-hidden ring-[2px] ring-[#0c0c0e] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] border border-white/10"
-                style={{
-                  width: pos.size,
-                  height: pos.size,
-                }}
-              >
-                <img
-                  src={participant.avatar}
-                  alt={participant.name}
-                  className="w-full h-full object-cover"
-                />
+          return (
+            <div
+              key={participant.id}
+              className="absolute transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] z-10"
+              style={{
+                left: pos.x,
+                top: pos.y,
+                width: pos.size,
+                height: isOpen ? pos.size + 20 : pos.size,
+                opacity: pos.opacity,
+                zIndex: isOpen ? 10 : participants.length - index,
+                transitionDelay: `${delay}ms`,
+              }}
+            >
+              <div className="relative flex flex-col items-center">
+                <div
+                  className="rounded-full overflow-hidden ring-[2px] ring-[#0c0c0e] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] border border-white/10"
+                  style={{
+                    width: pos.size,
+                    height: pos.size,
+                  }}
+                >
+                  <img
+                    src={participant.avatar}
+                    alt={participant.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <SpeakingIndicator show={isOpen && !!participant.isSpeaking} />
+
+                <span
+                  className={cn(
+                    "absolute text-[9px] font-bold text-nexus-muted whitespace-nowrap",
+                    "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                    isOpen ? "opacity-100" : "opacity-0",
+                  )}
+                  style={{
+                    top: pos.size + 4,
+                    transitionDelay: isOpen ? `${150 + index * 30}ms` : "0ms",
+                  }}
+                >
+                  {participant.name}
+                </span>
               </div>
-              <SpeakingIndicator show={isOpen && !!participant.isSpeaking} />
-
-              <span
-                className={cn(
-                  "absolute text-[9px] font-bold text-nexus-muted whitespace-nowrap",
-                  "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-                  isOpen ? "opacity-100" : "opacity-0",
-                )}
-                style={{
-                  top: pos.size + 4,
-                  transitionDelay: isOpen ? `${150 + index * 30}ms` : "0ms",
-                }}
-              >
-                {participant.name}
-              </span>
             </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
 
-      <button
+      <div
         className={cn(
-          "absolute left-4 right-4 bg-nexus-accent text-black py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest",
-          "hover:brightness-110 active:scale-[0.98] z-40",
+          "absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-3 z-30",
           "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
           isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none",
         )}
-        style={{
-          bottom: 40,
-          transitionDelay: isOpen ? "200ms" : "0ms",
-        }}
       >
-        Join Session
-      </button>
-
-      <p
-        className={cn(
-          "absolute inset-x-0 text-center text-[8px] text-nexus-muted/60 font-bold uppercase tracking-widest z-40",
-          "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-          isOpen ? "opacity-100" : "opacity-0",
-        )}
-        style={{
-          bottom: 16,
-          transitionDelay: isOpen ? "250ms" : "0ms",
-        }}
-      >
-        Nexus Stream Active
-      </p>
+        <button
+          className={cn(
+            "w-full bg-nexus-accent text-black py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest",
+            "hover:brightness-110 active:scale-[0.98] transition-all",
+          )}
+          style={{ transitionDelay: isOpen ? "200ms" : "0ms" }}
+        >
+          Join Session
+        </button>
+        <p
+          className={cn(
+            "text-center text-[8px] text-nexus-muted/60 font-bold uppercase tracking-widest transition-all",
+          )}
+          style={{ transitionDelay: isOpen ? "250ms" : "0ms" }}
+        >
+          Nexus Stream Active
+        </p>
+      </div>
     </div>
   );
 }
