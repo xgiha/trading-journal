@@ -205,7 +205,7 @@ const App: React.FC = () => {
           {/* LEFT WING */}
           <div className="flex h-full min-h-0 order-2 lg:order-none w-full overflow-hidden gap-6">
             <div className="flex flex-col h-full min-h-0 w-[220px] shrink-0">
-              <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1 pb-4">
+              <div className="flex-1 flex flex-col gap-4 overflow-hidden pr-1 pb-4">
                 <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
                 <div className="flex flex-col gap-4">
                   <VoiceChat 
@@ -222,7 +222,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="hidden lg:flex flex-col gap-4 items-stretch w-[240px] shrink-0 h-full justify-start overflow-hidden">
-               <div className="w-full flex flex-col gap-4 items-stretch pb-4 custom-scrollbar overflow-y-auto">
+               <div className="w-full flex flex-col gap-4 items-stretch pb-4 overflow-hidden">
                   <TradeStats trades={trades} />
                </div>
             </div>

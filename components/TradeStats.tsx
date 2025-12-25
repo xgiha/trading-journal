@@ -10,14 +10,14 @@ const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Bool
 
 const StatCard: React.FC<{ title: string; children?: React.ReactNode; className?: string }> = ({ title, children, className }) => (
   <div className={cn(
-    "relative w-full overflow-hidden bg-white/[0.03] backdrop-blur-[120px] border border-white/10 rounded-[2.5rem] p-5 isolate transition-all duration-500",
+    "relative w-full overflow-hidden bg-white/[0.03] backdrop-blur-[120px] border border-white/10 rounded-[2.5rem] p-4 isolate transition-all duration-500",
     className
   )}>
     <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
     <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
     
     <div className="relative z-30 flex flex-col h-full">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2.5">
         <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
         <span className="text-[10px] font-bold text-nexus-muted tracking-[0.2em] uppercase">{title}</span>
       </div>
@@ -79,11 +79,11 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
   }, [trades]);
 
   if (!stats) return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {[1, 2, 3].map(i => (
-        <StatCard key={i} title="Pending Data" className="h-[140px]">
+        <StatCard key={i} title="Pending Data" className="h-[120px]">
           <div className="flex-1 flex items-center justify-center opacity-20">
-            <Award size={40} />
+            <Award size={32} />
           </div>
         </StatCard>
       ))}
@@ -105,56 +105,56 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <StatCard title="Trade Performance" className="h-[360px]">
-        <div className="flex-1 grid grid-cols-2 gap-4 mt-1">
-          <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-            <div className="flex items-center gap-1.5 mb-1">
+    <div className="flex flex-col gap-3 w-full">
+      <StatCard title="Trade Performance" className="h-[250px]">
+        <div className="flex-1 grid grid-cols-2 gap-2 mt-[-4px]">
+          <div className="bg-white/5 rounded-2xl p-1.5 border border-white/5">
+            <div className="flex items-center gap-1.5 mb-0.5">
               <Trophy size={10} className="text-emerald-400" />
               <span className="text-[9px] uppercase font-bold text-nexus-muted">Best</span>
             </div>
-            <div className="text-lg font-bold text-emerald-400 font-mono tracking-tighter">
+            <div className="text-base font-bold text-emerald-400 font-mono tracking-tighter">
               +${stats.bestTrade.pnl.toLocaleString()}
             </div>
-            <div className="text-[8px] text-nexus-muted mt-0.5 truncate uppercase tracking-widest">{stats.bestTrade.pair}</div>
+            <div className="text-[8px] text-nexus-muted truncate uppercase tracking-widest">{stats.bestTrade.pair}</div>
           </div>
-          <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-            <div className="flex items-center gap-1.5 mb-1">
+          <div className="bg-white/5 rounded-2xl p-1.5 border border-white/5">
+            <div className="flex items-center gap-1.5 mb-0.5">
               <AlertTriangle size={10} className="text-red-400" />
               <span className="text-[9px] uppercase font-bold text-nexus-muted">Worst</span>
             </div>
-            <div className="text-lg font-bold text-red-400 font-mono tracking-tighter">
+            <div className="text-base font-bold text-red-400 font-mono tracking-tighter">
               -${Math.abs(stats.worstTrade.pnl).toLocaleString()}
             </div>
-            <div className="text-[8px] text-nexus-muted mt-0.5 truncate uppercase tracking-widest">{stats.worstTrade.pair}</div>
+            <div className="text-[8px] text-nexus-muted truncate uppercase tracking-widest">{stats.worstTrade.pair}</div>
           </div>
-          <div className="bg-white/5 rounded-2xl p-3 border border-white/5 col-span-2">
-            <div className="flex justify-between items-center mb-1.5">
+          <div className="bg-white/5 rounded-2xl p-1.5 px-3 border border-white/5 col-span-2">
+            <div className="flex justify-between items-center mb-0.5">
                <span className="text-[9px] uppercase font-bold text-nexus-muted">Avg Winning Trade</span>
                <TrendingUp size={10} className="text-emerald-400" />
             </div>
-            <div className="text-xl font-bold text-white font-mono">+${stats.avgWin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <div className="text-base font-bold text-white font-mono">+${stats.avgWin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
           </div>
-          <div className="bg-white/5 rounded-2xl p-3 border border-white/5 col-span-2">
-            <div className="flex justify-between items-center mb-1.5">
+          <div className="bg-white/5 rounded-2xl p-1.5 px-3 border border-white/5 col-span-2">
+            <div className="flex justify-between items-center mb-0.5">
                <span className="text-[9px] uppercase font-bold text-nexus-muted">Avg Losing Trade</span>
                <TrendingDown size={10} className="text-red-400" />
             </div>
-            <div className="text-xl font-bold text-white font-mono">-${Math.abs(stats.avgLoss).toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <div className="text-base font-bold text-white font-mono">-${Math.abs(stats.avgLoss).toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
           </div>
         </div>
       </StatCard>
 
-      <StatCard title="Daily Records" className="h-[164px]">
-        <div className="flex-1 flex flex-col justify-center gap-3">
-            <div className="flex justify-between items-center bg-white/5 rounded-xl p-2 px-3 border border-white/5">
+      <StatCard title="Daily Records" className="h-[135px]">
+        <div className="flex-1 flex flex-col justify-center gap-2 mt-[-4px]">
+            <div className="flex justify-between items-center bg-white/5 rounded-xl p-1.5 px-3 border border-white/5">
                 <div className="flex flex-col">
                     <span className="text-[8px] uppercase font-bold text-nexus-muted">Most Profitable</span>
                     <span className="text-[10px] text-white font-bold">{stats.mostProfitableDay ? formatDate(stats.mostProfitableDay[0]) : '-'}</span>
                 </div>
                 <div className="text-sm font-bold text-emerald-400 font-mono">+${stats.mostProfitableDay?.[1].toLocaleString()}</div>
             </div>
-            <div className="flex justify-between items-center bg-white/5 rounded-xl p-2 px-3 border border-white/5">
+            <div className="flex justify-between items-center bg-white/5 rounded-xl p-1.5 px-3 border border-white/5">
                 <div className="flex flex-col">
                     <span className="text-[8px] uppercase font-bold text-nexus-muted">Least Profitable</span>
                     <span className="text-[10px] text-white font-bold">{stats.leastProfitableDay ? formatDate(stats.leastProfitableDay[0]) : '-'}</span>
@@ -164,39 +164,39 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
         </div>
       </StatCard>
 
-      <StatCard title="Logic & Efficiency" className="h-[234px]">
-        <div className="flex-1 flex flex-col gap-3 mt-1">
+      <StatCard title="Logic & Efficiency" className="h-[195px]">
+        <div className="flex-1 flex flex-col gap-2 mt-[-4px]">
             <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white/5 rounded-xl p-2 border border-white/5">
-                    <span className="text-[8px] uppercase font-bold text-nexus-muted block mb-1">Longest</span>
+                <div className="bg-white/5 rounded-xl p-1.5 border border-white/5">
+                    <span className="text-[8px] uppercase font-bold text-nexus-muted block mb-0.5">Longest</span>
                     <div className="flex items-center gap-1.5">
                         <Clock size={10} className="text-white/40" />
-                        <span className="text-[11px] font-bold text-white">{formatMin(stats.longestTime)}</span>
+                        <span className="text-[10px] font-bold text-white">{formatMin(stats.longestTime)}</span>
                     </div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-2 border border-white/5">
-                    <span className="text-[8px] uppercase font-bold text-nexus-muted block mb-1">Shortest</span>
+                <div className="bg-white/5 rounded-xl p-1.5 border border-white/5">
+                    <span className="text-[8px] uppercase font-bold text-nexus-muted block mb-0.5">Shortest</span>
                     <div className="flex items-center gap-1.5">
                         <Clock size={10} className="text-white/40" />
-                        <span className="text-[11px] font-bold text-white">{formatMin(stats.shortestTime)}</span>
+                        <span className="text-[10px] font-bold text-white">{formatMin(stats.shortestTime)}</span>
                     </div>
                 </div>
             </div>
             
-            <div className="flex flex-col gap-2">
-                <div className="bg-white/5 rounded-xl p-2 px-3 border border-white/5 flex justify-between items-center">
+            <div className="flex flex-col gap-1.5">
+                <div className="bg-white/5 rounded-xl p-1.5 px-3 border border-white/5 flex justify-between items-center">
                     <div className="flex flex-col">
-                        <span className="text-[8px] uppercase font-bold text-nexus-muted">Most Used Strategy</span>
-                        <span className="text-[10px] text-nexus-accent font-bold truncate max-w-[120px]">{stats.mostUsedStrategy?.[0] || 'N/A'}</span>
+                        <span className="text-[8px] uppercase font-bold text-nexus-muted">Most Used</span>
+                        <span className="text-[10px] text-nexus-accent font-bold truncate max-w-[100px]">{stats.mostUsedStrategy?.[0] || 'N/A'}</span>
                     </div>
                     <div className="text-[10px] font-bold text-white">{stats.mostUsedStrategy?.[1] || 0}x</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-2 px-3 border border-white/5 flex justify-between items-center">
+                <div className="bg-white/5 rounded-xl p-1.5 px-3 border border-white/5 flex justify-between items-center">
                     <div className="flex flex-col">
-                        <span className="text-[8px] uppercase font-bold text-nexus-muted">Best Strategy</span>
-                        <span className="text-[10px] text-emerald-400 font-bold truncate max-w-[120px]">{stats.mostProfitableStrategy?.[0] || 'N/A'}</span>
+                        <span className="text-[8px] uppercase font-bold text-nexus-muted">Best Logic</span>
+                        <span className="text-[10px] text-emerald-400 font-bold truncate max-w-[100px]">{stats.mostProfitableStrategy?.[0] || 'N/A'}</span>
                     </div>
-                    <div className="text-[10px] font-bold text-emerald-400 font-mono tracking-tighter">
+                    <div className="text-[10px] font-bold text-emerald-400 font-mono">
                         +${stats.mostProfitableStrategy?.[1].toLocaleString()}
                     </div>
                 </div>
