@@ -103,7 +103,7 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
 
   return (
     <div className="flex flex-col gap-3 w-full">
-      <StatCard title="Trade Performance" className="h-[250px]">
+      <StatCard title="Trade Performance" className="h-[250px] !rounded-[25px]">
         <div className="flex-1 grid grid-cols-2 gap-2 mt-[-4px]">
           <div className="bg-white/5 rounded-2xl p-1.5 border border-white/5">
             <div className="flex items-center gap-1.5 mb-0.5">
@@ -142,7 +142,7 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
         </div>
       </StatCard>
 
-      <StatCard title="Daily Records" className="h-[135px]">
+      <StatCard title="Daily Records" className="h-[160px] !rounded-[25px]">
         <div className="flex-1 flex flex-col justify-center gap-2 mt-[-4px]">
             <div className="flex justify-between items-center bg-white/5 rounded-xl p-1.5 px-3 border border-white/5">
                 <div className="flex flex-col">
@@ -161,7 +161,7 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
         </div>
       </StatCard>
 
-      <StatCard title="Logic & Efficiency" className="h-[195px]">
+      <StatCard title="Logic & Efficiency" className="h-[195px] !rounded-[25px]">
         <div className="flex-1 flex flex-col gap-2 mt-[-4px]">
             <div className="grid grid-cols-2 gap-2">
                 <div className="bg-white/5 rounded-xl p-1.5 border border-white/5">
