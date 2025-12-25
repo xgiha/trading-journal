@@ -143,9 +143,9 @@ const App: React.FC = () => {
             >
               {/* LEFT WING */}
               <div className="flex flex-row h-full overflow-hidden gap-4 lg:gap-6">
-                <div className="flex flex-col gap-4 w-[220px] shrink-0 pb-20">
+                <div className="flex flex-col gap-4 w-[220px] shrink-0">
                   <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                  <div className="flex flex-col gap-4">
+                  <div className="flex-1 flex flex-col gap-4 min-h-0">
                     <VoiceChat 
                       isOpen={expandedSidebarCard === 'voice'} 
                       onToggle={() => toggleSidebar('voice')} 
@@ -157,7 +157,7 @@ const App: React.FC = () => {
                     />
                   </div>
                 </div>
-                <div className="hidden lg:flex flex-col gap-4 w-[220px] shrink-0 pb-20">
+                <div className="hidden lg:flex flex-col gap-4 w-[220px] shrink-0">
                   <TradeStats trades={trades} />
                 </div>
               </div>
@@ -197,11 +197,11 @@ const App: React.FC = () => {
               </div>
 
               {/* RIGHT WING */}
-              <div className="flex flex-col h-full w-full max-w-[460px] gap-4 lg:gap-6 pb-20">
-                <div className="flex-1 min-h-[250px]">
+              <div className="flex flex-col h-full w-full max-w-[460px] gap-4 lg:gap-6 overflow-hidden">
+                <div className="flex-1 min-h-0">
                     <InsightCard trades={trades} />
                 </div>
-                <div className="flex-1 min-h-[250px]">
+                <div className="flex-1 min-h-0">
                     <EnergyChart trades={trades} stats={globalStats} />
                 </div>
               </div>
