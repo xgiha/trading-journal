@@ -56,14 +56,19 @@ It’s a mirror.
 
 ---
 
-## Run Locally
+## Project Status
 
-### Prerequisites
-- Node.js (v18+ recommended)
+This project is actively evolving.
+Expect breaking changes as features and analysis logic improve.
 
-### Setup
+---
 
-1. Install dependencies:
-   ```bash
-   npm install
+## Philosophy
+
+You don’t improve by trading more.
+You improve by reviewing better.
+
+If this journal makes you uncomfortable sometimes, it’s doing its job.
+
+
 
