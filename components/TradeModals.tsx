@@ -288,7 +288,7 @@ const ImageZoomOverlay = ({ src, onClose }: { src: string, onClose: () => void }
                 setScale(s => Math.min(Math.max(0.5, s + delta), 5));
             }}
         >
-            <button className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full backdrop-blur-md">
+            <button className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full">
                 <X size={24} />
             </button>
             <motion.img 
@@ -301,7 +301,7 @@ const ImageZoomOverlay = ({ src, onClose }: { src: string, onClose: () => void }
                 dragElastic={0.2}
                 onClick={(e) => e.stopPropagation()}
             />
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 backdrop-blur-md rounded-full border border-white/10 text-white/60 text-xs font-medium pointer-events-none whitespace-nowrap">
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 rounded-full border border-white/10 text-white/60 text-xs font-medium pointer-events-none whitespace-nowrap">
                 Scroll to Zoom • Drag to Pan
             </div>
         </motion.div>
@@ -319,7 +319,7 @@ const NoteZoomOverlay = ({ content, onClose }: { content: string, onClose: () =>
             onClick={onClose}
         >
             <button 
-                className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full backdrop-blur-md transition-colors"
+                className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full transition-colors"
                 onClick={onClose}
             >
                 <X size={24} />
@@ -520,7 +520,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
         animate="visible"
         exit="exit"
         transition={{ duration: 0.2 }}
-        className="absolute inset-0 bg-black/90 backdrop-blur-md"
+        className="absolute inset-0 bg-black/90"
         onClick={onClose}
       ></motion.div>
 
@@ -825,7 +825,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
             type="submit"
             form="entry-form"
             disabled={isUploading}
-            className="pointer-events-auto relative px-8 py-[18px] rounded-full text-white group overflow-hidden bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl hover:bg-white/[0.08] hover:border-white/[0.15] active:scale-95 active:bg-white/[0.12] transition-all duration-300 shadow-xl font-bold text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+            className="pointer-events-auto relative px-8 py-[18px] rounded-full text-white group overflow-hidden bg-white/[0.02] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] active:scale-95 active:bg-white/[0.12] transition-all duration-300 shadow-xl font-bold text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploading ? 'Uploading...' : 'Save Trade'}
           </button>
@@ -884,7 +884,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/90 backdrop-blur-md"
+            className="absolute inset-0 bg-black/90"
             onClick={onClose}
         />
         

@@ -10,12 +10,9 @@ const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Bool
 
 const StatCard: React.FC<{ title: string; children?: React.ReactNode; className?: string }> = ({ title, children, className }) => (
   <div className={cn(
-    "relative w-full overflow-hidden bg-white/[0.03] backdrop-blur-[120px] border border-white/10 rounded-[2.5rem] p-4 isolate transition-all duration-500",
+    "relative w-full overflow-hidden bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-4 transition-all duration-500",
     className
   )}>
-    <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
-    <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-    
     <div className="relative z-30 flex flex-col h-full">
       <div className="flex items-center gap-2 mb-2.5">
         <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />

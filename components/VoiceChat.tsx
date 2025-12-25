@@ -105,7 +105,7 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
     <div
       onClick={() => !isOpen && onToggle()}
       className={cn(
-        "relative bg-white/[0.03] backdrop-blur-2xl border border-white/10 overflow-hidden isolate",
+        "relative bg-white/[0.03] border border-white/10 overflow-hidden",
         "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
         "cursor-pointer",
       )}
@@ -116,10 +116,6 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
         zIndex: 100,
       }}
     >
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
-
       <AudioWaveIcon isExpanded={isOpen} />
 
       <div

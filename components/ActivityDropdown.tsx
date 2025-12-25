@@ -1,6 +1,7 @@
 import React from "react"
 import { Bell, ChevronUp, Zap, Edit3, Trash2, ShieldCheck } from "lucide-react"
 import { ActivityLog } from "../types"
+import { motion, AnimatePresence } from "framer-motion"
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
@@ -10,10 +11,10 @@ interface ActivityDropdownProps {
   onToggle: () => void;
 }
 
-export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownProps) {
+export function ActivityDropdownComponent({ logs, isOpen, onToggle }: ActivityDropdownProps) {
   const getIcon = (type: ActivityLog['type']) => {
     switch (type) {
-      case 'add': return < Zap className="h-3.5 w-3.5" />;
+      case 'add': return <Zap className="h-3.5 w-3.5" />;
       case 'edit': return <Edit3 className="h-3.5 w-3.5" />;
       case 'delete': return <Trash2 className="h-3.5 w-3.5" />;
       default: return <ShieldCheck className="h-3.5 w-3.5" />;
@@ -34,20 +35,14 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
   return (
     <div
       className={cn(
-        "w-full max-w-[220px] overflow-hidden cursor-pointer select-none isolate relative",
-        "bg-white/[0.03] backdrop-blur-2xl border border-white/10",
-        "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-        isOpen ? "rounded-3xl h-[440px]" : "rounded-[2rem] h-[56px]",
+        "w-full max-w-[220px] overflow-hidden cursor-pointer select-none relative bg-white/[0.03] border border-white/10 transition-all duration-300",
+        isOpen ? "rounded-3xl" : "rounded-[2rem]",
       )}
       onClick={() => !isOpen && onToggle()}
     >
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
-
       <div className="flex items-center gap-3 p-2 h-[56px] relative z-30">
         <div className="relative">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10 transition-colors duration-300">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10">
                 <Bell className="h-4 w-4 text-nexus-muted" />
             </div>
             {logs.length > 0 && (
@@ -56,92 +51,54 @@ export function ActivityDropdown({ logs, isOpen, onToggle }: ActivityDropdownPro
         </div>
         <div className="flex-1 overflow-hidden">
           <h3 className="text-[11px] font-bold text-white uppercase tracking-wider">Activities</h3>
-          <p
-            className={cn(
-              "text-[9px] text-nexus-muted uppercase font-bold tracking-widest opacity-60 truncate",
-              "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-              isOpen ? "opacity-0 max-h-0 mt-0" : "opacity-100 max-h-6 mt-0.5",
-            )}
-          >
-            {logs.length} Recent Events
-          </p>
+          {!isOpen && (
+            <p className="text-[9px] text-nexus-muted uppercase font-bold tracking-widest opacity-60 truncate mt-0.5">
+              {logs.length} Recent Events
+            </p>
+          )}
         </div>
-        
-        <div className="flex h-8 w-8 items-center justify-center">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggle();
-            }}
-            className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 transition-colors border border-white/10"
-          >
-            <ChevronUp
-              className={cn(
-                "h-3 w-3 text-white transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-                isOpen ? "rotate-0" : "rotate-180",
-              )}
-            />
-          </button>
-        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggle(); }}
+          className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 border border-white/10"
+        >
+          <ChevronUp className={cn("h-3 w-3 text-white transition-transform duration-300", isOpen ? "rotate-0" : "rotate-180")} />
+        </button>
       </div>
 
-      <div
-        className={cn(
-          "absolute left-6 right-6 h-px bg-white/10 z-30 transition-opacity duration-300",
-          isOpen ? "opacity-100" : "opacity-0",
-        )}
-        style={{ top: 58 }}
-      />
-
-      <div
-        className={cn(
-          "grid relative z-30",
-          "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          isOpen ? "grid-rows-[1fr] opacity-100 pt-4" : "grid-rows-[0fr] opacity-0 pt-0",
-        )}
+      <motion.div
+        initial={false}
+        animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="relative z-30 overflow-hidden"
       >
-        <div className="overflow-hidden">
-          <div className="px-2 pb-4">
-            <div className="space-y-1">
-              {displayLogs.length > 0 ? (
-                displayLogs.map((activity, index) => (
-                  <div
-                    key={activity.id}
-                    className={cn(
-                      "flex items-start gap-3 rounded-2xl p-2.5",
-                      "transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-                      "hover:bg-white/5 border border-transparent hover:border-white/5",
-                      isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
-                    )}
-                    style={{
-                      transitionDelay: isOpen ? `${index * 50}ms` : "0ms",
-                    }}
-                  >
-                    <div className={cn(
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-colors duration-300",
-                        getIconStyles(activity.type)
-                    )}>
-                      {getIcon(activity.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-center mb-0.5">
-                        <h4 className="text-[10px] font-bold text-white uppercase tracking-tight">{activity.title}</h4>
-                        <span className="text-[8px] text-nexus-muted font-mono opacity-50">{activity.time}</span>
-                      </div>
-                      <p className="text-[10px] text-nexus-muted truncate opacity-80 leading-tight">{activity.description}</p>
-                    </div>
+        <div className="px-2 pb-4 pt-4 border-t border-white/10 mx-4">
+          <div className="space-y-1">
+            {displayLogs.length > 0 ? (
+              displayLogs.map((activity, index) => (
+                <div key={activity.id} className="flex items-start gap-3 rounded-2xl p-2.5 hover:bg-white/5 border border-transparent hover:border-white/5">
+                  <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border", getIconStyles(activity.type))}>
+                    {getIcon(activity.type)}
                   </div>
-                ))
-              ) : (
-                <div className="py-20 text-center flex flex-col items-center gap-2 opacity-30">
-                    <ShieldCheck size={24} className="text-nexus-muted" />
-                    <span className="text-[9px] uppercase font-bold tracking-[0.2em]">Stream is empty</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center mb-0.5">
+                      <h4 className="text-[10px] font-bold text-white uppercase tracking-tight">{activity.title}</h4>
+                      <span className="text-[8px] text-nexus-muted font-mono opacity-50">{activity.time}</span>
+                    </div>
+                    <p className="text-[10px] text-nexus-muted truncate opacity-80 leading-tight">{activity.description}</p>
+                  </div>
                 </div>
-              )}
-            </div>
+              ))
+            ) : (
+              <div className="py-20 text-center flex flex-col items-center gap-2 opacity-30">
+                  <ShieldCheck size={24} className="text-nexus-muted" />
+                  <span className="text-[9px] uppercase font-bold tracking-[0.2em]">Stream is empty</span>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
+
+export const ActivityDropdown = React.memo(ActivityDropdownComponent);

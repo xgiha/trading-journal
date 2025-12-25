@@ -88,7 +88,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
 
     return (
         <div className="relative h-20 w-full min-w-[600px] mb-2 rounded-[30px] select-none touch-pan-y overflow-hidden shrink-0">
-            <div className="absolute inset-0 flex justify-between items-center px-10 bg-white/5 backdrop-blur-md rounded-[30px] border border-white/5 z-0">
+            <div className="absolute inset-0 flex justify-between items-center px-10 bg-white/5 rounded-[30px] border border-white/5 z-0">
                 <button 
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onEdit(trade); setOffset(0); }}
@@ -175,11 +175,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
   const groupedTrades = useMemo(() => groupTradesByDate(currentTrades), [currentTrades]);
 
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] relative overflow-hidden isolate">
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
-
+    <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] border border-white/10 rounded-[2.5rem] relative overflow-hidden">
       <div className="shrink-0 flex flex-col gap-5 mb-4 z-10">
         <div className="flex justify-between items-center px-2">
             <h2 className="text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>

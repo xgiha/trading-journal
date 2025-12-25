@@ -1,5 +1,5 @@
-import React from 'react';
-import { ChevronLeft, ChevronRight, Plus, Activity, Trophy } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Trade } from '../types';
 
 interface TradingCalendarProps {
@@ -9,11 +9,6 @@ interface TradingCalendarProps {
   onAddTradeClick: (date: string) => void;
   onViewDayClick: (date: string) => void;
   onViewWeekClick: (trades: Trade[], weekLabel: string) => void;
-  monthlyStats: {
-    totalPnl: number;
-    count: number;
-    winRate: number;
-  };
 }
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -24,9 +19,22 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
   onMonthChange,
   onAddTradeClick, 
   onViewDayClick, 
-  onViewWeekClick,
-  monthlyStats
+  onViewWeekClick
 }) => {
+
+  const monthlyStats = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+    const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
+    const monthTrades = trades.filter(t => t.date.startsWith(monthPrefix));
+    
+    const totalPnl = monthTrades.reduce((sum, t) => sum + t.pnl, 0);
+    const count = monthTrades.length;
+    const wins = monthTrades.filter(t => t.pnl > 0).length;
+    const winRate = count > 0 ? (wins / count) * 100 : 0;
+    
+    return { totalPnl, count, winRate };
+  }, [trades, currentDate]);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -39,22 +47,10 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
 
   const { days, firstDay } = getDaysInMonth(currentDate);
 
-  const prevMonth = () => {
-    onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-  };
-
-  const nextMonth = () => {
-    onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-  };
-
   const formatCurrency = (val: number) => {
     const absVal = Math.abs(val);
     const sign = val < 0 ? '-' : '';
-    if (absVal >= 10000) {
-        const kVal = absVal / 1000;
-        const formatted = kVal.toFixed(1).replace(/\.0$/, '');
-        return `${sign}$${formatted}k`;
-    }
+    if (absVal >= 10000) return `${sign}$${(absVal / 1000).toFixed(1)}k`;
     return `${sign}$${absVal.toLocaleString()}`;
   };
 
@@ -84,30 +80,22 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
             }
           }}
           className={`relative p-1 md:p-2 flex flex-col justify-between transition-all group rounded-lg md:rounded-xl border border-white/5 overflow-hidden aspect-square ${
-            isDay 
-              ? 'bg-white/5 hover:bg-white/10 hover:border-white/20 cursor-pointer' 
-              : 'opacity-0 pointer-events-none'
+            isDay ? 'bg-white/5 hover:bg-white/10 hover:border-white/20 cursor-pointer' : 'opacity-0 pointer-events-none'
           }`}
         >
           {isDay && (
             <>
-              <div className="flex justify-between items-start">
-                 <span className={`text-[10px] md:text-xs font-semibold ${dayTradeCount > 0 ? 'text-nexus-muted' : 'text-nexus-muted/40'}`}>{dayNum}</span>
-              </div>
-              
+              <span className={`text-[10px] md:text-xs font-semibold ${dayTradeCount > 0 ? 'text-nexus-muted' : 'text-nexus-muted/40'}`}>{dayNum}</span>
               {dayTradeCount > 0 ? (
                 <div className="flex flex-col items-center justify-center flex-1">
                   <span className={`text-xs md:text-sm lg:text-base font-bold tracking-tight ${dayPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {dayPnl >= 0 ? '+' : ''}{formatCurrency(dayPnl)}
                   </span>
-                  <span className="text-[8px] md:text-[9px] uppercase tracking-widest text-nexus-muted mt-0.5 hidden md:block">
-                    {dayTradeCount} {dayTradeCount === 1 ? 'Trade' : 'Trades'}
-                  </span>
                 </div>
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-nexus-accent text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform">
-                      <Plus size={14} className="md:w-[18px] md:h-[18px]" />
+                      <Plus size={14} />
                    </div>
                 </div>
               )}
@@ -130,30 +118,19 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                 weekTradesCount += t.length;
              }
         }
-        const weekStartDay = (i - 6) - firstDay + 1;
-        const safeStartDay = weekStartDay < 1 ? 1 : weekStartDay; 
-        const weekLabel = `Week of ${currentDate.toLocaleString('default', { month: 'short' })} ${safeStartDay}`;
         grid.push(
             <React.Fragment key={`row-${i}`}>
                {currentWeek}
                <div 
-                onClick={() => weekTradesCount > 0 && onViewWeekClick(weekTradesList, weekLabel)}
+                onClick={() => weekTradesCount > 0 && onViewWeekClick(weekTradesList, `Week of ${currentDate.toLocaleString('default', { month: 'short' })} ${Math.max(1, (i - 6) - firstDay + 1)}`)}
                 className={`hidden md:flex rounded-lg md:rounded-xl p-1 md:p-2 flex-col items-center justify-center transition-all border border-white/5 relative overflow-hidden aspect-square ${
-                    weekTradesCount > 0 
-                      ? 'bg-white/10 hover:bg-white/15 cursor-pointer hover:border-nexus-accent/30' 
-                      : 'bg-white/[0.02]'
+                    weekTradesCount > 0 ? 'bg-white/10 hover:bg-white/15 cursor-pointer hover:border-nexus-accent/30' : 'bg-white/[0.02]'
                 }`}
                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50 pointer-events-none"></div>
                   {weekTradesCount > 0 && (
-                      <>
-                        <span className={`text-xs md:text-lg lg:text-xl font-bold tracking-tighter z-10 ${weekPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                             {weekPnl >= 0 ? '+' : ''}{formatCurrency(weekPnl)}
-                        </span>
-                        <span className="text-[8px] md:text-[10px] uppercase tracking-widest text-nexus-muted mt-1 z-10 hidden md:block">
-                            {weekTradesCount} {weekTradesCount === 1 ? 'Trade' : 'Trades'}
-                        </span>
-                      </>
+                    <span className={`text-xs md:text-lg lg:text-xl font-bold tracking-tighter z-10 ${weekPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                         {weekPnl >= 0 ? '+' : ''}{formatCurrency(weekPnl)}
+                    </span>
                   )}
                </div>
             </React.Fragment>
@@ -165,22 +142,18 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
   };
 
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 bg-white/[0.03] backdrop-blur-[120px] border border-white/10 rounded-[2.5rem] relative overflow-hidden isolate">
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
-
+    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 bg-white/[0.03] border border-white/10 rounded-[2.5rem] relative overflow-hidden">
       <div className="flex items-center justify-between shrink-0 w-full px-2 z-10">
          <div className="flex items-center gap-4 bg-white/5 rounded-full px-4 py-1.5 border border-white/5">
             <div className="flex gap-2">
-                <button onClick={prevMonth} className="text-nexus-muted hover:text-white transition-colors">
+                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="text-nexus-muted hover:text-white transition-colors">
                     <ChevronLeft size={16} />
                 </button>
-                <button onClick={nextMonth} className="text-nexus-muted hover:text-white transition-colors">
+                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="text-nexus-muted hover:text-white transition-colors">
                     <ChevronRight size={16} />
                 </button>
             </div>
-            <span className="text-[12px] font-bold text-white tracking-[0.2em] uppercase whitespace-nowrap">
+            <span className="text-[12px] font-bold text-white tracking-[0.2em] uppercase">
                {currentDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
             </span>
          </div>
@@ -193,11 +166,6 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
             </div>
             <div className="w-px h-3 bg-white/10"></div>
             <div className="flex items-center gap-2">
-               <span className="text-[12px] font-bold text-white font-mono">{monthlyStats.count}</span>
-               <span className="text-[9px] uppercase tracking-widest text-nexus-muted font-bold opacity-60">Trades</span>
-            </div>
-            <div className="w-px h-3 bg-white/10"></div>
-            <div className="flex items-center gap-2">
                <span className="text-[12px] font-bold text-white font-mono">{monthlyStats.winRate.toFixed(0)}%</span>
                <span className="text-[9px] uppercase tracking-widest text-nexus-muted font-bold opacity-60">Win Rate</span>
             </div>
@@ -206,14 +174,8 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
 
       <div className="flex-1 flex flex-col min-h-0 z-10">
         <div className="grid grid-cols-7 md:grid-cols-8 gap-2 mb-3 shrink-0 px-2">
-            {WEEKDAYS.map(d => (
-            <div key={d} className="text-center text-[10px] uppercase tracking-[0.2em] text-nexus-muted font-bold opacity-40">
-                {d}
-            </div>
-            ))}
-            <div className="hidden md:block text-center text-[10px] uppercase tracking-[0.2em] text-nexus-accent font-bold opacity-80">
-                Total
-            </div>
+            {WEEKDAYS.map(d => <div key={d} className="text-center text-[10px] uppercase tracking-[0.2em] text-nexus-muted font-bold opacity-40">{d}</div>)}
+            <div className="hidden md:block text-center text-[10px] uppercase tracking-[0.2em] text-nexus-accent font-bold opacity-80">Total</div>
         </div>
         <div className="grid grid-cols-7 md:grid-cols-8 gap-2 flex-1 auto-rows-min overflow-y-auto custom-scrollbar px-2 content-start pb-4">
             {renderCalendarDays()}

@@ -64,14 +64,10 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
       ref={containerRef}
       onMouseLeave={handleContainerLeave}
       className={cn(
-        "group relative w-full h-full p-6 rounded-[2.5rem] bg-white/[0.03] backdrop-blur-[120px] border border-white/10 transition-all duration-500 flex flex-col justify-between overflow-hidden isolate",
+        "group relative w-full h-full p-6 rounded-[2.5rem] bg-white/[0.03] border border-white/10 transition-all duration-500 flex flex-col justify-between overflow-hidden",
         className
       )}
     >
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute top-0 left-0 bottom-0 w-[1px] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-20"></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-20 pointer-events-none z-0"></div>
-
       <div className="flex items-center justify-between z-30 shrink-0 mb-4">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" />

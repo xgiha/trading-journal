@@ -25,7 +25,7 @@ export const MarketStatusCard: React.FC = () => {
   }, []);
 
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-md shadow-inner">
+    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 shadow-inner">
       <span className="text-[8px] font-bold text-nexus-muted uppercase tracking-[0.15em]">
         {isMarketOpen ? 'Market Open' : 'Market Closed'}
       </span>
