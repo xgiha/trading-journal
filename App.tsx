@@ -129,20 +129,20 @@ const App: React.FC = () => {
   const activeIndex = TABS.findIndex(t => t.id === activeTab);
 
   return (
-    <div className="h-screen w-screen relative flex items-center justify-center p-4 lg:p-6 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black">
-      <div className="w-full h-full glass-card rounded-[2.5rem] lg:rounded-[3.5rem] relative overflow-hidden flex flex-col p-4 lg:p-10 transition-all duration-500 shadow-2xl">
+    <div className="h-screen w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black">
+      <div className="w-full h-full glass-card rounded-[1.5rem] lg:rounded-[2.5rem] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
         
         <AnimatePresence mode="wait">
             <MotionDiv 
               key="dashboard-grid"
-              initial={{ opacity: 0, scale: 0.98 }}
+              initial={{ opacity: 0, scale: 0.99 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.3, ease: "circOut" }}
-              className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[460px_1fr_460px] gap-6 z-10 items-stretch h-full"
+              exit={{ opacity: 0, scale: 0.99 }}
+              transition={{ duration: 0.4, ease: "circOut" }}
+              className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[460px_1fr_460px] gap-4 lg:gap-6 z-10 items-stretch h-full"
             >
               {/* LEFT WING */}
-              <div className="flex flex-row h-full overflow-hidden gap-6">
+              <div className="flex flex-row h-full overflow-hidden gap-4 lg:gap-6">
                 <div className="flex flex-col gap-4 w-[220px] shrink-0">
                   <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
                   <div className="flex-1 flex flex-col gap-4 min-h-0">
@@ -197,7 +197,7 @@ const App: React.FC = () => {
               </div>
 
               {/* RIGHT WING */}
-              <div className="flex flex-col h-full w-full max-w-[460px] gap-6 overflow-hidden">
+              <div className="flex flex-col h-full w-full max-w-[460px] gap-4 lg:gap-6 overflow-hidden">
                 <div className="flex-1 min-h-0">
                     <InsightCard trades={trades} />
                 </div>
@@ -209,17 +209,17 @@ const App: React.FC = () => {
         </AnimatePresence>
 
         {/* NAVIGATION DOCK */}
-        <div className="absolute bottom-8 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none">
+        <div className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none">
           <div className="flex items-center gap-4 pointer-events-auto px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
             <div className="relative p-1 rounded-full flex items-center bg-white/5 border border-white/5 w-[260px]">
                 {TABS.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 py-2.5 rounded-full flex items-center justify-center gap-2 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-nexus-muted hover:text-white/60'}`}
+                    className={`flex-1 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-nexus-muted hover:text-white/60'}`}
                   >
-                    <tab.icon size={16} />
-                    <span className="text-xs font-semibold tracking-wide">{tab.label}</span>
+                    <tab.icon size={14} />
+                    <span className="text-[10px] font-semibold tracking-wide">{tab.label}</span>
                   </button>
                 ))}
                 <MotionDiv
@@ -233,10 +233,10 @@ const App: React.FC = () => {
 
             <button 
               onClick={handleAddTradeBtnClick}
-              className="bg-nexus-accent text-black px-6 py-3.5 rounded-full flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-[0_0_20px_rgba(255,166,0,0.2)]"
+              className="bg-nexus-accent text-black px-6 py-2.5 rounded-full flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-[0_0_20px_rgba(255,166,0,0.2)]"
             >
-              <Plus size={18} />
-              <span className="text-xs font-bold uppercase tracking-widest">Add Trade</span>
+              <Plus size={16} />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Add Trade</span>
             </button>
           </div>
         </div>

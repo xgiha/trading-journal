@@ -55,7 +55,8 @@ const InsightCardComponent: React.FC<InsightCardProps> = ({ trades, className })
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.03)" strokeDasharray="3 3" />
-            <XAxis dataKey="name" axisLine={{ stroke: 'rgba(255, 255, 255, 0.15)', strokeWidth: 1 }} tickLine={{ stroke: 'rgba(255, 255, 255, 0.15)' }} tick={{ fill: 'rgba(161, 161, 170, 0.4)', fontSize: 9, fontWeight: 600 }} dy={10} interval="auto" minTickGap={30} />
+            {/* Fix: Replaced 'auto' with 'preserveStart' for the interval prop on XAxis to match the required AxisInterval type. */}
+            <XAxis dataKey="name" axisLine={{ stroke: 'rgba(255, 255, 255, 0.15)', strokeWidth: 1 }} tickLine={{ stroke: 'rgba(255, 255, 255, 0.15)' }} tick={{ fill: 'rgba(161, 161, 170, 0.4)', fontSize: 9, fontWeight: 600 }} dy={10} interval="preserveStart" minTickGap={30} />
             <YAxis axisLine={{ stroke: 'rgba(255, 255, 255, 0.15)', strokeWidth: 1 }} tickLine={{ stroke: 'rgba(255, 255, 255, 0.15)' }} tick={{ fill: 'rgba(161, 161, 170, 0.4)', fontSize: 9, fontWeight: 600 }} tickFormatter={(val) => `$${val}`} domain={[0, 'auto']} width={40} />
             <Tooltip contentStyle={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} itemStyle={{ fontSize: '10px', color: '#fff' }} labelStyle={{ fontSize: '9px', color: '#666' }} formatter={(val: number) => [`$${val.toLocaleString()}`, 'Total PnL']} />
             <Area type="monotone" dataKey="pnl" stroke="white" strokeWidth={2} fill="url(#equityGradient)" dot={false} activeDot={{ r: 4, fill: '#fff', strokeWidth: 0 }} animationDuration={800} isAnimationActive={true} />
