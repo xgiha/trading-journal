@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useMemo } from 'react';
 import { 
   ArrowUpRight, 
@@ -12,6 +13,9 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trade } from '../types';
 import MorphingPageDots from './MorphingPageDots';
+
+// Cast motion elements to any to bypass environment-specific type definition issues
+const MotionDiv = motion.div as any;
 
 interface JournalTableProps {
   trades: Trade[];
@@ -206,7 +210,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
         <div className="w-full h-full overflow-hidden">
           <div className="min-w-[600px] w-full h-full flex flex-col relative pb-20">
              <AnimatePresence mode="wait">
-              <motion.div
+              <MotionDiv
                 key={currentPage}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -234,7 +238,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
                     <span className="text-xs uppercase tracking-[0.2em] font-bold">No Entries Found</span>
                   </div>
                 )}
-              </motion.div>
+              </MotionDiv>
             </AnimatePresence>
             <div className="absolute bottom-0 left-0 right-0 z-50 flex flex-col items-center">
                 <div className="w-full py-2 flex justify-center items-center">

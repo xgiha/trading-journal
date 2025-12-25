@@ -1,8 +1,13 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud, Loader2, Edit2, FileText, Target } from 'lucide-react';
 import { Trade } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Cast motion elements to any to bypass environment-specific type definition issues
+const MotionDiv = motion.div as any;
+const MotionImg = motion.img as any;
 
 // --- Helper: Number Formatter ---
 const formatNumber = (value: string) => {
@@ -277,13 +282,13 @@ const ImageZoomOverlay = ({ src, onClose }: { src: string, onClose: () => void }
     const [scale, setScale] = useState(1);
     
     return (
-        <motion.div 
+        <MotionDiv 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center touch-none"
             onClick={onClose}
-            onWheel={(e) => {
+            onWheel={(e: React.WheelEvent<HTMLDivElement>) => {
                 const delta = -e.deltaY * 0.001;
                 setScale(s => Math.min(Math.max(0.5, s + delta), 5));
             }}
@@ -291,27 +296,27 @@ const ImageZoomOverlay = ({ src, onClose }: { src: string, onClose: () => void }
             <button className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full">
                 <X size={24} />
             </button>
-            <motion.img 
+            <MotionImg 
                 src={src} 
                 alt="Zoom View"
                 className="max-w-[95vw] max-h-[95vh] object-contain cursor-grab active:cursor-grabbing"
-                style={{ scale }}
+                animate={{ scale }}
                 drag
                 dragConstraints={{ left: -window.innerWidth/2, right: window.innerWidth/2, top: -window.innerHeight/2, bottom: window.innerHeight/2 }}
                 dragElastic={0.2}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
             />
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 rounded-full border border-white/10 text-white/60 text-xs font-medium pointer-events-none whitespace-nowrap">
                 Scroll to Zoom • Drag to Pan
             </div>
-        </motion.div>
+        </MotionDiv>
     );
 };
 
 // --- Note Zoom Overlay Component ---
 const NoteZoomOverlay = ({ content, onClose }: { content: string, onClose: () => void }) => {
     return (
-        <motion.div 
+        <MotionDiv 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -324,12 +329,12 @@ const NoteZoomOverlay = ({ content, onClose }: { content: string, onClose: () =>
             >
                 <X size={24} />
             </button>
-            <motion.div 
+            <MotionDiv 
                 initial={{ scale: 0.95, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 className="bg-[#141414] border border-white/10 p-6 md:p-8 rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar shadow-2xl relative"
-                onClick={e => e.stopPropagation()}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
                 <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5 sticky top-0 bg-[#141414] z-10 -mt-2 pt-2">
                      <FileText size={18} className="text-nexus-accent" />
@@ -338,8 +343,8 @@ const NoteZoomOverlay = ({ content, onClose }: { content: string, onClose: () =>
                 <div className="text-[#e4e4e7] text-base leading-relaxed whitespace-pre-wrap font-sans break-words">
                     {content}
                 </div>
-            </motion.div>
-        </motion.div>
+            </MotionDiv>
+        </MotionDiv>
     );
 };
 
@@ -514,7 +519,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <motion.div 
+      <MotionDiv 
         variants={backdropVariants}
         initial="hidden"
         animate="visible"
@@ -522,10 +527,10 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
         transition={{ duration: 0.2 }}
         className="absolute inset-0 bg-black/90"
         onClick={onClose}
-      ></motion.div>
+      ></MotionDiv>
 
       {/* Modal Container */}
-      <motion.div 
+      <MotionDiv 
         variants={modalVariants}
         initial="hidden"
         animate="visible"
@@ -831,7 +836,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           </button>
         </div>
 
-      </motion.div>
+      </MotionDiv>
     </div>
   );
 };
@@ -880,7 +885,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
      <>
      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         {/* Backdrop */}
-        <motion.div 
+        <MotionDiv 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -889,7 +894,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
         />
         
         {/* Modal */}
-        <motion.div
+        <MotionDiv
             initial={{ y: "100%", opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: "100%", opacity: 0, scale: 0.95 }}
@@ -937,7 +942,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                            <Tooltip 
                                 cursor={{ stroke: 'rgba(255,255,255,0.2)' }}
-                                contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px' }}
+                                contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '12px' }}
                                 formatter={(val: number) => [`$${val.toFixed(2)}`, 'PnL']}
                            />
                            <Area 
@@ -1075,7 +1080,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                      <Plus size={16} /> Add Trade
                  </button>
              </div>
-        </motion.div>
+        </MotionDiv>
      </div>
 
      {/* Full Screen Image/Note Zoom Overlay */}

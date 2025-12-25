@@ -2,8 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { 
   LayoutGrid, 
   BookOpen, 
-  Plus, 
-  Brain
+  Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,12 +11,14 @@ import { InsightCard } from './components/InsightCard';
 import { TradingCalendar } from './components/TradingCalendar';
 import { JournalTable } from './components/JournalTable';
 import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
-import PsychologyPage from './components/PsychologyPage';
 import { VoiceChat } from './components/VoiceChat';
 import TotalPnlCard from './components/TotalPnlCard';
 import { ActivityDropdown } from './components/ActivityDropdown';
 import TradeStats from './components/TradeStats';
 import { Trade, ActivityLog } from './types';
+
+// Cast motion elements to any to bypass environment-specific type definition issues
+const MotionDiv = motion.div as any;
 
 const TABS = [
   { id: 'dashboard', icon: LayoutGrid, label: 'Dashboard' },
@@ -25,7 +26,6 @@ const TABS = [
 ];
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'psychology'>('dashboard');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [expandedSidebarCard, setExpandedSidebarCard] = useState<'voice' | 'activity'>('voice');
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
@@ -147,12 +147,7 @@ const App: React.FC = () => {
   }, [syncToCloud, addActivity]);
 
   const handleTabChange = useCallback((tabId: string) => { 
-    setCurrentView('dashboard'); 
     setActiveTab(tabId); 
-  }, []);
-
-  const handlePsychologyClick = useCallback(() => { 
-    setCurrentView(prev => prev === 'psychology' ? 'dashboard' : 'psychology'); 
   }, []);
 
   const activeIndex = TABS.findIndex(t => t.id === activeTab);
@@ -162,8 +157,7 @@ const App: React.FC = () => {
       <div className="w-[98vw] h-auto lg:h-full bg-[#141414] border border-white/10 rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 pb-6 lg:pb-10 transition-all duration-500 shadow-2xl">
         
         <AnimatePresence mode="wait">
-          {currentView === 'dashboard' ? (
-            <motion.div 
+            <MotionDiv 
               key="dashboard-grid"
               initial={{ opacity: 0, scale: 0.99 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -198,7 +192,7 @@ const App: React.FC = () => {
               <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0 pb-24">
                 <div className="w-full h-full min-0 relative overflow-hidden">
                   <AnimatePresence mode="wait" initial={false}>
-                    <motion.div
+                    <MotionDiv
                       key={activeTab}
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -211,45 +205,26 @@ const App: React.FC = () => {
                       ) : (
                         <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} />
                       )}
-                    </motion.div>
+                    </MotionDiv>
                   </AnimatePresence>
                 </div>
               </div>
 
               {/* RIGHT WING */}
               <div className="flex flex-col h-full order-3 lg:order-none w-[484px] shrink-0 overflow-hidden gap-6">
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-0">
                     <InsightCard trades={trades} />
                 </div>
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-0">
                     <EnergyChart trades={trades} stats={globalStats} />
                 </div>
               </div>
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="psychology-view"
-              initial={{ opacity: 0, scale: 0.99 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.99 }}
-              transition={{ duration: 0.2 }}
-              className="flex-1 w-full h-full flex items-center justify-center overflow-hidden"
-            >
-              <PsychologyPage trades={trades} onBack={() => setCurrentView('dashboard')} />
-            </motion.div>
-          )}
+            </MotionDiv>
         </AnimatePresence>
 
         {/* NAVIGATION DOCK AREA */}
         <div className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none">
           <div className="flex items-center gap-6 pointer-events-auto px-6 py-3 rounded-full">
-            <button
-              onClick={handlePsychologyClick}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 duration-100 group relative overflow-hidden bg-white/5 border border-white/10 ${currentView === 'psychology' ? 'text-purple-400 border-purple-500/30' : 'text-nexus-muted'}`}
-            >
-              <Brain size={24} className="z-10" />
-            </button>
-
             <div className="relative p-1.5 rounded-full flex items-center justify-center overflow-hidden w-[280px] bg-white/5 border border-white/10">
               <div className="relative flex items-center justify-center w-full z-10">
                 {TABS.map((tab) => (
@@ -264,7 +239,7 @@ const App: React.FC = () => {
                 ))}
               </div>
 
-              <motion.div
+              <MotionDiv
                 layout="position"
                 className="absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-6px)] z-20 pointer-events-none overflow-hidden rounded-full border border-white/20 bg-white/10"
                 initial={false}
