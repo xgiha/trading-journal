@@ -1,9 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { 
-  LayoutGrid, 
-  BookOpen, 
-  Plus
-} from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { LayoutGrid, BookOpen, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import EnergyChart from './components/EnergyChart';
@@ -17,7 +13,6 @@ import { ActivityDropdown } from './components/ActivityDropdown';
 import TradeStats from './components/TradeStats';
 import { Trade, ActivityLog } from './types';
 
-// Cast motion elements to any to bypass environment-specific type definition issues
 const MotionDiv = motion.div as any;
 
 const TABS = [
@@ -32,7 +27,7 @@ const App: React.FC = () => {
 
   const addActivity = useCallback((type: ActivityLog['type'], title: string, description: string) => {
     const newLog: ActivityLog = {
-      id: `act-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `act-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       type,
       title,
       description,
@@ -58,18 +53,6 @@ const App: React.FC = () => {
       { id: '2', date: '2025-02-02', pair: 'EUR/USD', pnl: -120, entryTime: '14:15:00', exitTime: '14:45:00', type: 'Short', entryPrice: 1.0850, exitPrice: 1.0865, size: '1.5', fee: 5, strategy: 'Fair Value Gap', notes: 'Got nervous and exited early.' },
     ];
   });
-
-  const syncToCloud = useCallback(async (newTrades: Trade[]) => {
-      try {
-          await fetch('/api/trades', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newTrades)
-          });
-      } catch (err) {
-          console.error("Failed to sync trades to cloud", err);
-      }
-  }, []);
 
   useEffect(() => {
     localStorage.setItem('nexus_trades', JSON.stringify(trades));
@@ -113,11 +96,9 @@ const App: React.FC = () => {
       if (trade) {
         addActivity('delete', 'Trade Deleted', `${trade.pair} ${trade.type} position removed.`);
       }
-      const updated = prev.filter(t => t.id !== tradeId);
-      syncToCloud(updated);
-      return updated;
+      return prev.filter(t => t.id !== tradeId);
     });
-  }, [syncToCloud, addActivity]);
+  }, [addActivity]);
 
   const handleViewDayClick = useCallback((date: string) => { 
     setSelectedDate(date); 
@@ -141,69 +122,74 @@ const App: React.FC = () => {
       }
       let newTrades = existingIndex >= 0 ? [...prev] : [...prev, tradeData];
       if (existingIndex >= 0) newTrades[existingIndex] = tradeData;
-      syncToCloud(newTrades);
       return newTrades;
     });
-  }, [syncToCloud, addActivity]);
-
-  const handleTabChange = useCallback((tabId: string) => { 
-    setActiveTab(tabId); 
-  }, []);
+  }, [addActivity]);
 
   const activeIndex = TABS.findIndex(t => t.id === activeTab);
 
   return (
-    <div className="min-h-screen lg:h-screen w-full relative flex items-center justify-center p-2 md:p-4 lg:p-6 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black bg-black">
-      <div className="w-[98vw] h-auto lg:h-full bg-[#141414] border border-white/10 rounded-2xl md:rounded-3xl lg:rounded-[3rem] relative overflow-hidden flex flex-col p-3 md:p-6 lg:p-10 pb-6 lg:pb-10 transition-all duration-500 shadow-2xl">
+    <div className="h-screen w-screen relative flex items-center justify-center p-4 lg:p-6 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black">
+      <div className="w-full h-full glass-card rounded-[2.5rem] lg:rounded-[3.5rem] relative overflow-hidden flex flex-col p-4 lg:p-10 transition-all duration-500 shadow-2xl">
         
         <AnimatePresence mode="wait">
             <MotionDiv 
               key="dashboard-grid"
-              initial={{ opacity: 0, scale: 0.99 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.99 }}
-              transition={{ duration: 0.2 }}
-              className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[484px_1fr_484px] gap-4 md:gap-6 z-10 items-start h-full"
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.3, ease: "circOut" }}
+              className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[460px_1fr_460px] gap-6 z-10 items-stretch h-full"
             >
               {/* LEFT WING */}
-              <div className="flex h-full min-h-0 order-2 lg:order-none w-full overflow-hidden gap-6">
-                <div className="flex flex-col h-full min-h-0 w-[220px] shrink-0">
-                  <div className="flex-1 flex flex-col gap-4 overflow-hidden pr-1 pb-4 h-full">
-                    <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                    <div className="flex-1 flex flex-col gap-4 min-h-0">
-                      <VoiceChat 
-                        isOpen={expandedSidebarCard === 'voice'} 
-                        onToggle={() => toggleSidebar('voice')} 
-                      />
-                      <ActivityDropdown 
-                        logs={activityLogs} 
-                        isOpen={expandedSidebarCard === 'activity'} 
-                        onToggle={() => toggleSidebar('activity')} 
-                      />
-                    </div>
+              <div className="flex flex-row h-full overflow-hidden gap-6">
+                <div className="flex flex-col gap-4 w-[220px] shrink-0">
+                  <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+                  <div className="flex-1 flex flex-col gap-4 min-h-0">
+                    <VoiceChat 
+                      isOpen={expandedSidebarCard === 'voice'} 
+                      onToggle={() => toggleSidebar('voice')} 
+                    />
+                    <ActivityDropdown 
+                      logs={activityLogs} 
+                      isOpen={expandedSidebarCard === 'activity'} 
+                      onToggle={() => toggleSidebar('activity')} 
+                    />
                   </div>
                 </div>
-                <div className="hidden lg:flex flex-col gap-4 items-stretch w-[240px] shrink-0 h-full justify-start overflow-hidden">
+                <div className="hidden lg:flex flex-col gap-4 w-[220px] shrink-0">
                   <TradeStats trades={trades} />
                 </div>
               </div>
 
               {/* CENTER AREA */}
-              <div className="relative flex flex-col items-center h-[700px] lg:h-full lg:min-h-0 order-1 lg:order-none w-full max-w-[800px] mx-auto shrink-0 pb-24">
-                <div className="w-full h-full min-0 relative overflow-hidden">
+              <div className="relative flex flex-col items-center h-full min-h-0 w-full shrink-0 pb-20">
+                <div className="w-full h-full relative">
                   <AnimatePresence mode="wait" initial={false}>
                     <MotionDiv
                       key={activeTab}
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
                       className="absolute inset-0 w-full h-full flex flex-col"
                     >
                       {activeTab === 'dashboard' ? (
-                        <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />
+                        <TradingCalendar 
+                          trades={trades} 
+                          currentDate={currentCalendarDate} 
+                          onMonthChange={setCurrentCalendarDate} 
+                          onAddTradeClick={handleAddTradeClick} 
+                          onViewDayClick={handleViewDayClick} 
+                          onViewWeekClick={handleViewWeekClick} 
+                        />
                       ) : (
-                        <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} />
+                        <JournalTable 
+                          trades={trades} 
+                          onEdit={handleEditTrade} 
+                          onDelete={handleDeleteTrade} 
+                          onViewDay={handleViewDayClick} 
+                        />
                       )}
                     </MotionDiv>
                   </AnimatePresence>
@@ -211,59 +197,71 @@ const App: React.FC = () => {
               </div>
 
               {/* RIGHT WING */}
-              <div className="flex flex-col h-full order-3 lg:order-none w-[484px] shrink-0 overflow-hidden gap-6">
-                <div className="flex-1 min-0">
+              <div className="flex flex-col h-full w-full max-w-[460px] gap-6 overflow-hidden">
+                <div className="flex-1 min-h-0">
                     <InsightCard trades={trades} />
                 </div>
-                <div className="flex-1 min-0">
+                <div className="flex-1 min-h-0">
                     <EnergyChart trades={trades} stats={globalStats} />
                 </div>
               </div>
             </MotionDiv>
         </AnimatePresence>
 
-        {/* NAVIGATION DOCK AREA */}
-        <div className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none">
-          <div className="flex items-center gap-6 pointer-events-auto px-6 py-3 rounded-full">
-            <div className="relative p-1.5 rounded-full flex items-center justify-center overflow-hidden w-[280px] bg-white/5 border border-white/10">
-              <div className="relative flex items-center justify-center w-full z-10">
+        {/* NAVIGATION DOCK */}
+        <div className="absolute bottom-8 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none">
+          <div className="flex items-center gap-4 pointer-events-auto px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
+            <div className="relative p-1 rounded-full flex items-center bg-white/5 border border-white/5 w-[260px]">
                 {TABS.map((tab) => (
                   <button
-                    key={`bg-${tab.id}`}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`flex-1 py-3 rounded-full flex items-center justify-center gap-2 transition-colors duration-200 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-nexus-muted'}`}
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 py-2.5 rounded-full flex items-center justify-center gap-2 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-nexus-muted hover:text-white/60'}`}
                   >
-                    <tab.icon size={18} className="shrink-0" />
-                    <span className="text-sm font-medium tracking-tight">{tab.label}</span>
+                    <tab.icon size={16} />
+                    <span className="text-xs font-semibold tracking-wide">{tab.label}</span>
                   </button>
                 ))}
-              </div>
-
-              <MotionDiv
-                layout="position"
-                className="absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-6px)] z-20 pointer-events-none overflow-hidden rounded-full border border-white/20 bg-white/10"
-                initial={false}
-                animate={{ x: `${activeIndex * 100}%` }}
-                transition={{ type: "spring", stiffness: 450, damping: 38 }}
-              />
+                <MotionDiv
+                  layoutId="active-tab-pill"
+                  className="absolute inset-y-1 w-[calc(50%-4px)] z-0 rounded-full bg-white/10 border border-white/10"
+                  initial={false}
+                  animate={{ x: activeIndex === 1 ? '100%' : '0%' }}
+                  transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                />
             </div>
 
             <button 
               onClick={handleAddTradeBtnClick}
-              className="relative rounded-full flex items-center justify-center gap-2 text-nexus-muted transition-all active:scale-95 duration-100 group px-8 py-4 overflow-hidden whitespace-nowrap bg-white/5 border border-white/10"
+              className="bg-nexus-accent text-black px-6 py-3.5 rounded-full flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-[0_0_20px_rgba(255,166,0,0.2)]"
             >
-              <Plus size={20} className="shrink-0 z-10" />
-              <span className="text-sm font-bold uppercase tracking-widest shrink-0 z-10">Add Trade</span>
+              <Plus size={18} />
+              <span className="text-xs font-bold uppercase tracking-widest">Add Trade</span>
             </button>
           </div>
         </div>
 
         <AnimatePresence>
           {isAddModalOpen && (
-            <AddTradeModal key={editingTrade ? editingTrade.id : 'add-trade'} isOpen={true} onClose={() => setIsAddModalOpen(false)} date={selectedDate} onAdd={handleAddOrUpdateTrade} initialData={editingTrade} />
+            <AddTradeModal 
+              key={editingTrade ? editingTrade.id : 'add-trade'} 
+              isOpen={true} 
+              onClose={() => setIsAddModalOpen(false)} 
+              date={selectedDate} 
+              onAdd={handleAddOrUpdateTrade} 
+              initialData={editingTrade} 
+            />
           )}
-          {isDetailModalOpen && selectedDate && (
-            <DayDetailsModal key="day-details" isOpen={true} onClose={() => setIsDetailModalOpen(false)} date={selectedDate} trades={selectedTrades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onAddTrade={() => { setIsDetailModalOpen(false); setEditingTrade(undefined); setTimeout(() => setIsAddModalOpen(true), 200); }} />
+          {isDetailModalOpen && (
+            <DayDetailsModal 
+              isOpen={true} 
+              onClose={() => setIsDetailModalOpen(false)} 
+              date={selectedDate} 
+              trades={selectedTrades} 
+              onEdit={handleEditTrade} 
+              onDelete={handleDeleteTrade} 
+              onAddTrade={() => { setIsDetailModalOpen(false); handleAddTradeBtnClick(); }} 
+            />
           )}
         </AnimatePresence>
       </div>
