@@ -143,7 +143,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
   };
 
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 bg-white/[0.03] rounded-[2.5rem] relative overflow-hidden">
+    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 bg-white/[0.03] rounded-[25px] relative overflow-hidden">
       <div className="flex items-center justify-between shrink-0 w-full px-2 z-10">
          <div className="flex items-center gap-4 bg-white/5 rounded-full px-4 py-1.5">
             <div className="flex gap-2">

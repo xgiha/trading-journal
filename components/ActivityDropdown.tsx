@@ -36,7 +36,7 @@ export function ActivityDropdownComponent({ logs, isOpen, onToggle }: ActivityDr
   return (
     <div
       className={cn(
-        "w-full max-w-[220px] overflow-hidden cursor-pointer select-none relative bg-white/[0.03] transition-all duration-300 flex flex-col min-h-0",
+        "w-[218px] shrink-0 overflow-hidden cursor-pointer select-none relative bg-white/[0.03] transition-all duration-300 flex flex-col min-h-0",
         isOpen ? "rounded-[25px] flex-1" : "rounded-[2rem] h-[56px]",
       )}
       onClick={() => !isOpen && onToggle()}

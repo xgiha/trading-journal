@@ -25,7 +25,7 @@ const TotalPnlCardComponent: React.FC<TotalPnlCardProps> = ({ totalPnl, growthPc
   return (
     <div className="relative w-full aspect-square group">
       <div
-        className="absolute inset-0 bg-white/[0.03] rounded-[2.5rem] flex flex-col items-center justify-center overflow-hidden transition-all duration-500"
+        className="absolute inset-0 bg-white/[0.03] rounded-[25px] flex flex-col items-center justify-center overflow-hidden transition-all duration-500"
       >
         <div className="flex flex-col items-center z-10">
           <div className="flex items-start gap-1">

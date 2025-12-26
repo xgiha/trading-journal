@@ -179,7 +179,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
   const groupedTrades = useMemo(() => groupTradesByDate(currentTrades), [currentTrades]);
 
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] rounded-[2.5rem] relative overflow-hidden">
+    <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] rounded-[25px] relative overflow-hidden">
       <div className="shrink-0 flex flex-col gap-5 mb-4 z-10">
         <div className="flex justify-between items-center px-2">
             <h2 className="text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>

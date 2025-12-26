@@ -21,7 +21,7 @@ const participants: Participant[] = [
   { id: "7", name: "Afshin", avatar: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/attachments/gen-images/public/man-with-sunglasses-red-shirt-blue-background-KvK2BMFg07EE8rLsTSQ8891UfCcSIV.jpg" },
 ];
 
-const COLLAPSED_WIDTH = 220; 
+const COLLAPSED_WIDTH = 218; 
 const COLLAPSED_HEIGHT = 56;
 const EXPANDED_HEIGHT = 380;
 const AVATAR_SIZE_COLLAPSED = 34;

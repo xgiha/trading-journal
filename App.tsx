@@ -131,7 +131,7 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black">
-      <div className="w-full h-full glass-card rounded-[1.5rem] lg:rounded-[2.5rem] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
+      <div className="w-full h-full glass-card rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
         
         <AnimatePresence mode="wait">
             <MotionDiv 
@@ -140,11 +140,11 @@ const App: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.99 }}
               transition={{ duration: 0.4, ease: "circOut" }}
-              className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[460px_1fr_460px] gap-4 lg:gap-6 z-10 items-stretch h-full"
+              className="flex-1 min-h-0 flex flex-row gap-4 lg:gap-6 z-10 items-stretch h-full w-full"
             >
-              {/* LEFT WING */}
-              <div className="flex flex-row h-full overflow-hidden gap-4 lg:gap-6">
-                <div className="flex flex-col gap-4 w-[220px] shrink-0">
+              {/* LEFT WING - FIXED WIDTH TO STOP JUMPS */}
+              <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
+                <div className="flex flex-col gap-4 w-[218px] shrink-0">
                   <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
                   <div className="flex-1 flex flex-col gap-4 min-h-0">
                     <VoiceChat 
@@ -158,13 +158,13 @@ const App: React.FC = () => {
                     />
                   </div>
                 </div>
-                <div className="hidden lg:flex flex-col gap-4 w-[220px] shrink-0">
+                <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0">
                   <TradeStats trades={trades} />
                 </div>
               </div>
 
-              {/* CENTER AREA */}
-              <div className="relative flex flex-col items-center h-full min-h-0 w-full shrink-0 pb-20">
+              {/* CENTER AREA - FLEX-1 TO FILL REMAINING SPACE */}
+              <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-20">
                 <div className="w-full h-full relative">
                   <AnimatePresence mode="wait" initial={false}>
                     <MotionDiv
@@ -197,8 +197,8 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* RIGHT WING */}
-              <div className="flex flex-col h-full w-full max-w-[460px] gap-4 lg:gap-6 overflow-hidden">
+              {/* RIGHT WING - FIXED WIDTH TO STOP JUMPS */}
+              <div className="flex flex-col h-full w-[460px] shrink-0 gap-4 lg:gap-6">
                 <div className="flex-1 min-h-0">
                     <InsightCard trades={trades} />
                 </div>
