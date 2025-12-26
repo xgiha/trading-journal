@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { LayoutGrid, BookOpen, Plus, Cloud, CloudOff, RefreshCw } from 'lucide-react';
+import { LayoutGrid, BookOpen, Plus, Cloud, CloudOff, RefreshCw, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import EnergyChart from './components/EnergyChart';
@@ -21,7 +21,7 @@ const TABS = [
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error'>('synced');
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -42,10 +42,12 @@ const App: React.FC = () => {
             if (saved) setTrades(JSON.parse(saved));
           }
         }
-        setSyncStatus('synced');
+        setSyncStatus('success');
+        setTimeout(() => setSyncStatus('idle'), 2000);
       } catch (e) {
         console.error("Failed to sync with cloud", e);
         setSyncStatus('error');
+        setTimeout(() => setSyncStatus('idle'), 3000);
         // Final fallback
         const saved = localStorage.getItem('nexus_trades');
         if (saved) setTrades(JSON.parse(saved));
@@ -72,10 +74,12 @@ const App: React.FC = () => {
           body: JSON.stringify(trades),
         });
         if (!response.ok) throw new Error('Sync failed');
-        setSyncStatus('synced');
+        setSyncStatus('success');
+        setTimeout(() => setSyncStatus('idle'), 2000);
       } catch (e) {
         console.error("Cloud sync failed", e);
         setSyncStatus('error');
+        setTimeout(() => setSyncStatus('idle'), 3000);
       }
     };
 
@@ -146,15 +150,25 @@ const App: React.FC = () => {
     <div className="h-screen w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black">
       <div className="w-full h-full glass-card rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
         
-        {/* Sync Status Header */}
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-            {syncStatus === 'syncing' && <RefreshCw size={10} className="text-nexus-accent animate-spin" />}
-            {syncStatus === 'synced' && <Cloud size={10} className="text-emerald-400" />}
-            {syncStatus === 'error' && <CloudOff size={10} className="text-red-400" />}
-            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-white/40">
-                {syncStatus === 'syncing' ? 'Syncing...' : syncStatus === 'error' ? 'Sync Error' : 'Cloud Protected'}
-            </span>
-        </div>
+        {/* Sync Status Header - Sliding Animation */}
+        <AnimatePresence>
+          {syncStatus !== 'idle' && (
+            <MotionDiv
+              initial={{ y: -60, x: '-50%', opacity: 0 }}
+              animate={{ y: 0, x: '-50%', opacity: 1 }}
+              exit={{ y: -60, x: '-50%', opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="absolute top-6 left-1/2 z-[100] flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-lg"
+            >
+                {syncStatus === 'syncing' && <RefreshCw size={10} className="text-nexus-accent animate-spin" />}
+                {syncStatus === 'success' && <Check size={10} className="text-emerald-400" />}
+                {syncStatus === 'error' && <CloudOff size={10} className="text-red-400" />}
+                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-white/70">
+                    {syncStatus === 'syncing' ? 'Journal Syncing' : syncStatus === 'error' ? 'Sync Error' : 'Success'}
+                </span>
+            </MotionDiv>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence mode="wait">
             {isInitialLoading ? (
