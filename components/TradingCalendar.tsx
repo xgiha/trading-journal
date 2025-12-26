@@ -86,7 +86,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
         >
           {isDay && (
             <>
-              <span className={`text-[10px] md:text-xs font-semibold ${dayTradeCount > 0 ? 'text-nexus-muted' : 'text-nexus-muted/40'}`}>{dayNum}</span>
+              <span className={`text-[10px] md:text-xs font-semibold ${dayTradeCount > 0 ? 'text-xgiha-muted' : 'text-xgiha-muted/40'}`}>{dayNum}</span>
               {dayTradeCount > 0 ? (
                 <div className="flex flex-col items-center justify-center flex-1">
                   <span className={`text-xs md:text-sm lg:text-base font-bold tracking-tight ${dayPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -95,7 +95,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                 </div>
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-nexus-accent text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform">
+                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-xgiha-accent text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform">
                       <Plus size={14} />
                    </div>
                 </div>
@@ -147,10 +147,10 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
       <div className="flex items-center justify-between shrink-0 w-full px-2 z-10">
          <div className="flex items-center gap-4 bg-white/5 rounded-full px-4 py-1.5">
             <div className="flex gap-2">
-                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="text-nexus-muted hover:text-white transition-colors">
+                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="text-xgiha-muted hover:text-white transition-colors">
                     <ChevronLeft size={16} />
                 </button>
-                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="text-nexus-muted hover:text-white transition-colors">
+                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="text-xgiha-muted hover:text-white transition-colors">
                     <ChevronRight size={16} />
                 </button>
             </div>
@@ -163,20 +163,20 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                <span className={`text-[12px] font-bold font-mono ${monthlyStats.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {monthlyStats.totalPnl >= 0 ? '+' : ''}{formatCurrency(monthlyStats.totalPnl)}
                </span>
-               <span className="text-[9px] uppercase tracking-widest text-nexus-muted font-bold opacity-60">P&L</span>
+               <span className="text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">P&L</span>
             </div>
             <div className="w-px h-3 bg-white/10"></div>
             <div className="flex items-center gap-2">
                <span className="text-[12px] font-bold text-white font-mono">{monthlyStats.winRate.toFixed(0)}%</span>
-               <span className="text-[9px] uppercase tracking-widest text-nexus-muted font-bold opacity-60">Win Rate</span>
+               <span className="text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">Win Rate</span>
             </div>
          </div>
       </div>
 
       <div className="flex-1 flex flex-col min-h-0 z-10">
         <div className="grid grid-cols-7 md:grid-cols-8 gap-2 mb-3 shrink-0 px-2">
-            {WEEKDAYS.map(d => <div key={d} className="text-center text-[10px] uppercase tracking-[0.2em] text-nexus-muted font-bold opacity-40">{d}</div>)}
-            <div className="hidden md:block text-center text-[10px] uppercase tracking-[0.2em] text-nexus-accent font-bold opacity-80">Total</div>
+            {WEEKDAYS.map(d => <div key={d} className="text-center text-[10px] uppercase tracking-[0.2em] text-xgiha-muted font-bold opacity-40">{d}</div>)}
+            <div className="hidden md:block text-center text-[10px] uppercase tracking-[0.2em] text-xgiha-accent font-bold opacity-80">Total</div>
         </div>
         <div className="grid grid-cols-7 md:grid-cols-8 gap-2 flex-1 auto-rows-min overflow-y-auto custom-scrollbar px-2 content-start pb-4">
             {renderCalendarDays()}

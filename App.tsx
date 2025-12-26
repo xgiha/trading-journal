@@ -39,7 +39,7 @@ const App: React.FC = () => {
             setTrades(cloudTrades);
           } else {
             // Fallback to local if cloud is empty
-            const saved = localStorage.getItem('nexus_trades');
+            const saved = localStorage.getItem('xgiha_trades');
             if (saved) setTrades(JSON.parse(saved));
           }
         }
@@ -50,7 +50,7 @@ const App: React.FC = () => {
         setSyncStatus('error');
         setTimeout(() => setSyncStatus('idle'), 3000);
         // Final fallback
-        const saved = localStorage.getItem('nexus_trades');
+        const saved = localStorage.getItem('xgiha_trades');
         if (saved) setTrades(JSON.parse(saved));
       } finally {
         setIsInitialLoading(false);
@@ -65,7 +65,7 @@ const App: React.FC = () => {
 
     const syncTrades = async () => {
       // Save locally first for speed
-      localStorage.setItem('nexus_trades', JSON.stringify(trades));
+      localStorage.setItem('xgiha_trades', JSON.stringify(trades));
 
       try {
         setSyncStatus('syncing');
@@ -150,7 +150,7 @@ const App: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `nexus-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `xgiha-backup-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -166,7 +166,7 @@ const App: React.FC = () => {
   const activeIndex = TABS.findIndex(t => t.id === activeTab);
 
   return (
-    <div className="h-screen w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black">
+    <div className="h-screen w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black">
       <div className="w-full h-full glass-card rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
         
         {/* Sync Status Header - Sliding Animation */}
@@ -179,7 +179,7 @@ const App: React.FC = () => {
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="absolute top-6 left-1/2 z-[100] flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-lg"
             >
-                {syncStatus === 'syncing' && <RefreshCw size={10} className="text-nexus-accent animate-spin" />}
+                {syncStatus === 'syncing' && <RefreshCw size={10} className="text-xgiha-accent animate-spin" />}
                 {syncStatus === 'success' && <Check size={10} className="text-emerald-400" />}
                 {syncStatus === 'error' && <CloudOff size={10} className="text-red-400" />}
                 <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-white/70">
@@ -199,7 +199,7 @@ const App: React.FC = () => {
                   className="flex-1 flex flex-col items-center justify-center gap-4"
                >
                   <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin" />
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-nexus-muted">Initializing Nexus Core</span>
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-xgiha-muted">Initializing xgiha Core</span>
                </MotionDiv>
             ) : (
               <MotionDiv 
@@ -280,7 +280,7 @@ const App: React.FC = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-nexus-muted hover:text-white/60'}`}
+                    className={`flex-1 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-xgiha-muted hover:text-white/60'}`}
                   >
                     <tab.icon size={14} />
                     <span className="text-[10px] font-semibold tracking-wide">{tab.label}</span>

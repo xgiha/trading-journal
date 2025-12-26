@@ -72,7 +72,7 @@ const WeeklyChart: React.FC<WeeklyChartProps> = ({ trades, stats, className }) =
       <div className="flex items-center justify-between z-30 shrink-0 mb-4">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" />
-          <span className="text-[11px] font-bold text-nexus-muted tracking-[0.2em] uppercase">Weekly Chart</span>
+          <span className="text-[11px] font-bold text-xgiha-muted tracking-[0.2em] uppercase">Weekly Chart</span>
         </div>
         <div className="relative h-7 flex items-baseline">
           <span
@@ -82,7 +82,7 @@ const WeeklyChart: React.FC<WeeklyChartProps> = ({ trades, stats, className }) =
           >
             {isPositiveValue ? '+' : '-'}${Math.abs(headerValue).toLocaleString()}
           </span>
-          <span className="text-[9px] font-bold text-nexus-muted/40 uppercase tracking-widest ml-1.5">
+          <span className="text-[9px] font-bold text-xgiha-muted/40 uppercase tracking-widest ml-1.5">
             EQUITY
           </span>
         </div>
@@ -127,7 +127,7 @@ const WeeklyChart: React.FC<WeeklyChartProps> = ({ trades, stats, className }) =
               <span
                 className={cn(
                   "text-[10px] font-bold mt-3 transition-all duration-300 uppercase tracking-widest",
-                  isHovered ? "text-white" : "text-nexus-muted/40",
+                  isHovered ? "text-white" : "text-xgiha-muted/40",
                 )}
               >
                 {item.label.charAt(0)}

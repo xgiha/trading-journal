@@ -38,11 +38,11 @@ const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className })
       <div className="flex items-center justify-between z-30 shrink-0 mb-4">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" />
-          <span className="text-[11px] font-bold text-nexus-muted tracking-[0.2em] uppercase">Growth Chart</span>
+          <span className="text-[11px] font-bold text-xgiha-muted tracking-[0.2em] uppercase">Growth Chart</span>
         </div>
         <div className="flex items-baseline gap-1">
           <span className="text-2xl font-bold tabular-nums text-white">${Math.abs(currentPnl).toLocaleString()}</span>
-          <span className="text-[10px] font-bold text-nexus-muted opacity-60 uppercase tracking-widest">Equity</span>
+          <span className="text-[10px] font-bold text-xgiha-muted opacity-60 uppercase tracking-widest">Equity</span>
         </div>
       </div>
 

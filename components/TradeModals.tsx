@@ -157,7 +157,7 @@ const CustomDatePicker = ({ selectedDate, onChange }: { selectedDate: string, on
                             className={`
                                 h-8 w-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all
                                 ${selected 
-                                    ? 'bg-nexus-accent text-white shadow-lg shadow-nexus-accent/20 font-bold' 
+                                    ? 'bg-xgiha-accent text-white shadow-lg shadow-xgiha-accent/20 font-bold' 
                                     : 'text-[#ccc] hover:bg-white/5 hover:text-white'
                                 }
                             `}
@@ -255,7 +255,7 @@ const ScrollableTimeInput = ({
             </div>
             
             <div 
-                className={`flex items-center justify-between bg-[#141414] rounded-xl p-1 h-[38px] cursor-pointer transition-colors ${isOpen ? 'ring-1 ring-nexus-accent' : 'hover:bg-white/[0.02]'}`}
+                className={`flex items-center justify-between bg-[#141414] rounded-xl p-1 h-[38px] cursor-pointer transition-colors ${isOpen ? 'ring-1 ring-xgiha-accent' : 'hover:bg-white/[0.02]'}`}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <div className="flex-1 text-center text-xs font-mono text-white">{h}</div>
@@ -339,7 +339,7 @@ const NoteZoomOverlay = ({ content, onClose }: { content: string, onClose: () =>
                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
                 <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5 sticky top-0 bg-[#141414] z-10 -mt-2 pt-2">
-                     <FileText size={18} className="text-nexus-accent" />
+                     <FileText size={18} className="text-xgiha-accent" />
                      <h3 className="text-base font-bold text-white uppercase tracking-widest">Trade Note</h3>
                 </div>
                 <div className="text-[#e4e4e7] text-base leading-relaxed whitespace-pre-wrap font-sans break-words">
@@ -548,7 +548,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 custom-scrollbar pb-24 relative">
           <form id="entry-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 relative">
             
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
                  <label htmlFor="symbol" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <Type size={10} /> Symbol
                  </label>
@@ -563,7 +563,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                  />
             </div>
 
-             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
+             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <DollarSign size={10} /> Net P&L
                  </label>
@@ -614,7 +614,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                 </button>
             </div>
 
-            <div className="col-span-2 relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
+            <div className="col-span-2 relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
                  <label htmlFor="strategy" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <Target size={10} /> Strategy
                  </label>
@@ -628,7 +628,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                  />
             </div>
 
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <Hash size={10} /> Lots
                   </label>
@@ -641,7 +641,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                   />
             </div>
 
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <DollarSign size={10} /> Fees
                   </label>
@@ -695,7 +695,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                  </div>
             </div>
 
-             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
+             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider">Entry Price</label>
                   <input 
                     type="text" 
@@ -706,7 +706,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                   />
             </div>
 
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider">Exit Price</label>
                   <input 
                     type="text" 
@@ -772,7 +772,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                      
                      <div 
                          onClick={() => !isUploading && fileInputRef.current?.click()}
-                         className={`w-10 h-10 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center transition-colors shrink-0 bg-white/[0.02] ${isUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-white hover:border-nexus-accent text-[#666]'}`}
+                         className={`w-10 h-10 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center transition-colors shrink-0 bg-white/[0.02] ${isUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-white hover:border-xgiha-accent text-[#666]'}`}
                          title="Add Image"
                      >
                          {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
@@ -948,7 +948,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                                              <div className="flex flex-col">
                                                  <span className="text-white font-mono font-bold text-sm">{trade.pair}</span>
                                                  {trade.strategy && (
-                                                     <span className="text-[8px] text-nexus-accent font-bold uppercase tracking-wider">{trade.strategy}</span>
+                                                     <span className="text-[8px] text-xgiha-accent font-bold uppercase tracking-wider">{trade.strategy}</span>
                                                  )}
                                              </div>
                                              <span className={`font-mono font-bold text-sm ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
@@ -996,7 +996,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                                                     e.stopPropagation();
                                                     setViewingNote(trade.notes || '');
                                                 }}
-                                                className="ml-1 text-nexus-accent hover:text-white text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-0.5 cursor-pointer"
+                                                className="ml-1 text-xgiha-accent hover:text-white text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-0.5 cursor-pointer"
                                              >
                                                  Read More
                                              </button>
@@ -1027,7 +1027,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#141414] to-transparent pt-10 pointer-events-none flex justify-center">
                  <button
                     onClick={onAddTrade}
-                    className="pointer-events-auto flex items-center gap-2 bg-nexus-accent text-black px-6 py-3 rounded-full font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                    className="pointer-events-auto flex items-center gap-2 bg-xgiha-accent text-black px-6 py-3 rounded-full font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                  >
                      <Plus size={16} /> Add Trade
                  </button>

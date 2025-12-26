@@ -17,7 +17,7 @@ const StatCard: React.FC<{ title: string; children?: React.ReactNode; className?
     <div className="relative z-30 flex flex-col h-full">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
-        <span className="text-[10px] font-bold text-nexus-muted tracking-[0.2em] uppercase">{title}</span>
+        <span className="text-[10px] font-bold text-xgiha-muted tracking-[0.2em] uppercase">{title}</span>
       </div>
       {children}
     </div>
@@ -90,14 +90,14 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                  <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400"><TrendingUp size={14} /></div>
-                 <span className="text-[11px] font-bold text-nexus-muted uppercase">Avg Win</span>
+                 <span className="text-[11px] font-bold text-xgiha-muted uppercase">Avg Win</span>
               </div>
               <span className="font-pixel text-emerald-400 text-sm">${stats.avgWin.toFixed(0)}</span>
            </div>
            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                  <div className="p-2 rounded-lg bg-red-500/10 text-red-400"><TrendingDown size={14} /></div>
-                 <span className="text-[11px] font-bold text-nexus-muted uppercase">Avg Loss</span>
+                 <span className="text-[11px] font-bold text-xgiha-muted uppercase">Avg Loss</span>
               </div>
               <span className="font-pixel text-red-400 text-sm">-${Math.abs(stats.avgLoss).toFixed(0)}</span>
            </div>
@@ -113,14 +113,14 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
         <div className="flex flex-col gap-3">
            <div className="flex justify-between items-end">
               <div className="flex flex-col">
-                 <span className="text-[9px] font-bold text-nexus-muted/40 uppercase tracking-widest mb-1">Best Day</span>
+                 <span className="text-[9px] font-bold text-xgiha-muted/40 uppercase tracking-widest mb-1">Best Day</span>
                  <span className="text-[10px] font-bold text-white uppercase">{stats.mostProfitableDay?.[0]}</span>
               </div>
               <span className="text-sm font-pixel text-emerald-400">+${stats.mostProfitableDay?.[1].toFixed(0)}</span>
            </div>
            <div className="flex justify-between items-end">
               <div className="flex flex-col">
-                 <span className="text-[9px] font-bold text-nexus-muted/40 uppercase tracking-widest mb-1">Worst Day</span>
+                 <span className="text-[9px] font-bold text-xgiha-muted/40 uppercase tracking-widest mb-1">Worst Day</span>
                  <span className="text-[10px] font-bold text-white uppercase">{stats.leastProfitableDay?.[0]}</span>
               </div>
               <span className="text-sm font-pixel text-red-400">-${Math.abs(stats.leastProfitableDay?.[1] || 0).toFixed(0)}</span>
@@ -132,8 +132,8 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
         <div className="flex flex-col gap-4">
            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
-                 <Target size={12} className="text-nexus-accent" />
-                 <span className="text-[9px] font-bold text-nexus-muted uppercase tracking-widest">Top Strategy</span>
+                 <Target size={12} className="text-xgiha-accent" />
+                 <span className="text-[9px] font-bold text-xgiha-muted uppercase tracking-widest">Top Strategy</span>
               </div>
               <div className="flex justify-between items-center bg-white/5 rounded-xl px-3 py-2">
                  <span className="text-[10px] font-bold text-white truncate max-w-[100px]">{stats.mostProfitableStrategy?.[0]}</span>
@@ -143,11 +143,11 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                  <Zap size={12} className="text-yellow-500" />
-                 <span className="text-[9px] font-bold text-nexus-muted uppercase tracking-widest">Volume Leader</span>
+                 <span className="text-[9px] font-bold text-xgiha-muted uppercase tracking-widest">Volume Leader</span>
               </div>
               <div className="flex justify-between items-center bg-white/5 rounded-xl px-3 py-2">
                  <span className="text-[10px] font-bold text-white truncate max-w-[100px]">{stats.mostUsedStrategy?.[0]}</span>
-                 <span className="text-[10px] font-bold text-nexus-accent">{stats.mostUsedStrategy?.[1]} Trades</span>
+                 <span className="text-[10px] font-bold text-xgiha-accent">{stats.mostUsedStrategy?.[1]} Trades</span>
               </div>
            </div>
         </div>

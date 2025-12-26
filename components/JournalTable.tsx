@@ -199,7 +199,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
           if (Array.isArray(data) && onImport) {
             onImport(data);
           } else {
-            alert("Invalid data format. Please provide a valid Nexus backup JSON.");
+            alert("Invalid data format. Please provide a valid xgiha backup JSON.");
           }
         } catch (error) {
           alert("Error parsing file. Ensure it is a valid JSON.");
@@ -226,14 +226,14 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
             <div className="flex gap-2">
                 <button 
                   onClick={handleImportClick}
-                  className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-nexus-muted hover:text-white transition-all flex items-center gap-2"
+                  className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"
                 >
                   <Upload size={12} />
                   Import
                 </button>
                 <button 
                   onClick={onExport}
-                  className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-nexus-muted hover:text-white transition-all flex items-center gap-2"
+                  className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"
                 >
                   <Download size={12} />
                   Export
@@ -274,7 +274,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
                   groupedTrades.map(([date, dateTrades]) => (
                     <div key={date} className="w-full">
                       <div className="mt-2 mb-3 pl-4">
-                          <span className="text-[12px] font-bold text-nexus-accent uppercase tracking-[0.3em] opacity-80">
+                          <span className="text-[12px] font-bold text-xgiha-accent uppercase tracking-[0.3em] opacity-80">
                               {getDateLabel(date)}
                           </span>
                       </div>
@@ -286,7 +286,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
                     </div>
                   ))
                 ) : (
-                  <div className="w-full h-40 flex flex-col items-center justify-center text-nexus-muted/20">
+                  <div className="w-full h-40 flex flex-col items-center justify-center text-xgiha-muted/20">
                     <span className="text-xs uppercase tracking-[0.2em] font-bold">No Entries Found</span>
                   </div>
                 )}
