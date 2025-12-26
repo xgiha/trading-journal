@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check } from 'lucide-react';
+import { LayoutGrid, BookOpen, Plus, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import EnergyChart from './components/EnergyChart';
@@ -21,26 +21,32 @@ const TABS = [
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error'>('synced');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+
   const [trades, setTrades] = useState<Trade[]>([]);
 
   // 1. Load data from Cloud on mount
   useEffect(() => {
     const initData = async () => {
       try {
+        setSyncStatus('syncing');
         const response = await fetch('/api/trades');
         if (response.ok) {
           const cloudTrades = await response.json();
           if (cloudTrades && Array.isArray(cloudTrades) && cloudTrades.length > 0) {
             setTrades(cloudTrades);
           } else {
+            // Fallback to local if cloud is empty
             const saved = localStorage.getItem('nexus_trades');
             if (saved) setTrades(JSON.parse(saved));
           }
         }
+        setSyncStatus('synced');
       } catch (e) {
-        console.error("Cloud fetch failed, using local fallback", e);
+        console.error("Failed to sync with cloud", e);
+        setSyncStatus('error');
+        // Final fallback
         const saved = localStorage.getItem('nexus_trades');
         if (saved) setTrades(JSON.parse(saved));
       } finally {
@@ -52,31 +58,28 @@ const App: React.FC = () => {
 
   // 2. Sync to Cloud and LocalStorage whenever trades change
   useEffect(() => {
-    if (isInitialLoading) return;
+    if (isInitialLoading) return; // Don't sync empty state over existing data
 
     const syncTrades = async () => {
+      // Save locally first for speed
       localStorage.setItem('nexus_trades', JSON.stringify(trades));
-      setSyncStatus('syncing');
 
       try {
+        setSyncStatus('syncing');
         const response = await fetch('/api/trades', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(trades),
         });
         if (!response.ok) throw new Error('Sync failed');
-        
-        // Success: Show Synced status then hide
-        setSyncStatus('success');
-        setTimeout(() => setSyncStatus('idle'), 2000);
+        setSyncStatus('synced');
       } catch (e) {
         console.error("Cloud sync failed", e);
         setSyncStatus('error');
-        setTimeout(() => setSyncStatus('idle'), 3000);
       }
     };
 
-    const timeout = setTimeout(syncTrades, 800);
+    const timeout = setTimeout(syncTrades, 1000); // Debounce sync
     return () => clearTimeout(timeout);
   }, [trades, isInitialLoading]);
 
@@ -143,29 +146,15 @@ const App: React.FC = () => {
     <div className="h-screen w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black">
       <div className="w-full h-full glass-card rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
         
-        {/* GLOBAL SYNC INDICATOR - Animated slide down from the very top */}
-        <AnimatePresence>
-            {(syncStatus !== 'idle' && !isInitialLoading) && (
-                <MotionDiv 
-                    initial={{ y: -60, x: '-50%', opacity: 0 }}
-                    animate={{ y: 0, x: '-50%', opacity: 1 }}
-                    exit={{ y: -60, x: '-50%', opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    className="absolute top-4 left-1/2 z-[100] flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl pointer-events-none"
-                >
-                    {syncStatus === 'syncing' ? (
-                        <RefreshCw size={11} className="text-nexus-accent animate-spin" />
-                    ) : syncStatus === 'success' ? (
-                        <Check size={11} className="text-emerald-400" />
-                    ) : (
-                        <CloudOff size={11} className="text-red-400" />
-                    )}
-                    <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/70">
-                        {syncStatus === 'syncing' ? 'Vault Syncing' : syncStatus === 'success' ? 'Synced' : 'Connection Error'}
-                    </span>
-                </MotionDiv>
-            )}
-        </AnimatePresence>
+        {/* Sync Status Header */}
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+            {syncStatus === 'syncing' && <RefreshCw size={10} className="text-nexus-accent animate-spin" />}
+            {syncStatus === 'synced' && <Cloud size={10} className="text-emerald-400" />}
+            {syncStatus === 'error' && <CloudOff size={10} className="text-red-400" />}
+            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-white/40">
+                {syncStatus === 'syncing' ? 'Syncing...' : syncStatus === 'error' ? 'Sync Error' : 'Cloud Protected'}
+            </span>
+        </div>
 
         <AnimatePresence mode="wait">
             {isInitialLoading ? (
@@ -177,7 +166,7 @@ const App: React.FC = () => {
                   className="flex-1 flex flex-col items-center justify-center gap-4"
                >
                   <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin" />
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-nexus-muted">Initializing Cloud Core</span>
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-nexus-muted">Initializing Nexus Core</span>
                </MotionDiv>
             ) : (
               <MotionDiv 
@@ -192,8 +181,9 @@ const App: React.FC = () => {
                 <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
                   <div className="flex flex-col gap-4 w-[218px] shrink-0">
                     <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+                    {/* SINGLE EMPTY CARD REPLACING VOICE AND ACTIVITIES */}
                     <div className="flex-1 min-h-0 bg-white/[0.03] rounded-[25px] transition-all duration-500">
-                      {/* Empty Placeholder Card */}
+                      {/* Placeholder for future content */}
                     </div>
                   </div>
                   <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0">
@@ -251,6 +241,7 @@ const App: React.FC = () => {
         {/* NAVIGATION DOCK */}
         <div className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none">
           <div className="flex items-center gap-6 pointer-events-auto">
+            {/* Tab Switcher */}
             <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md w-[260px] shadow-lg">
                 {TABS.map((tab) => (
                   <button
@@ -271,6 +262,7 @@ const App: React.FC = () => {
                 />
             </div>
 
+            {/* Add Trade Button */}
             <button 
               onClick={handleAddTradeBtnClick}
               className="bg-white text-black px-6 py-2.5 rounded-full flex items-center gap-2 active:scale-[0.95] transition-all duration-200 shadow-[0_0_25px_rgba(255,255,255,0.3)]"
