@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Nexus Trading Journal</title>
+    <title>Journal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -40,9 +41,6 @@
                 muted: '#a1a1aa',
               }
             },
-            backgroundImage: {
-              'gradient-mesh': 'radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,10%,1) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,10%,1) 0, transparent 50%)',
-            },
             animation: {
               'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             }
@@ -73,7 +71,6 @@
         background: rgba(22, 22, 22, 0.6);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .nexus-gradient-text {
@@ -111,7 +108,7 @@
 }
 </script>
 </head>
-  <body class="bg-gradient-mesh">
+  <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

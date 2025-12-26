@@ -1,3 +1,4 @@
+
 import React from "react"
 import { Bell, ChevronUp, Zap, Edit3, Trash2, ShieldCheck } from "lucide-react"
 import { ActivityLog } from "../types"
@@ -23,10 +24,10 @@ export function ActivityDropdownComponent({ logs, isOpen, onToggle }: ActivityDr
 
   const getIconStyles = (type: ActivityLog['type']) => {
     switch (type) {
-      case 'add': return "bg-emerald-500/20 text-emerald-400 border-emerald-500/20";
-      case 'edit': return "bg-blue-500/20 text-blue-400 border-blue-500/20";
-      case 'delete': return "bg-red-500/20 text-red-400 border-red-500/20";
-      default: return "bg-purple-500/20 text-purple-400 border-purple-500/20";
+      case 'add': return "bg-emerald-500/20 text-emerald-400";
+      case 'edit': return "bg-blue-500/20 text-blue-400";
+      case 'delete': return "bg-red-500/20 text-red-400";
+      default: return "bg-purple-500/20 text-purple-400";
     }
   };
 
@@ -35,14 +36,14 @@ export function ActivityDropdownComponent({ logs, isOpen, onToggle }: ActivityDr
   return (
     <div
       className={cn(
-        "w-full max-w-[220px] overflow-hidden cursor-pointer select-none relative bg-white/[0.03] border border-white/10 transition-all duration-300 flex flex-col min-h-0",
-        isOpen ? "rounded-3xl flex-1" : "rounded-[2rem] h-[56px]",
+        "w-full max-w-[220px] overflow-hidden cursor-pointer select-none relative bg-white/[0.03] transition-all duration-300 flex flex-col min-h-0",
+        isOpen ? "rounded-[25px] flex-1" : "rounded-[2rem] h-[56px]",
       )}
       onClick={() => !isOpen && onToggle()}
     >
       <div className="flex items-center gap-3 p-2 h-[56px] shrink-0 relative z-30">
         <div className="relative">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/5">
                 <Bell className="h-4 w-4 text-nexus-muted" />
             </div>
             {logs.length > 0 && (
@@ -59,7 +60,7 @@ export function ActivityDropdownComponent({ logs, isOpen, onToggle }: ActivityDr
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(); }}
-          className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 border border-white/10"
+          className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10"
         >
           <ChevronUp className={cn("h-3 w-3 text-white transition-transform duration-300", isOpen ? "rotate-0" : "rotate-180")} />
         </button>
@@ -78,8 +79,8 @@ export function ActivityDropdownComponent({ logs, isOpen, onToggle }: ActivityDr
               <div className="space-y-1">
                 {displayLogs.length > 0 ? (
                   displayLogs.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3 rounded-2xl p-2.5 hover:bg-white/5 border border-transparent hover:border-white/5">
-                      <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border", getIconStyles(activity.type))}>
+                    <div key={activity.id} className="flex items-start gap-3 rounded-2xl p-2.5 hover:bg-white/5 border border-transparent">
+                      <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-xl", getIconStyles(activity.type))}>
                         {getIcon(activity.type)}
                       </div>
                       <div className="flex-1 min-w-0">

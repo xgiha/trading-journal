@@ -1,3 +1,4 @@
+
 import React from "react";
 import { ChevronUp } from "lucide-react";
 
@@ -31,7 +32,7 @@ function SpeakingIndicator({ show }: { show: boolean }) {
   return (
     <div
       className={cn(
-        "absolute -top-1 -right-1 bg-black rounded-full p-1 border border-white/10",
+        "absolute -top-1 -right-1 bg-black rounded-full p-1",
         "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
         show ? "opacity-100 scale-100" : "opacity-0 scale-0",
       )}
@@ -105,10 +106,10 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
     <div
       onClick={() => !isOpen && onToggle()}
       className={cn(
-        "relative bg-white/[0.03] border border-white/10 overflow-hidden shrink-0",
+        "relative bg-white/[0.03] overflow-hidden shrink-0",
         "transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
         "cursor-pointer",
-        isOpen ? "rounded-3xl" : "rounded-[999px]",
+        isOpen ? "rounded-[25px]" : "rounded-[999px]",
       )}
       style={{
         width: COLLAPSED_WIDTH,
@@ -151,7 +152,7 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
             e.stopPropagation();
             onToggle();
           }}
-          className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 transition-colors border border-white/10"
+          className="w-6 h-6 flex items-center justify-center rounded-full bg-white/10 transition-colors"
         >
           <ChevronUp 
             className={cn(
@@ -192,7 +193,7 @@ export function VoiceChat({ isOpen, onToggle }: VoiceChatProps) {
             >
               <div className="relative flex flex-col items-center">
                 <div
-                  className="rounded-full overflow-hidden ring-[2px] ring-[#0c0c0e] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] border border-white/10"
+                  className="rounded-full overflow-hidden ring-[2px] ring-[#0c0c0e] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
                   style={{
                     width: pos.size,
                     height: pos.size,

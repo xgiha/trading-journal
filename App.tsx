@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { LayoutGrid, BookOpen, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -208,10 +209,11 @@ const App: React.FC = () => {
             </MotionDiv>
         </AnimatePresence>
 
-        {/* NAVIGATION DOCK */}
+        {/* NAVIGATION DOCK (Container is visually invisible) */}
         <div className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none">
-          <div className="flex items-center gap-4 pointer-events-auto px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
-            <div className="relative p-1 rounded-full flex items-center bg-white/5 border border-white/5 w-[260px]">
+          <div className="flex items-center gap-6 pointer-events-auto">
+            {/* Tab Switcher - Visually Floating */}
+            <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md w-[260px] shadow-lg">
                 {TABS.map((tab) => (
                   <button
                     key={tab.id}
@@ -224,16 +226,17 @@ const App: React.FC = () => {
                 ))}
                 <MotionDiv
                   layoutId="active-tab-pill"
-                  className="absolute inset-y-1 w-[calc(50%-4px)] z-0 rounded-full bg-white/10 border border-white/10"
+                  className="absolute inset-y-1 w-[calc(50%-4px)] z-0 rounded-full bg-white/10"
                   initial={false}
                   animate={{ x: activeIndex === 1 ? '100%' : '0%' }}
                   transition={{ type: "spring", stiffness: 400, damping: 35 }}
                 />
             </div>
 
+            {/* Add Trade Button - White, No Hover Scale, Press Animation, Glow */}
             <button 
               onClick={handleAddTradeBtnClick}
-              className="bg-nexus-accent text-black px-6 py-2.5 rounded-full flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-[0_0_20px_rgba(255,166,0,0.2)]"
+              className="bg-white text-black px-6 py-2.5 rounded-full flex items-center gap-2 active:scale-[0.95] transition-all duration-200 shadow-[0_0_25px_rgba(255,255,255,0.3)]"
             >
               <Plus size={16} />
               <span className="text-[10px] font-bold uppercase tracking-widest">Add Trade</span>

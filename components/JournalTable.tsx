@@ -92,7 +92,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
 
     return (
         <div className="relative h-20 w-full min-w-[600px] mb-2 rounded-[30px] select-none touch-pan-y overflow-hidden shrink-0">
-            <div className="absolute inset-0 flex justify-between items-center px-10 bg-white/5 rounded-[30px] border border-white/5 z-0">
+            <div className="absolute inset-0 flex justify-between items-center px-10 bg-white/5 rounded-[30px] z-0">
                 <button 
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onEdit(trade); setOffset(0); }}
@@ -117,7 +117,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
                 onPointerLeave={() => { if(isDragging.current) onPointerUp({ pointerId: 0 } as any) }}
-                className="absolute inset-0 bg-[#0F0F0F] border border-white/5 rounded-[30px] flex items-center transition-transform duration-300 ease-out cursor-pointer hover:border-white/20 hover:bg-[#141414] z-10"
+                className="absolute inset-0 bg-[#0F0F0F] rounded-[30px] flex items-center transition-transform duration-300 ease-out cursor-pointer hover:bg-[#141414] z-10"
                 style={{ transform: `translateX(${offset}px)` }}
             >
                 <div className="w-16 flex flex-col gap-1 justify-center items-center shrink-0 border-r border-white/5 h-full">
@@ -179,18 +179,18 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
   const groupedTrades = useMemo(() => groupTradesByDate(currentTrades), [currentTrades]);
 
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] border border-white/10 rounded-[2.5rem] relative overflow-hidden">
+    <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] rounded-[2.5rem] relative overflow-hidden">
       <div className="shrink-0 flex flex-col gap-5 mb-4 z-10">
         <div className="flex justify-between items-center px-2">
             <h2 className="text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>
             <div className="flex gap-2">
-                <button className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-nexus-muted hover:text-white transition-all">Filter</button>
-                <button className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-nexus-muted hover:text-white transition-all">Export</button>
+                <button className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-nexus-muted hover:text-white transition-all">Filter</button>
+                <button className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-nexus-muted hover:text-white transition-all">Export</button>
             </div>
         </div>
         <div className="overflow-x-auto pb-1 -mx-4 px-6 no-scrollbar">
            <div className="min-w-[600px]">
-              <div className="flex items-center w-full text-[10px] text-[#555] uppercase tracking-[0.2em] font-bold bg-[#1A1A1A] border border-white/5 rounded-[30px] py-3 px-2 shadow-inner">
+              <div className="flex items-center w-full text-[10px] text-[#555] uppercase tracking-[0.2em] font-bold bg-[#1A1A1A] rounded-[30px] py-3 px-2 shadow-inner">
                   <div className="w-16 shrink-0"></div>
                   <div className="flex-1 grid grid-cols-7 gap-4 px-8">
                       <div>Symbol</div>

@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { Trade } from '../types';
@@ -33,7 +34,7 @@ const InsightCardComponent: React.FC<InsightCardProps> = ({ trades, className })
   const currentPnl = chartData[chartData.length - 1]?.pnl || 0;
 
   return (
-    <div className={cn("group relative w-full h-full p-6 rounded-[2.5rem] bg-white/[0.03] border border-white/10 transition-all duration-500 flex flex-col justify-between overflow-hidden", className)}>
+    <div className={cn("group relative w-full h-full p-6 rounded-[25px] bg-white/[0.03] transition-all duration-500 flex flex-col justify-between overflow-hidden", className)}>
       <div className="flex items-center justify-between z-30 shrink-0 mb-4">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" />
@@ -55,7 +56,6 @@ const InsightCardComponent: React.FC<InsightCardProps> = ({ trades, className })
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.03)" strokeDasharray="3 3" />
-            {/* Fix: Replaced 'auto' with 'preserveStart' for the interval prop on XAxis to match the required AxisInterval type. */}
             <XAxis dataKey="name" axisLine={{ stroke: 'rgba(255, 255, 255, 0.15)', strokeWidth: 1 }} tickLine={{ stroke: 'rgba(255, 255, 255, 0.15)' }} tick={{ fill: 'rgba(161, 161, 170, 0.4)', fontSize: 9, fontWeight: 600 }} dy={10} interval="preserveStart" minTickGap={30} />
             <YAxis axisLine={{ stroke: 'rgba(255, 255, 255, 0.15)', strokeWidth: 1 }} tickLine={{ stroke: 'rgba(255, 255, 255, 0.15)' }} tick={{ fill: 'rgba(161, 161, 170, 0.4)', fontSize: 9, fontWeight: 600 }} tickFormatter={(val) => `$${val}`} domain={[0, 'auto']} width={40} />
             <Tooltip contentStyle={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} itemStyle={{ fontSize: '10px', color: '#fff' }} labelStyle={{ fontSize: '9px', color: '#666' }} formatter={(val: number) => [`$${val.toLocaleString()}`, 'Total PnL']} />

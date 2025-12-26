@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { useState, useMemo, useRef } from 'react';
 import { Trade } from '../types';
@@ -64,7 +65,7 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
       ref={containerRef}
       onMouseLeave={handleContainerLeave}
       className={cn(
-        "group relative w-full h-full p-6 rounded-[2.5rem] bg-white/[0.03] border border-white/10 transition-all duration-500 flex flex-col justify-between overflow-hidden",
+        "group relative w-full h-full p-6 rounded-[25px] bg-white/[0.03] transition-all duration-500 flex flex-col justify-between overflow-hidden",
         className
       )}
     >

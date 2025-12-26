@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Trade } from '../types';
@@ -79,8 +80,8 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
               else onAddTradeClick(dateStr);
             }
           }}
-          className={`relative p-1 md:p-2 flex flex-col justify-between transition-all group rounded-lg md:rounded-xl border border-white/5 overflow-hidden aspect-square ${
-            isDay ? 'bg-white/5 hover:bg-white/10 hover:border-white/20 cursor-pointer' : 'opacity-0 pointer-events-none'
+          className={`relative p-1 md:p-2 flex flex-col justify-between transition-all group rounded-lg md:rounded-xl overflow-hidden aspect-square ${
+            isDay ? 'bg-white/5 hover:bg-white/10 cursor-pointer' : 'opacity-0 pointer-events-none'
           }`}
         >
           {isDay && (
@@ -123,8 +124,8 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                {currentWeek}
                <div 
                 onClick={() => weekTradesCount > 0 && onViewWeekClick(weekTradesList, `Week of ${currentDate.toLocaleString('default', { month: 'short' })} ${Math.max(1, (i - 6) - firstDay + 1)}`)}
-                className={`hidden md:flex rounded-lg md:rounded-xl p-1 md:p-2 flex-col items-center justify-center transition-all border border-white/5 relative overflow-hidden aspect-square ${
-                    weekTradesCount > 0 ? 'bg-white/10 hover:bg-white/15 cursor-pointer hover:border-nexus-accent/30' : 'bg-white/[0.02]'
+                className={`hidden md:flex rounded-lg md:rounded-xl p-1 md:p-2 flex-col items-center justify-center transition-all relative overflow-hidden aspect-square ${
+                    weekTradesCount > 0 ? 'bg-white/10 hover:bg-white/15 cursor-pointer' : 'bg-white/[0.02]'
                 }`}
                >
                   {weekTradesCount > 0 && (
@@ -142,9 +143,9 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
   };
 
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 bg-white/[0.03] border border-white/10 rounded-[2.5rem] relative overflow-hidden">
+    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 bg-white/[0.03] rounded-[2.5rem] relative overflow-hidden">
       <div className="flex items-center justify-between shrink-0 w-full px-2 z-10">
-         <div className="flex items-center gap-4 bg-white/5 rounded-full px-4 py-1.5 border border-white/5">
+         <div className="flex items-center gap-4 bg-white/5 rounded-full px-4 py-1.5">
             <div className="flex gap-2">
                 <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="text-nexus-muted hover:text-white transition-colors">
                     <ChevronLeft size={16} />
@@ -157,7 +158,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                {currentDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
             </span>
          </div>
-         <div className="flex items-center gap-6 bg-white/5 rounded-full px-6 py-2 border border-white/5">
+         <div className="flex items-center gap-6 bg-white/5 rounded-full px-6 py-2">
             <div className="flex items-center gap-2">
                <span className={`text-[12px] font-bold font-mono ${monthlyStats.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {monthlyStats.totalPnl >= 0 ? '+' : ''}{formatCurrency(monthlyStats.totalPnl)}

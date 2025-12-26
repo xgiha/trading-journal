@@ -121,7 +121,7 @@ const CustomDatePicker = ({ selectedDate, onChange }: { selectedDate: string, on
     };
 
     return (
-        <div className="bg-[#1A1A1A] border border-white/10 rounded-2xl p-4 w-full animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-[#1A1A1A] rounded-2xl p-4 w-full animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center mb-4">
                 <button type="button" onClick={() => changeMonth(-1)} className="p-1 hover:bg-white/10 rounded-full text-[#888] hover:text-white transition-colors">
                     <ChevronLeft size={16} />
@@ -246,7 +246,7 @@ const ScrollableTimeInput = ({
             </div>
             
             <div 
-                className={`flex items-center justify-between bg-[#141414] rounded-xl p-1 border h-[38px] cursor-pointer transition-colors ${isOpen ? 'border-nexus-accent' : 'border-white/5 hover:border-white/20'}`}
+                className={`flex items-center justify-between bg-[#141414] rounded-xl p-1 h-[38px] cursor-pointer transition-colors ${isOpen ? 'ring-1 ring-nexus-accent' : 'hover:bg-white/[0.02]'}`}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <div className="flex-1 text-center text-xs font-mono text-white">{h}</div>
@@ -258,7 +258,7 @@ const ScrollableTimeInput = ({
 
             {/* Dropdown Menu */}
             {isOpen && (
-                <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-[#1A1A1A] border border-white/10 rounded-xl p-2 shadow-2xl flex gap-1 animate-in fade-in zoom-in-95 duration-200 min-w-full">
+                <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-[#1A1A1A] rounded-xl p-2 shadow-2xl flex gap-1 animate-in fade-in zoom-in-95 duration-200 min-w-full">
                     <div className="flex-1 flex flex-col gap-1">
                         <span className="text-[8px] text-center text-[#555] uppercase">HR</span>
                         <TimeScrollColumn max={24} value={h} onChange={(v) => handleChange('h', v)} />
@@ -279,36 +279,29 @@ const ScrollableTimeInput = ({
 
 // --- Image Zoom Overlay Component ---
 const ImageZoomOverlay = ({ src, onClose }: { src: string, onClose: () => void }) => {
-    const [scale, setScale] = useState(1);
-    
     return (
         <MotionDiv 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center touch-none"
+            className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out"
             onClick={onClose}
-            onWheel={(e: React.WheelEvent<HTMLDivElement>) => {
-                const delta = -e.deltaY * 0.001;
-                setScale(s => Math.min(Math.max(0.5, s + delta), 5));
-            }}
         >
-            <button className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full">
+            <button 
+                className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full transition-colors"
+                onClick={onClose}
+            >
                 <X size={24} />
             </button>
-            <MotionImg 
-                src={src} 
-                alt="Zoom View"
-                className="max-w-[95vw] max-h-[95vh] object-contain cursor-grab active:cursor-grabbing"
-                animate={{ scale }}
-                drag
-                dragConstraints={{ left: -window.innerWidth/2, right: window.innerWidth/2, top: -window.innerHeight/2, bottom: window.innerHeight/2 }}
-                dragElastic={0.2}
+            <MotionDiv 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="max-w-[95vw] max-h-[95vh] relative"
                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            />
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 rounded-full border border-white/10 text-white/60 text-xs font-medium pointer-events-none whitespace-nowrap">
-                Scroll to Zoom • Drag to Pan
-            </div>
+            >
+                <img src={src} alt="Zoomed" className="w-full h-full object-contain rounded-xl shadow-2xl" />
+            </MotionDiv>
         </MotionDiv>
     );
 };
@@ -333,7 +326,7 @@ const NoteZoomOverlay = ({ content, onClose }: { content: string, onClose: () =>
                 initial={{ scale: 0.95, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                className="bg-[#141414] border border-white/10 p-6 md:p-8 rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar shadow-2xl relative"
+                className="bg-[#141414] p-6 md:p-8 rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar shadow-2xl relative"
                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
                 <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5 sticky top-0 bg-[#141414] z-10 -mt-2 pt-2">
@@ -386,7 +379,6 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
 
   // Handle Reset & Pre-fill when modal opens (component mounts)
   useEffect(() => {
-    // Helper for local date fallback if date prop is empty
     const getLocalFallback = () => {
         const d = new Date();
         const y = d.getFullYear();
@@ -396,9 +388,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
     };
 
     if (tradeToEdit) {
-      // Edit Mode
       setIsNewsTrade(!!tradeToEdit.newsEvent);
-      // Normalize images
       let initialImages: string[] = [];
       if (tradeToEdit.images && tradeToEdit.images.length > 0) {
           initialImages = tradeToEdit.images;
@@ -423,7 +413,6 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           notes: tradeToEdit.notes || '',
       });
     } else {
-      // New Mode
       setIsNewsTrade(false);
       setFormData({
           symbol: '',
@@ -446,7 +435,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isUploading) return; // Prevent saving while upload in progress
+    if (isUploading) return; 
 
     const pnlValue = parseFloat(unformatNumber(formData.pnl));
     const tradeId = tradeToEdit ? tradeToEdit.id : `T-${Date.now()}`;
@@ -466,7 +455,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       pnl: isNaN(pnlValue) ? 0 : pnlValue,
       strategy: formData.strategy,
       images: formData.images,
-      image: formData.images[0], // Backward compat
+      image: formData.images[0], 
       notes: formData.notes
     };
     onAdd(newTrade);
@@ -503,7 +492,6 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       }));
   }
 
-  // Variants for animation
   const backdropVariants = {
       hidden: { opacity: 0 },
       visible: { opacity: 1 },
@@ -518,7 +506,6 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Backdrop */}
       <MotionDiv 
         variants={backdropVariants}
         initial="hidden"
@@ -529,35 +516,30 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
         onClick={onClose}
       ></MotionDiv>
 
-      {/* Modal Container */}
       <MotionDiv 
         variants={modalVariants}
         initial="hidden"
         animate="visible"
         exit="exit"
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="relative w-[95%] md:max-w-[420px] bg-[#141414] rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] md:max-h-[95vh]"
+        className="relative w-[95%] md:max-w-[420px] bg-[#141414] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] md:max-h-[95vh]"
       >
-        
-        {/* Minimal Header */}
         <div className="px-6 pt-6 pb-2 flex justify-between items-center shrink-0 z-10">
-          <h2 className="text-xl font-normal text-white tracking-tight font-[Google_Sans_Flex]">
+          <h2 className="text-xl font-normal text-white tracking-tight">
             {tradeToEdit ? 'Edit Trade' : 'Add Trade'}
           </h2>
           <button 
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-[#888] hover:text-white hover:bg-[#333] transition-all hover:rotate-90 duration-300"
+            className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-[#888] hover:text-white transition-all hover:rotate-90 duration-300"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Form Area - Bento Grid */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 custom-scrollbar pb-24 relative">
           <form id="entry-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 relative">
             
-            {/* 1. Symbol */}
-            <div className="relative bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-1 focus-within:border-nexus-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
                  <label htmlFor="symbol" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <Type size={10} /> Symbol
                  </label>
@@ -572,8 +554,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                  />
             </div>
 
-            {/* 2. Net P&L (Moved to top) */}
-             <div className="relative bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-1 focus-within:border-nexus-accent transition-colors h-[72px]">
+             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <DollarSign size={10} /> Net P&L
                  </label>
@@ -593,9 +574,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                  </div>
             </div>
 
-            {/* 3. Direction (Full Width Bar) */}
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl border border-white/5 p-1 flex relative isolate h-[56px]">
-                {/* Sliding Background Pill */}
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-1 flex relative isolate h-[56px]">
                 <div 
                     className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] -z-10 shadow-lg ${
                         formData.direction === 'Long' 
@@ -626,8 +605,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                 </button>
             </div>
 
-            {/* Strategy Field */}
-            <div className="col-span-2 relative bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-1 focus-within:border-nexus-accent transition-colors h-[72px]">
+            <div className="col-span-2 relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
                  <label htmlFor="strategy" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <Target size={10} /> Strategy
                  </label>
@@ -641,8 +619,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                  />
             </div>
 
-            {/* 4. Lots (Was Size) */}
-            <div className="relative bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-1 focus-within:border-nexus-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <Hash size={10} /> Lots
                   </label>
@@ -655,8 +632,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                   />
             </div>
 
-            {/* 5. Fees */}
-            <div className="relative bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-1 focus-within:border-nexus-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <DollarSign size={10} /> Fees
                   </label>
@@ -669,17 +645,14 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                   />
             </div>
 
-            {/* 6. Combined Date & Time Section */}
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col md:flex-row items-start gap-4 z-40 relative h-auto md:h-[84px]">
-                 {/* Date Block */}
-                 <div className="w-full md:flex-1 relative group cursor-pointer border-b md:border-b-0 md:border-r border-white/5 pb-3 md:pb-0 pr-0 md:pr-4 h-full" onClick={() => setShowCalendar(!showCalendar)}>
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col md:flex-row items-start gap-4 z-40 relative h-auto md:h-[84px]">
+                 <div className="w-full md:flex-1 relative group cursor-pointer h-full" onClick={() => setShowCalendar(!showCalendar)}>
                       <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5 pointer-events-none mb-1.5">
                         <CalendarIcon size={10} /> Date
                       </label>
                       <div className={`text-sm font-mono truncate h-[38px] flex items-center ${formData.date ? 'text-white' : 'text-white/30'}`}>
                           {formData.date || 'Select'}
                       </div>
-                      {/* Calendar Dropdown */}
                       {showCalendar && (
                           <div className="absolute top-full left-0 z-50 mt-2 w-full md:w-[280px]">
                               <CustomDatePicker 
@@ -693,9 +666,8 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                       )}
                  </div>
 
-                 {/* Time Inputs */}
                  <div className="w-full md:w-[65%] flex gap-2">
-                     <div className="flex-1 border-r border-white/5 pr-2">
+                     <div className="flex-1 pr-2">
                          <ScrollableTimeInput
                             label="Entry"
                             type="IN"
@@ -714,8 +686,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                  </div>
             </div>
 
-             {/* 7. Entry Price */}
-             <div className="relative bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-1 focus-within:border-nexus-accent transition-colors h-[72px]">
+             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider">Entry Price</label>
                   <input 
                     type="text" 
@@ -726,8 +697,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                   />
             </div>
 
-            {/* 8. Exit Price */}
-            <div className="relative bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-1 focus-within:border-nexus-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-nexus-accent transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider">Exit Price</label>
                   <input 
                     type="text" 
@@ -738,21 +708,20 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                   />
             </div>
 
-            {/* 9. News Event (Horizontal Layout) */}
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl border border-white/5 p-2 flex items-center gap-3 transition-colors h-[64px]">
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 transition-colors h-[64px]">
                 <div 
                     onClick={() => setIsNewsTrade(!isNewsTrade)}
-                    className={`cursor-pointer h-full px-4 rounded-xl border flex items-center gap-2 transition-all shrink-0 ${
+                    className={`cursor-pointer h-full px-4 rounded-xl flex items-center gap-2 transition-all shrink-0 ${
                         isNewsTrade 
-                            ? 'bg-yellow-500/10 border-yellow-500/50 text-yellow-500' 
-                            : 'bg-white/5 border-white/10 text-[#666] hover:bg-white/10 hover:text-[#888]'
+                            ? 'bg-yellow-500/10 text-yellow-500' 
+                            : 'bg-white/5 text-[#666] hover:bg-white/10 hover:text-[#888]'
                     }`}
                 >
                     <Zap size={14} fill={isNewsTrade ? "currentColor" : "none"} />
                     <span className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">News Event</span>
                 </div>
                 
-                <div className="flex-1 h-full relative border-l border-white/5 pl-3 flex flex-col justify-center">
+                <div className="flex-1 h-full relative flex flex-col justify-center">
                     <input 
                         type="text"
                         className={`w-full bg-transparent text-sm text-white font-medium focus:outline-none placeholder-white/20 transition-opacity ${isNewsTrade ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}
@@ -764,8 +733,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                 </div>
             </div>
 
-            {/* 10. Notes (New Field - Compact) */}
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 flex flex-col gap-1 h-[72px]">
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
                 <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5">
                     <FileText size={10} /> Notes
                 </label>
@@ -777,9 +745,8 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                 />
             </div>
 
-            {/* 11. Attachments (Compact Layout) */}
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl border border-white/5 p-2 flex items-center gap-3 h-[72px]">
-                 <div className="pl-2 pr-3 border-r border-white/5 h-full flex items-center">
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 h-[72px]">
+                 <div className="pl-2 pr-3 h-full flex items-center">
                     <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0">
                         <ImageIcon size={12} /> Attachments
                     </label>
@@ -794,7 +761,6 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                          onChange={handleFileChange}
                      />
                      
-                     {/* Compact Upload Button */}
                      <div 
                          onClick={() => !isUploading && fileInputRef.current?.click()}
                          className={`w-10 h-10 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center transition-colors shrink-0 bg-white/[0.02] ${isUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-white hover:border-nexus-accent text-[#666]'}`}
@@ -803,9 +769,8 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                          {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
                      </div>
 
-                     {/* Thumbnails */}
                      {formData.images.map((img, idx) => (
-                         <div key={idx} className="w-10 h-10 rounded-lg border border-white/10 relative shrink-0 group overflow-hidden bg-black/40">
+                         <div key={idx} className="w-10 h-10 rounded-lg relative shrink-0 group overflow-hidden bg-black/40">
                              <img src={img} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                  <button 
@@ -824,13 +789,12 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           </form>
         </div>
 
-        {/* Floating Save Button */}
         <div className="absolute bottom-6 left-0 right-0 flex justify-center z-20 pointer-events-none">
           <button 
             type="submit"
             form="entry-form"
             disabled={isUploading}
-            className="pointer-events-auto relative px-8 py-[18px] rounded-full text-white group overflow-hidden bg-white/[0.02] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] active:scale-95 active:bg-white/[0.12] transition-all duration-300 shadow-xl font-bold text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+            className="pointer-events-auto relative px-8 py-[18px] rounded-full text-white group overflow-hidden bg-white/[0.02] hover:bg-white/[0.08] active:scale-95 active:bg-white/[0.12] transition-all duration-300 shadow-xl font-bold text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploading ? 'Uploading...' : 'Save Trade'}
           </button>
@@ -854,37 +818,28 @@ interface DayDetailsModalProps {
 export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ 
   isOpen, onClose, date, trades, onAddTrade, onEdit, onDelete 
 }) => {
-   
-   // Calculate stats
    const totalPnl = trades.reduce((acc, t) => acc + t.pnl, 0);
    const winRate = trades.length > 0 ? (trades.filter(t => t.pnl > 0).length / trades.length) * 100 : 0;
-
-   // Sort trades by time
    const sortedTrades = [...trades].sort((a, b) => a.entryTime.localeCompare(b.entryTime));
-
-   // State for zoom modal
    const [zoomedImage, setZoomedImage] = useState<string | null>(null);
    const [viewingNote, setViewingNote] = useState<string | null>(null);
 
-   // Chart Data: Cumulative PnL throughout the day
    const chartData = useMemo(() => {
      let runningPnl = 0;
      const points = sortedTrades.map(t => {
        runningPnl += t.pnl;
        return {
-         time: t.exitTime || t.entryTime, // Use exit time for realization, fallback to entry
+         time: t.exitTime || t.entryTime, 
          pnl: runningPnl,
-         color: runningPnl >= 0 ? '#10b981' : '#ef4444' // Green or Red based on cumulative
+         color: runningPnl >= 0 ? '#10b981' : '#ef4444' 
        };
      });
-     // Add start point
      return [{ time: 'Start', pnl: 0, color: '#666' }, ...points];
    }, [sortedTrades]);
 
    return (
      <>
      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-        {/* Backdrop */}
         <MotionDiv 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -893,14 +848,12 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
             onClick={onClose}
         />
         
-        {/* Modal */}
         <MotionDiv
             initial={{ y: "100%", opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: "100%", opacity: 0, scale: 0.95 }}
-            className="relative w-[95%] md:max-w-[500px] bg-[#141414] rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+            className="relative w-[95%] md:max-w-[500px] bg-[#141414] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
         >
-             {/* Header */}
              <div className="px-6 pt-6 pb-2 shrink-0 flex justify-between items-start">
                  <div>
                      <h2 className="text-xl font-normal text-white tracking-tight">{date}</h2>
@@ -922,13 +875,12 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                  </div>
                  <button 
                     onClick={onClose}
-                    className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-[#888] hover:text-white hover:bg-[#333] transition-all"
+                    className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-[#888] hover:text-white transition-all"
                  >
                     <X size={18} />
                  </button>
              </div>
 
-             {/* Intraday Chart */}
              {sortedTrades.length > 0 && (
                 <div className="h-32 w-full px-2 mt-2 shrink-0">
                     <ResponsiveContainer width="100%" height="100%">
@@ -942,7 +894,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                            <Tooltip 
                                 cursor={{ stroke: 'rgba(255,255,255,0.2)' }}
-                                contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '12px' }}
+                                contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '12px', fontSize: '12px' }}
                                 formatter={(val: number) => [`$${val.toFixed(2)}`, 'PnL']}
                            />
                            <Area 
@@ -957,7 +909,6 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                 </div>
              )}
 
-             {/* List */}
              <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-20 pt-4 flex flex-col gap-2">
                  {sortedTrades.length === 0 ? (
                      <div className="py-10 text-center text-[#555] text-xs uppercase font-bold tracking-widest">
@@ -970,23 +921,19 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                             ? trade.images 
                             : (trade.image ? [trade.image] : []);
                             
-                         // Notes logic
                          const NOTE_preview_limit = 60;
                          const isLongNote = trade.notes && trade.notes.length > NOTE_preview_limit;
                          const displayNote = isLongNote ? trade.notes!.substring(0, NOTE_preview_limit).trim() + '...' : trade.notes;
 
                          return (
-                             <div key={trade.id} className="bg-[#1E1E1E] rounded-xl p-3 border border-white/5 flex flex-col gap-3 group hover:border-white/10 transition-colors">
-                                 {/* Top Row: Details */}
+                             <div key={trade.id} className="bg-[#1E1E1E] rounded-xl p-3 flex flex-col gap-3 group hover:bg-[#252525] transition-colors">
                                  <div className="flex items-center gap-3">
-                                     {/* Icon/Type */}
-                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center border shrink-0 ${
-                                         trade.type === 'Long' ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-red-500/10 border-red-500/20 text-red-500'
+                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                                         trade.type === 'Long' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
                                      }`}>
                                          {trade.type === 'Long' ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
                                      </div>
                                      
-                                     {/* Info */}
                                      <div className="flex-1 min-w-0">
                                          <div className="flex justify-between items-center mb-0.5">
                                              <div className="flex flex-col">
@@ -1008,12 +955,11 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                                          </div>
                                      </div>
 
-                                     {/* Actions */}
-                                     <div className="flex gap-1 pl-2 border-l border-white/5 shrink-0">
+                                     <div className="flex gap-1 pl-2 shrink-0">
                                          {onEdit && (
                                              <button 
                                                onClick={() => {
-                                                   onClose(); // Close day details first to prevent overlap
+                                                   onClose(); 
                                                    onEdit(trade);
                                                }}
                                                className="p-2 text-[#666] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -1032,9 +978,8 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                                      </div>
                                  </div>
                                  
-                                 {/* Middle Row: Notes */}
                                  {trade.notes && (
-                                     <div className="text-xs text-[#999] bg-black/20 rounded-lg p-2 font-medium leading-relaxed border border-white/5 relative group">
+                                     <div className="text-xs text-[#999] bg-black/20 rounded-lg p-2 font-medium leading-relaxed relative group">
                                          <span className="text-white/70">{displayNote}</span>
                                          {isLongNote && (
                                              <button 
@@ -1050,13 +995,12 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                                      </div>
                                  )}
 
-                                 {/* Bottom Row: Images Grid */}
                                  {tradeImages.length > 0 && (
                                      <div className="flex gap-2 overflow-x-auto custom-scrollbar pt-1 pb-1">
                                          {tradeImages.map((img, idx) => (
                                              <div 
                                                 key={idx} 
-                                                className="relative h-16 w-16 shrink-0 rounded-lg border border-white/10 overflow-hidden cursor-zoom-in group/img bg-black/40"
+                                                className="relative h-16 w-16 shrink-0 rounded-lg overflow-hidden cursor-zoom-in group/img bg-black/40"
                                                 onClick={() => setZoomedImage(img)}
                                              >
                                                  <img src={img} alt="Evidence" className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-110 opacity-80 group-hover/img:opacity-100" />
@@ -1071,7 +1015,6 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                  )}
              </div>
 
-             {/* Add Button Area */}
              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#141414] to-transparent pt-10 pointer-events-none flex justify-center">
                  <button
                     onClick={onAddTrade}
@@ -1083,7 +1026,6 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
         </MotionDiv>
      </div>
 
-     {/* Full Screen Image/Note Zoom Overlay */}
      <AnimatePresence>
         {zoomedImage && (
             <ImageZoomOverlay src={zoomedImage} onClose={() => setZoomedImage(null)} />
