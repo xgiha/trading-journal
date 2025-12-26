@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { LayoutGrid, BookOpen, Plus, Cloud, CloudOff, RefreshCw, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import EnergyChart from './components/EnergyChart';
-import { InsightCard } from './components/InsightCard';
+import WeeklyChart from './components/WeeklyChart';
+import GrowthChart from './components/GrowthChart';
 import { TradingCalendar } from './components/TradingCalendar';
 import { JournalTable } from './components/JournalTable';
 import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
@@ -241,10 +241,10 @@ const App: React.FC = () => {
                 {/* RIGHT WING */}
                 <div className="flex flex-col h-full w-[460px] shrink-0 gap-4 lg:gap-6">
                   <div className="flex-1 min-h-0">
-                      <InsightCard trades={trades} />
+                      <GrowthChart trades={trades} />
                   </div>
                   <div className="flex-1 min-h-0">
-                      <EnergyChart trades={trades} stats={globalStats} />
+                      <WeeklyChart trades={trades} stats={globalStats} />
                   </div>
                 </div>
               </MotionDiv>

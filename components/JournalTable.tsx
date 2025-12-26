@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trade } from '../types';
-import MorphingPageDots from './MorphingPageDots';
+import Pagination from './Pagination';
 
 // Cast motion elements to any to bypass environment-specific type definition issues
 const MotionDiv = motion.div as any;
@@ -242,7 +242,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
             </AnimatePresence>
             <div className="absolute bottom-0 left-0 right-0 z-50 flex flex-col items-center">
                 <div className="w-full py-2 flex justify-center items-center">
-                    <MorphingPageDots 
+                    <Pagination 
                       total={totalPages} 
                       page={currentPage - 1} 
                       setPage={(p) => setCurrentPage(p + 1)} 

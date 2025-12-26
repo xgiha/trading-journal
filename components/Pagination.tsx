@@ -1,19 +1,20 @@
+
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface MorphingPageDotsProps {
+interface PaginationProps {
   total: number;
   page: number;
   setPage: (page: number) => void;
 }
 
-export default function MorphingPageDots({
+export default function Pagination({
   total,
   page,
   setPage,
-}: MorphingPageDotsProps) {
+}: PaginationProps) {
   const goPrev = () => setPage(page > 0 ? page - 1 : page);
   const goNext = () => setPage(page < total - 1 ? page + 1 : page);
 

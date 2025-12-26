@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useState, useMemo, useRef } from 'react';
 import { Trade } from '../types';
 
-interface EnergyChartProps {
+interface WeeklyChartProps {
   trades: Trade[];
   stats: {
     totalPnl: number;
@@ -14,7 +14,7 @@ interface EnergyChartProps {
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
-const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) => {
+const WeeklyChart: React.FC<WeeklyChartProps> = ({ trades, stats, className }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -140,4 +140,4 @@ const EnergyChart: React.FC<EnergyChartProps> = ({ trades, stats, className }) =
   );
 };
 
-export default React.memo(EnergyChart);
+export default React.memo(WeeklyChart);

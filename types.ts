@@ -25,18 +25,3 @@ export interface Trade {
   
   notes?: string; // Free text notes
 }
-
-export interface DayStats {
-  date: string;
-  trades: number;
-  pnl: number;
-}
-
-export interface ActivityLog {
-  id: string;
-  type: 'add' | 'edit' | 'delete' | 'system';
-  title: string;
-  description: string;
-  time: string;
-  timestamp: number;
-}

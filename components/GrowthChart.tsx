@@ -3,14 +3,14 @@ import React, { useMemo } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { Trade } from '../types';
 
-interface InsightCardProps {
+interface GrowthChartProps {
   trades: Trade[];
   className?: string;
 }
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
-const InsightCardComponent: React.FC<InsightCardProps> = ({ trades, className }) => {
+const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className }) => {
   const chartData = useMemo(() => {
     const dailyMap = new Map<string, number>();
     const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -67,4 +67,5 @@ const InsightCardComponent: React.FC<InsightCardProps> = ({ trades, className })
   );
 };
 
-export const InsightCard = React.memo(InsightCardComponent);
+const GrowthChart = React.memo(GrowthChartComponent);
+export default GrowthChart;
