@@ -234,10 +234,10 @@ const ScrollableTimeInput = ({
     }, []);
 
     const handleChange = (part: 'h'|'m'|'s', newVal: string) => {
-        const newH = part === 'h' ? newVal : h;
-        const newM = part === 'm' ? newVal : m;
-        const newS = part === 's' ? newVal : s;
-        onChange(`${newH}:${newM}:${newS}`);
+        const hVal = part === 'h' ? newVal : h;
+        const mVal = part === 'm' ? newVal : m;
+        const sVal = part === 's' ? newVal : s;
+        onChange(`${hVal}:${mVal}:${sVal}`);
     };
 
     return (
@@ -767,7 +767,13 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
              </div>
         </MotionDiv>
      </div>
-     {zoomedImage && <ImageZoomOverlay src={zoomedImage} onClose={() => setZoomedImage(null)} />}
+     <AnimatePresence>
+        {zoomedImage && (
+            <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out" onClick={() => setZoomedImage(null)}>
+                <img src={zoomedImage} className="max-w-[95vw] max-h-[95vh] object-contain rounded-xl" />
+            </MotionDiv>
+        )}
+     </AnimatePresence>
      </>
    )
 };

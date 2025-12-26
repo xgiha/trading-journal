@@ -141,22 +141,23 @@ const App: React.FC = () => {
     <div className="h-screen w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-nexus-accent selection:text-black">
       <div className="w-full h-full glass-card rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
         
-        {/* Sync Status Header - Only visible when NOT synced or during error */}
+        {/* GLOBAL SYNC INDICATOR - Animated slide down from the very top */}
         <AnimatePresence>
             {(syncStatus !== 'synced' && !isInitialLoading) && (
                 <MotionDiv 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="absolute top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl"
+                    initial={{ y: -60, x: '-50%', opacity: 0 }}
+                    animate={{ y: 0, x: '-50%', opacity: 1 }}
+                    exit={{ y: -60, x: '-50%', opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="absolute top-4 left-1/2 z-[100] flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl pointer-events-none"
                 >
                     {syncStatus === 'syncing' ? (
-                        <RefreshCw size={10} className="text-nexus-accent animate-spin" />
+                        <RefreshCw size={11} className="text-nexus-accent animate-spin" />
                     ) : (
-                        <CloudOff size={10} className="text-red-400" />
+                        <CloudOff size={11} className="text-red-400" />
                     )}
-                    <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-white/60">
-                        {syncStatus === 'syncing' ? 'Cloud Saving...' : 'Sync Error'}
+                    <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/70">
+                        {syncStatus === 'syncing' ? 'Vault Syncing' : 'Connection Error'}
                     </span>
                 </MotionDiv>
             )}
