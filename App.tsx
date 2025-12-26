@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { LayoutGrid, BookOpen, Plus, Cloud, CloudOff, RefreshCw } from 'lucide-react';
+import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import EnergyChart from './components/EnergyChart';
@@ -21,7 +21,7 @@ const TABS = [
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error'>('synced');
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [trades, setTrades] = useState<Trade[]>([]);
 
@@ -66,11 +66,13 @@ const App: React.FC = () => {
         });
         if (!response.ok) throw new Error('Sync failed');
         
-        // Success: Wait a moment then hide indicator
-        setTimeout(() => setSyncStatus('synced'), 1000);
+        // Success: Show Synced status then hide
+        setSyncStatus('success');
+        setTimeout(() => setSyncStatus('idle'), 2000);
       } catch (e) {
         console.error("Cloud sync failed", e);
         setSyncStatus('error');
+        setTimeout(() => setSyncStatus('idle'), 3000);
       }
     };
 
@@ -143,7 +145,7 @@ const App: React.FC = () => {
         
         {/* GLOBAL SYNC INDICATOR - Animated slide down from the very top */}
         <AnimatePresence>
-            {(syncStatus !== 'synced' && !isInitialLoading) && (
+            {(syncStatus !== 'idle' && !isInitialLoading) && (
                 <MotionDiv 
                     initial={{ y: -60, x: '-50%', opacity: 0 }}
                     animate={{ y: 0, x: '-50%', opacity: 1 }}
@@ -153,11 +155,13 @@ const App: React.FC = () => {
                 >
                     {syncStatus === 'syncing' ? (
                         <RefreshCw size={11} className="text-nexus-accent animate-spin" />
+                    ) : syncStatus === 'success' ? (
+                        <Check size={11} className="text-emerald-400" />
                     ) : (
                         <CloudOff size={11} className="text-red-400" />
                     )}
                     <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/70">
-                        {syncStatus === 'syncing' ? 'Vault Syncing' : 'Connection Error'}
+                        {syncStatus === 'syncing' ? 'Vault Syncing' : syncStatus === 'success' ? 'Synced' : 'Connection Error'}
                     </span>
                 </MotionDiv>
             )}
