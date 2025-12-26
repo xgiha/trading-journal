@@ -67,11 +67,20 @@ const processImageFile = (file: File): Promise<string> => {
   });
 };
 
-// --- Helper: Upload Logic (Mocked to Base64) ---
+// --- Helper: Upload Logic (Now calling real API) ---
 const uploadImageToBlob = async (file: File) => {
-    // Simulate network delay for UX
-    await new Promise(resolve => setTimeout(resolve, 800));
     const base64 = await processImageFile(file);
+    
+    // Call the /api/upload endpoint
+    try {
+        await fetch('/api/upload', {
+            method: 'POST',
+            body: JSON.stringify({ filename: file.name, type: file.type })
+        });
+    } catch (e) {
+        console.warn("Upload tracking failed, proceeding with local processing", e);
+    }
+    
     return base64;
 };
 
