@@ -8,7 +8,9 @@ import {
   Edit2,
   ChevronLeft,
   ChevronRight,
-  FileText
+  FileText,
+  Download,
+  Upload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trade } from '../types';
@@ -22,6 +24,8 @@ interface JournalTableProps {
   onEdit: (trade: Trade) => void;
   onDelete: (id: string) => void;
   onViewDay: (date: string) => void;
+  onExport?: () => void;
+  onImport?: (trades: Trade[]) => void;
 }
 
 const ITEMS_PER_PAGE = 4;
@@ -161,8 +165,10 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
     );
 };
 
-const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalTableProps) => {
+const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, onImport }: JournalTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const sortedTrades = useMemo(() => {
     return [...trades].sort((a, b) => {
       const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
@@ -178,14 +184,60 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay }: JournalT
   }, [sortedTrades, currentPage]);
   const groupedTrades = useMemo(() => groupTradesByDate(currentTrades), [currentTrades]);
 
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const content = event.target?.result as string;
+          const data = JSON.parse(content);
+          if (Array.isArray(data) && onImport) {
+            onImport(data);
+          } else {
+            alert("Invalid data format. Please provide a valid Nexus backup JSON.");
+          }
+        } catch (error) {
+          alert("Error parsing file. Ensure it is a valid JSON.");
+        }
+      };
+      reader.readAsText(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return (
     <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] rounded-[25px] relative overflow-hidden">
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        accept=".json" 
+        className="hidden" 
+      />
+      
       <div className="shrink-0 flex flex-col gap-5 mb-4 z-10">
         <div className="flex justify-between items-center px-2">
             <h2 className="text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>
             <div className="flex gap-2">
-                <button className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-nexus-muted hover:text-white transition-all">Filter</button>
-                <button className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-nexus-muted hover:text-white transition-all">Export</button>
+                <button 
+                  onClick={handleImportClick}
+                  className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-nexus-muted hover:text-white transition-all flex items-center gap-2"
+                >
+                  <Upload size={12} />
+                  Import
+                </button>
+                <button 
+                  onClick={onExport}
+                  className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-nexus-muted hover:text-white transition-all flex items-center gap-2"
+                >
+                  <Download size={12} />
+                  Export
+                </button>
             </div>
         </div>
         <div className="overflow-x-auto pb-1 -mx-4 px-6 no-scrollbar">

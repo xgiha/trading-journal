@@ -145,6 +145,24 @@ const App: React.FC = () => {
     });
   }, []);
 
+  const handleExportData = useCallback(() => {
+    const blob = new Blob([JSON.stringify(trades, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `nexus-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [trades]);
+
+  const handleImportData = useCallback((importedTrades: Trade[]) => {
+    if (confirm("Importing data will replace all current trades. Proceed?")) {
+      setTrades(importedTrades);
+    }
+  }, []);
+
   const activeIndex = TABS.findIndex(t => t.id === activeTab);
 
   return (
@@ -230,7 +248,9 @@ const App: React.FC = () => {
                             trades={trades} 
                             onEdit={handleEditTrade} 
                             onDelete={handleDeleteTrade} 
-                            onViewDay={handleViewDayClick} 
+                            onViewDay={handleViewDayClick}
+                            onExport={handleExportData}
+                            onImport={handleImportData}
                           />
                         )}
                       </MotionDiv>
