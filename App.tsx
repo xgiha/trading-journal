@@ -10,7 +10,7 @@ import { JournalTable } from './components/JournalTable';
 import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
 import TotalPnlCard from './components/TotalPnlCard';
 import TradeStats from './components/TradeStats';
-import FearGreedIndex from './components/FearGreedIndex';
+import Progress from './components/Progress';
 import { Trade } from './types';
 
 const MotionDiv = motion.div as any;
@@ -214,8 +214,8 @@ const App: React.FC = () => {
                 <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
                   <div className="flex flex-col gap-4 w-[218px] shrink-0">
                     <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                    {/* FEAR & GREED INDEX CARD */}
-                    <FearGreedIndex trades={trades} />
+                    {/* PROGRESS MODULE */}
+                    <Progress trades={trades} />
                   </div>
                   <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0">
                     <TradeStats trades={trades} />
