@@ -9,13 +9,13 @@ interface ProgressProps {
   trades: Trade[];
 }
 
-// Sub-component for the background fireflies
+// Sub-component for the background fireflies - Tiny and reactive to progress
 const BackgroundFireflies: React.FC<{ speedFactor: number }> = ({ speedFactor }) => {
   const particles = useMemo(() => {
     const colors = ['#ffffff', '#34d399', '#ffa600']; 
     return Array.from({ length: 25 }).map((_, i) => ({
       id: i,
-      size: Math.random() * 1.5 + 0.5, 
+      size: Math.random() * 1.5 + 0.5, // Tiny particles
       waypointsX: Array.from({ length: 5 }).map(() => Math.random() * 100 + '%'),
       waypointsY: Array.from({ length: 5 }).map(() => Math.random() * 100 + '%'),
       baseDuration: Math.random() * 15 + 15, 
@@ -24,6 +24,7 @@ const BackgroundFireflies: React.FC<{ speedFactor: number }> = ({ speedFactor })
     }));
   }, []);
 
+  // Speed up particles as the bag fills
   const getDuration = (base: number) => base / (1 + speedFactor * 3);
 
   return (
@@ -99,41 +100,19 @@ const Progress: React.FC<ProgressProps> = ({ trades }) => {
         {/* The Progress Bar Track */}
         <div className="relative h-full w-20 bg-white/5 rounded-[25px] border border-white/10 overflow-hidden shrink-0 shadow-inner z-10">
           
-          {/* Fluid/Liquid Animation Wrapper */}
+          {/* Main Animation Wrapper */}
           <MotionDiv
             initial={{ height: 0 }}
-            animate={{ 
-              height: `${visualHeight}%`,
-              scaleX: [1, 1.05, 0.95, 1], // Sloshing effect on resize
-            }}
+            animate={{ height: `${visualHeight}%` }}
             transition={{ 
-              height: {
-                type: 'spring', 
-                stiffness: 70, 
-                damping: 8, 
-                mass: 1.5
-              },
-              scaleX: { duration: 0.8, ease: "easeOut" }
+              type: 'spring', 
+              stiffness: 80, 
+              damping: 15, 
+              mass: 1
             }}
             className="absolute bottom-0 left-0 right-0 overflow-hidden rounded-b-[25px] origin-bottom"
           >
-            {/* Liquid Surface Wave (SVG) */}
-            <div className="absolute top-0 left-0 right-0 h-4 -translate-y-2 z-20">
-              <motion.svg 
-                viewBox="0 0 120 28" 
-                preserveAspectRatio="none" 
-                className="w-[200%] h-full opacity-60"
-                animate={{ x: [0, -60] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              >
-                <path 
-                  d="M0 15 Q30 0 60 15 T120 15 T180 15 T240 15 V28 H0 Z" 
-                  fill={totalPnl >= BUFFER_VAL ? "#34d399" : "#ffffff"} 
-                />
-              </motion.svg>
-            </div>
-
-            {/* Main Fluid Body */}
+            {/* Fluid Body with Layered Gradients */}
             <div className="absolute inset-0 z-10">
                 <div 
                    className={`w-full h-full transition-colors duration-1000 ${
@@ -161,7 +140,7 @@ const Progress: React.FC<ProgressProps> = ({ trades }) => {
                 </div>
             </div>
 
-            {/* Top Surface Glow Cap */}
+            {/* Surface Highlights */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/40 blur-[1px] z-30" />
             
             {/* Overall Gloss Overlay */}
@@ -182,7 +161,8 @@ const Progress: React.FC<ProgressProps> = ({ trades }) => {
                 className="absolute left-0 w-full flex items-center gap-3 transition-all duration-500"
                 style={{ bottom: `${posPct}%`, transform: 'translateY(50%)' }}
               >
-                <div className={`h-[1.5px] rounded-full transition-all duration-700 ${
+                {/* Progress Marker Line - Standardized to 2px thickness */}
+                <div className={`h-[2px] rounded-full transition-all duration-700 ${
                   isHit 
                     ? 'w-10 bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.6)]' 
                     : isFoundation 
@@ -207,11 +187,6 @@ const Progress: React.FC<ProgressProps> = ({ trades }) => {
               </div>
             );
           })}
-          
-          <div className="absolute left-0 bottom-0 flex items-center gap-3 opacity-10" style={{ transform: 'translateY(50%)' }}>
-             <div className="h-[1px] w-4 bg-white" />
-             <span className="text-[8px] font-pixel text-white uppercase tracking-widest">$0</span>
-          </div>
         </div>
       </div>
 
