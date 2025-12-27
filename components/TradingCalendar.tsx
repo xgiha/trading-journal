@@ -80,7 +80,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
               else onAddTradeClick(dateStr);
             }
           }}
-          className={`relative p-1 md:p-2 flex flex-col justify-between transition-all group rounded-lg md:rounded-xl overflow-hidden aspect-square ${
+          className={`relative p-1 md:p-2 flex flex-col justify-between transition-all group rounded-lg md:rounded-xl overflow-hidden min-h-[60px] md:min-h-[80px] lg:min-h-[90px] ${
             isDay ? 'bg-white/5 hover:bg-white/10 cursor-pointer' : 'opacity-0 pointer-events-none'
           }`}
         >
@@ -124,7 +124,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                {currentWeek}
                <div 
                 onClick={() => weekTradesCount > 0 && onViewWeekClick(weekTradesList, `Week of ${currentDate.toLocaleString('default', { month: 'short' })} ${Math.max(1, (i - 6) - firstDay + 1)}`)}
-                className={`hidden md:flex rounded-lg md:rounded-xl p-1 md:p-2 flex-col items-center justify-center transition-all relative overflow-hidden aspect-square ${
+                className={`hidden md:flex rounded-lg md:rounded-xl p-1 md:p-2 flex-col items-center justify-center transition-all relative overflow-hidden min-h-[60px] md:min-h-[80px] lg:min-h-[90px] ${
                     weekTradesCount > 0 ? 'bg-white/10 hover:bg-white/15 cursor-pointer' : 'bg-white/[0.02]'
                 }`}
                >

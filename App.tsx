@@ -246,8 +246,8 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* CENTER AREA - Expanded to bottom from pb-20 to pb-6 */}
-                  <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-6">
+                  {/* CENTER AREA - Adjusted bottom padding to pb-24 to terminate exactly above the floating menu */}
+                  <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-24">
                     <div className="w-full h-full relative">
                       <AnimatePresence mode="wait" initial={false}>
                         <MotionDiv
