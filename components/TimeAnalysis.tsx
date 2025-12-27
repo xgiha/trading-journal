@@ -33,11 +33,13 @@ const getSeconds = (time?: string) => {
 };
 
 const formatDuration = (seconds: number) => {
-  if (seconds <= 0) return '0m';
-  const hrs = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  if (hrs > 0) return `${hrs}h ${mins}m`;
-  return `${mins}m`;
+  const s = Math.round(seconds);
+  if (s <= 0) return '0h 0m 0s';
+  const hrs = Math.floor(s / 3600);
+  const mins = Math.floor((s % 3600) / 60);
+  const secs = s % 60;
+  
+  return `${hrs}h ${mins}m ${secs}s`;
 };
 
 const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
@@ -50,8 +52,8 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
     let lossSum = 0, lossCount = 0;
     
     let totalDuration = 0, totalDurationCount = 0;
-    let winDurationSum = 0;
-    let lossDurationSum = 0;
+    let winDurationSum = 0, winDurationCount = 0;
+    let lossDurationSum = 0, lossDurationCount = 0;
 
     const dayMap = new Map<string, number>();
     const strategyCount = new Map<string, number>();
@@ -80,8 +82,13 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
 
         totalDuration += duration;
         totalDurationCount++;
-        if (t.pnl > 0) winDurationSum += duration;
-        else if (t.pnl < 0) lossDurationSum += duration;
+        if (t.pnl > 0) {
+          winDurationSum += duration;
+          winDurationCount++;
+        } else if (t.pnl < 0) {
+          lossDurationSum += duration;
+          lossDurationCount++;
+        }
       }
     });
 
@@ -99,8 +106,8 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
     const mostProfitableStrategy = strategyPnlEntries.length > 0 ? strategyPnlEntries.sort((a,b) => b[1] - a[1])[0] : null;
 
     const avgDuration = totalDurationCount > 0 ? totalDuration / totalDurationCount : 0;
-    const avgWinDuration = winCount > 0 ? winDurationSum / winCount : 0;
-    const avgLossDuration = lossCount > 0 ? lossDurationSum / lossCount : 0;
+    const avgWinDuration = winDurationCount > 0 ? winDurationSum / winDurationCount : 0;
+    const avgLossDuration = lossDurationCount > 0 ? lossDurationSum / lossDurationCount : 0;
 
     return {
       bestTrade, worstTrade, avgWin, avgLoss, profitFactor,
@@ -198,27 +205,38 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
 
       {/* TIME ANALYSIS CARD */}
       <StatCard title="Time Analysis" className="flex-1">
-        <div className="flex flex-col gap-3">
-           <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                 <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400"><History size={14} /></div>
-                 <span className="text-[10px] font-bold text-xgiha-muted uppercase tracking-widest">Avg Duration</span>
+        <div className="flex flex-col gap-2.5">
+           {/* AVG TRADE DURATION SECTION */}
+           <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-white/5 border border-white/5">
+              <div className="flex items-center gap-2">
+                 <History size={11} className="text-blue-400" />
+                 <span className="text-[9px] font-bold text-xgiha-muted uppercase tracking-[0.15em]">Avg Trade Duration</span>
               </div>
-              <span className="font-pixel text-white text-xs">{formatDuration(stats.avgDuration)}</span>
+              <span className="font-pixel text-white text-[11px] leading-tight">
+                {formatDuration(stats.avgDuration)}
+              </span>
            </div>
-           <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                 <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400"><Clock size={14} /></div>
-                 <span className="text-[10px] font-bold text-xgiha-muted uppercase tracking-widest">Avg Win Time</span>
+
+           {/* AVG WIN DURATION SECTION */}
+           <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-white/5 border border-white/5">
+              <div className="flex items-center gap-2">
+                 <Clock size={11} className="text-emerald-400" />
+                 <span className="text-[9px] font-bold text-xgiha-muted uppercase tracking-[0.15em]">Avg Win Duration</span>
               </div>
-              <span className="font-pixel text-emerald-400 text-xs">{formatDuration(stats.avgWinDuration)}</span>
+              <span className="font-pixel text-emerald-400 text-[11px] leading-tight">
+                {formatDuration(stats.avgWinDuration)}
+              </span>
            </div>
-           <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                 <div className="p-2 rounded-lg bg-red-500/10 text-red-400"><Timer size={14} /></div>
-                 <span className="text-[10px] font-bold text-xgiha-muted uppercase tracking-widest">Avg Loss Time</span>
+
+           {/* AVG LOSS DURATION SECTION */}
+           <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-white/5 border border-white/5">
+              <div className="flex items-center gap-2">
+                 <Timer size={11} className="text-red-400" />
+                 <span className="text-[9px] font-bold text-xgiha-muted uppercase tracking-[0.15em]">Avg Loss Duration</span>
               </div>
-              <span className="font-pixel text-red-400 text-xs">{formatDuration(stats.avgLossDuration)}</span>
+              <span className="font-pixel text-red-400 text-[11px] leading-tight">
+                {formatDuration(stats.avgLossDuration)}
+              </span>
            </div>
         </div>
       </StatCard>

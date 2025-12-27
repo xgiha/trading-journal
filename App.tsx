@@ -169,9 +169,9 @@ const App: React.FC = () => {
     <div className="h-screen w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black">
       <div className="w-full h-full glass-card rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
         
-        {/* Sync Status Header */}
+        {/* Sync Status Header - Only show if app is loaded */}
         <AnimatePresence>
-          {syncStatus !== 'idle' && (
+          {(syncStatus !== 'idle' && !isInitialLoading) && (
             <MotionDiv
               initial={{ y: -60, x: '-50%', opacity: 0 }}
               animate={{ y: 0, x: '-50%', opacity: 1 }}
@@ -202,109 +202,116 @@ const App: React.FC = () => {
                   <span className="text-[10px] uppercase font-bold tracking-widest text-xgiha-muted">Initializing xgiha Core</span>
                </MotionDiv>
             ) : (
-              <MotionDiv 
-                key="dashboard-grid"
-                initial={{ opacity: 0, scale: 0.99 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.99 }}
-                transition={{ duration: 0.4, ease: "circOut" }}
-                className="flex-1 min-h-0 flex flex-row gap-4 lg:gap-6 z-10 items-stretch h-full w-full"
-              >
-                {/* LEFT WING */}
-                <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
-                  <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full">
-                    <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                    {/* PROGRESS MODULE */}
-                    <Progress trades={trades} />
+              <React.Fragment>
+                <MotionDiv 
+                  key="dashboard-grid"
+                  initial={{ opacity: 0, scale: 0.99 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.99 }}
+                  transition={{ duration: 0.4, ease: "circOut" }}
+                  className="flex-1 min-h-0 flex flex-row gap-4 lg:gap-6 z-10 items-stretch h-full w-full"
+                >
+                  {/* LEFT WING */}
+                  <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
+                    <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full">
+                      <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+                      {/* PROGRESS MODULE */}
+                      <Progress trades={trades} />
+                    </div>
+                    <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
+                      <TimeAnalysis trades={trades} />
+                    </div>
                   </div>
-                  <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
-                    <TimeAnalysis trades={trades} />
-                  </div>
-                </div>
 
-                {/* CENTER AREA */}
-                <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-20">
-                  <div className="w-full h-full relative">
-                    <AnimatePresence mode="wait" initial={false}>
-                      <MotionDiv
-                        key={activeTab}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute inset-0 w-full h-full flex flex-col"
-                      >
-                        {activeTab === 'dashboard' ? (
-                          <TradingCalendar 
-                            trades={trades} 
-                            currentDate={currentCalendarDate} 
-                            onMonthChange={setCurrentCalendarDate} 
-                            onAddTradeClick={handleAddTradeClick} 
-                            onViewDayClick={handleViewDayClick} 
-                            onViewWeekClick={handleViewWeekClick} 
-                          />
-                        ) : (
-                          <JournalTable 
-                            trades={trades} 
-                            onEdit={handleEditTrade} 
-                            onDelete={handleDeleteTrade} 
-                            onViewDay={handleViewDayClick}
-                            onExport={handleExportData}
-                            onImport={handleImportData}
-                          />
-                        )}
-                      </MotionDiv>
-                    </AnimatePresence>
+                  {/* CENTER AREA */}
+                  <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-20">
+                    <div className="w-full h-full relative">
+                      <AnimatePresence mode="wait" initial={false}>
+                        <MotionDiv
+                          key={activeTab}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          className="absolute inset-0 w-full h-full flex flex-col"
+                        >
+                          {activeTab === 'dashboard' ? (
+                            <TradingCalendar 
+                              trades={trades} 
+                              currentDate={currentCalendarDate} 
+                              onMonthChange={setCurrentCalendarDate} 
+                              onAddTradeClick={handleAddTradeClick} 
+                              onViewDayClick={handleViewDayClick} 
+                              onViewWeekClick={handleViewWeekClick} 
+                            />
+                          ) : (
+                            <JournalTable 
+                              trades={trades} 
+                              onEdit={handleEditTrade} 
+                              onDelete={handleDeleteTrade} 
+                              onViewDay={handleViewDayClick}
+                              onExport={handleExportData}
+                              onImport={handleImportData}
+                            />
+                          )}
+                        </MotionDiv>
+                      </AnimatePresence>
+                    </div>
                   </div>
-                </div>
 
-                {/* RIGHT WING */}
-                <div className="flex flex-col h-full w-[460px] shrink-0 gap-4 lg:gap-6">
-                  <div className="flex-1 min-h-0">
-                      <GrowthChart trades={trades} />
+                  {/* RIGHT WING */}
+                  <div className="flex flex-col h-full w-[460px] shrink-0 gap-4 lg:gap-6">
+                    <div className="flex-1 min-h-0">
+                        <GrowthChart trades={trades} />
+                    </div>
+                    <div className="flex-1 min-h-0">
+                        <WeeklyChart trades={trades} stats={globalStats} />
+                    </div>
                   </div>
-                  <div className="flex-1 min-h-0">
-                      <WeeklyChart trades={trades} stats={globalStats} />
+                </MotionDiv>
+
+                {/* NAVIGATION DOCK - Only show if app is loaded */}
+                <MotionDiv 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
+                  className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none"
+                >
+                  <div className="flex items-center gap-6 pointer-events-auto">
+                    {/* Tab Switcher */}
+                    <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md w-[260px] shadow-lg">
+                        {TABS.map((tab) => (
+                          <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex-1 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-xgiha-muted hover:text-white/60'}`}
+                          >
+                            <tab.icon size={14} />
+                            <span className="text-[10px] font-semibold tracking-wide">{tab.label}</span>
+                          </button>
+                        ))}
+                        <MotionDiv
+                          layoutId="active-tab-pill"
+                          className="absolute inset-y-1 w-[calc(50%-4px)] z-0 rounded-full bg-white/10"
+                          initial={false}
+                          animate={{ x: activeIndex === 1 ? '100%' : '0%' }}
+                          transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                        />
+                    </div>
+
+                    {/* Add Trade Button */}
+                    <button 
+                      onClick={handleAddTradeBtnClick}
+                      className="bg-white text-black px-6 py-2.5 rounded-full flex items-center gap-2 active:scale-[0.95] transition-all duration-200 shadow-[0_0_25px_rgba(255,255,255,0.3)]"
+                    >
+                      <Plus size={16} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Add Trade</span>
+                    </button>
                   </div>
-                </div>
-              </MotionDiv>
+                </MotionDiv>
+              </React.Fragment>
             )}
         </AnimatePresence>
-
-        {/* NAVIGATION DOCK */}
-        <div className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none">
-          <div className="flex items-center gap-6 pointer-events-auto">
-            {/* Tab Switcher */}
-            <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md w-[260px] shadow-lg">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-xgiha-muted hover:text-white/60'}`}
-                  >
-                    <tab.icon size={14} />
-                    <span className="text-[10px] font-semibold tracking-wide">{tab.label}</span>
-                  </button>
-                ))}
-                <MotionDiv
-                  layoutId="active-tab-pill"
-                  className="absolute inset-y-1 w-[calc(50%-4px)] z-0 rounded-full bg-white/10"
-                  initial={false}
-                  animate={{ x: activeIndex === 1 ? '100%' : '0%' }}
-                  transition={{ type: "spring", stiffness: 400, damping: 35 }}
-                />
-            </div>
-
-            {/* Add Trade Button */}
-            <button 
-              onClick={handleAddTradeBtnClick}
-              className="bg-white text-black px-6 py-2.5 rounded-full flex items-center gap-2 active:scale-[0.95] transition-all duration-200 shadow-[0_0_25px_rgba(255,255,255,0.3)]"
-            >
-              <Plus size={16} />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Add Trade</span>
-            </button>
-          </div>
-        </div>
 
         <AnimatePresence>
           {isAddModalOpen && (
