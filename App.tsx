@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { LayoutGrid, BookOpen, Plus, Cloud, CloudOff, RefreshCw, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -24,57 +24,76 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-
   const [trades, setTrades] = useState<Trade[]>([]);
+  
+  // Ref to prevent redundant syncs on initial load
+  const lastSyncedTradesRef = useRef<string>("");
 
-  // 1. Load data from Cloud on mount
+  // 1. Initial Data Load
   useEffect(() => {
     const initData = async () => {
       try {
-        setSyncStatus('syncing');
         const response = await fetch('/api/trades');
+        let initialTrades: Trade[] = [];
+        
         if (response.ok) {
           const cloudTrades = await response.json();
           if (cloudTrades && Array.isArray(cloudTrades) && cloudTrades.length > 0) {
-            setTrades(cloudTrades);
+            initialTrades = cloudTrades;
           } else {
-            // Fallback to local if cloud is empty
             const saved = localStorage.getItem('xgiha_trades');
-            if (saved) setTrades(JSON.parse(saved));
+            if (saved) initialTrades = JSON.parse(saved);
           }
         }
-        setSyncStatus('success');
-        setTimeout(() => setSyncStatus('idle'), 2000);
+        
+        setTrades(initialTrades);
+        lastSyncedTradesRef.current = JSON.stringify(initialTrades);
+        
+        // Brief delay before showing the dashboard for smoother transition
+        setTimeout(() => {
+          setIsInitialLoading(false);
+          // Show successful sync once the dashboard appears
+          setSyncStatus('success');
+          setTimeout(() => setSyncStatus('idle'), 2000);
+        }, 800);
+
       } catch (e) {
         console.error("Failed to sync with cloud", e);
+        const saved = localStorage.getItem('xgiha_trades');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setTrades(parsed);
+          lastSyncedTradesRef.current = saved;
+        }
+        setIsInitialLoading(false);
         setSyncStatus('error');
         setTimeout(() => setSyncStatus('idle'), 3000);
-        // Final fallback
-        const saved = localStorage.getItem('xgiha_trades');
-        if (saved) setTrades(JSON.parse(saved));
-      } finally {
-        setIsInitialLoading(false);
       }
     };
     initData();
   }, []);
 
-  // 2. Sync to Cloud and LocalStorage whenever trades change
+  // 2. Data Sync logic (Debounced)
   useEffect(() => {
-    if (isInitialLoading) return; // Don't sync empty state over existing data
+    if (isInitialLoading) return;
+
+    const currentTradesJson = JSON.stringify(trades);
+    // Only trigger sync if data has actually changed from what we last loaded/sent
+    if (currentTradesJson === lastSyncedTradesRef.current) return;
 
     const syncTrades = async () => {
-      // Save locally first for speed
-      localStorage.setItem('xgiha_trades', JSON.stringify(trades));
+      localStorage.setItem('xgiha_trades', currentTradesJson);
 
       try {
         setSyncStatus('syncing');
         const response = await fetch('/api/trades', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(trades),
+          body: currentTradesJson,
         });
         if (!response.ok) throw new Error('Sync failed');
+        
+        lastSyncedTradesRef.current = currentTradesJson;
         setSyncStatus('success');
         setTimeout(() => setSyncStatus('idle'), 2000);
       } catch (e) {
@@ -84,7 +103,7 @@ const App: React.FC = () => {
       }
     };
 
-    const timeout = setTimeout(syncTrades, 1000); // Debounce sync
+    const timeout = setTimeout(syncTrades, 1500); // 1.5s debounce
     return () => clearTimeout(timeout);
   }, [trades, isInitialLoading]);
 
@@ -150,7 +169,7 @@ const App: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `xgiha-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `journal-backup-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -169,21 +188,21 @@ const App: React.FC = () => {
     <div className="h-screen w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black">
       <div className="w-full h-full glass-card rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
         
-        {/* Sync Status Header - Only show if app is loaded */}
+        {/* Sync Status Header - Visible only when NOT loading and status is active */}
         <AnimatePresence>
           {(syncStatus !== 'idle' && !isInitialLoading) && (
             <MotionDiv
               initial={{ y: -60, x: '-50%', opacity: 0 }}
               animate={{ y: 0, x: '-50%', opacity: 1 }}
               exit={{ y: -60, x: '-50%', opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="absolute top-6 left-1/2 z-[100] flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-lg"
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="absolute top-6 left-1/2 z-[150] flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl"
             >
-                {syncStatus === 'syncing' && <RefreshCw size={10} className="text-xgiha-accent animate-spin" />}
-                {syncStatus === 'success' && <Check size={10} className="text-emerald-400" />}
-                {syncStatus === 'error' && <CloudOff size={10} className="text-red-400" />}
-                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-white/70">
-                    {syncStatus === 'syncing' ? 'Journal Syncing' : syncStatus === 'error' ? 'Sync Error' : 'Success'}
+                {syncStatus === 'syncing' && <RefreshCw size={11} className="text-xgiha-accent animate-spin" />}
+                {syncStatus === 'success' && <Check size={11} className="text-emerald-400" />}
+                {syncStatus === 'error' && <CloudOff size={11} className="text-red-400" />}
+                <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white">
+                    {syncStatus === 'syncing' ? 'Syncing Journal' : syncStatus === 'error' ? 'Sync Failed' : 'System Synced'}
                 </span>
             </MotionDiv>
           )}
@@ -196,26 +215,30 @@ const App: React.FC = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex-1 flex flex-col items-center justify-center gap-4"
+                  className="flex-1 flex flex-col items-center justify-center gap-6"
                >
-                  <div className="w-8 h-8 border-2 border-white/10 border-t-white rounded-full animate-spin" />
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-xgiha-muted">Initializing xgiha Core</span>
+                  <div className="relative flex items-center justify-center">
+                    <div className="w-12 h-12 border-2 border-white/5 border-t-xgiha-accent rounded-full animate-spin" />
+                    <div className="absolute inset-0 w-12 h-12 border border-white/5 rounded-full blur-[4px]" />
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold tracking-[0.4em] text-xgiha-accent animate-pulse">Journal Core</span>
+                    <span className="text-[8px] uppercase font-medium tracking-[0.2em] text-xgiha-muted/60">Initializing Environment...</span>
+                  </div>
                </MotionDiv>
             ) : (
               <React.Fragment>
                 <MotionDiv 
                   key="dashboard-grid"
-                  initial={{ opacity: 0, scale: 0.99 }}
+                  initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.99 }}
-                  transition={{ duration: 0.4, ease: "circOut" }}
+                  transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
                   className="flex-1 min-h-0 flex flex-row gap-4 lg:gap-6 z-10 items-stretch h-full w-full"
                 >
                   {/* LEFT WING */}
                   <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
                     <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full">
                       <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                      {/* PROGRESS MODULE */}
                       <Progress trades={trades} />
                     </div>
                     <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
@@ -223,16 +246,16 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* CENTER AREA */}
-                  <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-20">
+                  {/* CENTER AREA - Expanded to bottom from pb-20 to pb-6 */}
+                  <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-6">
                     <div className="w-full h-full relative">
                       <AnimatePresence mode="wait" initial={false}>
                         <MotionDiv
                           key={activeTab}
-                          initial={{ opacity: 0, y: 10 }}
+                          initial={{ opacity: 0, y: 12 }}
                           animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          exit={{ opacity: 0, y: -12 }}
+                          transition={{ duration: 0.3, ease: "easeOut" }}
                           className="absolute inset-0 w-full h-full flex flex-col"
                         >
                           {activeTab === 'dashboard' ? (
@@ -270,24 +293,24 @@ const App: React.FC = () => {
                   </div>
                 </MotionDiv>
 
-                {/* NAVIGATION DOCK - Only show if app is loaded */}
+                {/* NAVIGATION DOCK */}
                 <MotionDiv 
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.4 }}
+                  transition={{ delay: 0.4, duration: 0.6, ease: "circOut" }}
                   className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none"
                 >
                   <div className="flex items-center gap-6 pointer-events-auto">
-                    {/* Tab Switcher */}
-                    <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md w-[260px] shadow-lg">
+                    {/* Tab Switcher - Increased height with py-3.5 */}
+                    <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md w-[260px] shadow-2xl border border-white/5">
                         {TABS.map((tab) => (
                           <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex-1 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-xgiha-muted hover:text-white/60'}`}
+                            className={`flex-1 py-3.5 rounded-full flex items-center justify-center gap-2 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-xgiha-muted hover:text-white/60'}`}
                           >
                             <tab.icon size={14} />
-                            <span className="text-[10px] font-semibold tracking-wide">{tab.label}</span>
+                            <span className="text-[10px] font-bold tracking-widest uppercase">{tab.label}</span>
                           </button>
                         ))}
                         <MotionDiv
@@ -299,13 +322,13 @@ const App: React.FC = () => {
                         />
                     </div>
 
-                    {/* Add Trade Button */}
+                    {/* Add Trade Button - Increased height with py-4 */}
                     <button 
                       onClick={handleAddTradeBtnClick}
-                      className="bg-white text-black px-6 py-2.5 rounded-full flex items-center gap-2 active:scale-[0.95] transition-all duration-200 shadow-[0_0_25px_rgba(255,255,255,0.3)]"
+                      className="bg-white text-black px-7 py-4 rounded-full flex items-center gap-2 active:scale-[0.95] transition-all duration-200 shadow-[0_0_30px_rgba(255,255,255,0.25)] hover:shadow-[0_0_40px_rgba(255,255,255,0.35)]"
                     >
-                      <Plus size={16} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">Add Trade</span>
+                      <Plus size={16} strokeWidth={3} />
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">Add Entry</span>
                     </button>
                   </div>
                 </MotionDiv>
