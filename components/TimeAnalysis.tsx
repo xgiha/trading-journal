@@ -205,9 +205,9 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
 
       {/* TIME ANALYSIS CARD */}
       <StatCard title="Time Analysis" className="flex-1">
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2">
            {/* AVG TRADE DURATION SECTION */}
-           <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-white/5 border border-white/5">
+           <div className="flex flex-col gap-1 p-2 rounded-xl bg-white/5 border border-white/5">
               <div className="flex items-center gap-2">
                  <History size={11} className="text-blue-400" />
                  <span className="text-[9px] font-bold text-xgiha-muted uppercase tracking-[0.15em]">Avg Trade Duration</span>
@@ -218,7 +218,7 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
            </div>
 
            {/* AVG WIN DURATION SECTION */}
-           <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-white/5 border border-white/5">
+           <div className="flex flex-col gap-1 p-2 rounded-xl bg-white/5 border border-white/5">
               <div className="flex items-center gap-2">
                  <Clock size={11} className="text-emerald-400" />
                  <span className="text-[9px] font-bold text-xgiha-muted uppercase tracking-[0.15em]">Avg Win Duration</span>
@@ -229,7 +229,7 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
            </div>
 
            {/* AVG LOSS DURATION SECTION */}
-           <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-white/5 border border-white/5">
+           <div className="flex flex-col gap-1 p-2 rounded-xl bg-white/5 border border-white/5">
               <div className="flex items-center gap-2">
                  <Timer size={11} className="text-red-400" />
                  <span className="text-[9px] font-bold text-xgiha-muted uppercase tracking-[0.15em]">Avg Loss Duration</span>
