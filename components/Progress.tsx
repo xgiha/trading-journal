@@ -9,22 +9,25 @@ interface ProgressProps {
   trades: Trade[];
 }
 
-// Sub-component for the background fireflies - Tiny and reactive to progress
+// Sub-component for the background fireflies - Optimized for GPU performance
 const BackgroundFireflies: React.FC<{ speedFactor: number }> = ({ speedFactor }) => {
   const particles = useMemo(() => {
     const colors = ['#ffffff', '#34d399', '#ffa600']; 
     return Array.from({ length: 25 }).map((_, i) => ({
       id: i,
-      size: Math.random() * 1.5 + 0.5, // Tiny particles
-      waypointsX: Array.from({ length: 5 }).map(() => Math.random() * 100 + '%'),
-      waypointsY: Array.from({ length: 5 }).map(() => Math.random() * 100 + '%'),
+      size: Math.random() * 1.5 + 0.5, 
+      // Use numeric values for transform-based animation
+      waypointsX: Array.from({ length: 5 }).map(() => (Math.random() * 200 - 50)), // Relative translate range
+      waypointsY: Array.from({ length: 5 }).map(() => (Math.random() * 200 - 50)),
+      // Initial fixed positions to avoid layout shifts
+      initialX: Math.random() * 100 + '%',
+      initialY: Math.random() * 100 + '%',
       baseDuration: Math.random() * 15 + 15, 
       delay: Math.random() * -20,
       color: colors[i % colors.length],
     }));
   }, []);
 
-  // Speed up particles as the bag fills
   const getDuration = (base: number) => base / (1 + speedFactor * 3);
 
   return (
@@ -32,9 +35,10 @@ const BackgroundFireflies: React.FC<{ speedFactor: number }> = ({ speedFactor })
       {particles.map((p) => (
         <MotionDiv
           key={p.id}
+          initial={{ left: p.initialX, top: p.initialY }}
           animate={{
-            left: p.waypointsX,
-            top: p.waypointsY,
+            x: p.waypointsX,
+            y: p.waypointsY,
             opacity: [0.1, 0.5, 0.1],
             scale: [1, 1.5, 1],
           }}
@@ -45,12 +49,13 @@ const BackgroundFireflies: React.FC<{ speedFactor: number }> = ({ speedFactor })
             ease: "easeInOut",
             delay: p.delay,
           }}
-          className="absolute rounded-full blur-[1px]"
+          className="absolute rounded-full blur-[1px] transform-gpu"
           style={{
             width: p.size,
             height: p.size,
             backgroundColor: p.color,
             boxShadow: `0 0 4px ${p.color}`,
+            willChange: 'transform, opacity', // Hint to browser for optimization
           }}
         />
       ))}
@@ -110,7 +115,7 @@ const Progress: React.FC<ProgressProps> = ({ trades }) => {
               damping: 15, 
               mass: 1
             }}
-            className="absolute bottom-0 left-0 right-0 overflow-hidden rounded-b-[25px] origin-bottom"
+            className="absolute bottom-0 left-0 right-0 overflow-hidden rounded-b-[25px] origin-bottom transform-gpu"
           >
             {/* Fluid Body with Layered Gradients */}
             <div className="absolute inset-0 z-10">
@@ -133,7 +138,7 @@ const Progress: React.FC<ProgressProps> = ({ trades }) => {
                                 repeat: Infinity, 
                                 delay: i * 0.5 
                             }}
-                            className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white/30 blur-[1px]"
+                            className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white/30 blur-[1px] transform-gpu"
                             style={{ left: `${20 + i * 20}%` }}
                         />
                     ))}
