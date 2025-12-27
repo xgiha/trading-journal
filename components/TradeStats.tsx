@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { Trade } from '../types';
-import { Award, TrendingUp, TrendingDown, Calendar, Target, Zap } from 'lucide-react';
+import { Award, TrendingUp, TrendingDown, Target, Zap, Layout } from 'lucide-react';
 
 interface TradeStatsProps {
   trades: Trade[];
@@ -71,9 +71,9 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
   }, [trades]);
 
   if (!stats) return (
-    <div className="flex flex-col gap-4">
-      {[1, 2, 3].map(i => (
-        <StatCard key={i} title="Pending Data" className="h-[120px]">
+    <div className="flex flex-col gap-4 h-full">
+      {[1, 2, 3, 4].map(i => (
+        <StatCard key={i} title="Pending Data" className="flex-1">
           <div className="flex-1 flex flex-col items-center justify-center opacity-20 gap-2">
             <Award size={24} />
             <span className="text-[8px] font-bold uppercase tracking-widest">Awaiting Trades</span>
@@ -84,7 +84,8 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
   );
 
   return (
-    <div className="flex flex-col gap-4 w-full h-full overflow-y-auto custom-scrollbar pr-1">
+    <div className="flex flex-col gap-4 w-full h-full pr-1">
+      {/* PERFORMANCE CARD */}
       <StatCard title="Trade Performance">
         <div className="flex flex-col gap-4">
            <div className="flex items-center justify-between">
@@ -109,7 +110,8 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
         </div>
       </StatCard>
 
-      <StatCard title="Daily Records">
+      {/* BEST & WORST CARD */}
+      <StatCard title="Best & Worst">
         <div className="flex flex-col gap-3">
            <div className="flex justify-between items-end">
               <div className="flex flex-col">
@@ -128,7 +130,8 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
         </div>
       </StatCard>
 
-      <StatCard title="Logic & Efficiency">
+      {/* STRATEGY CARD */}
+      <StatCard title="Strategy">
         <div className="flex flex-col gap-4">
            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
@@ -150,6 +153,14 @@ const TradeStats: React.FC<TradeStatsProps> = ({ trades }) => {
                  <span className="text-[10px] font-bold text-xgiha-accent">{stats.mostUsedStrategy?.[1]} Trades</span>
               </div>
            </div>
+        </div>
+      </StatCard>
+
+      {/* NEW EMPTY / PLACEHOLDER CARD */}
+      <StatCard title="Insights" className="flex-1 min-h-[100px] flex flex-col justify-center items-center opacity-40">
+        <div className="flex flex-col items-center gap-2">
+          <Layout size={20} className="text-white/20" />
+          <span className="text-[8px] font-bold uppercase tracking-[0.3em] text-white/30">Upcoming Section</span>
         </div>
       </StatCard>
     </div>

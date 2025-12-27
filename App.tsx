@@ -169,7 +169,7 @@ const App: React.FC = () => {
     <div className="h-screen w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black">
       <div className="w-full h-full glass-card rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
         
-        {/* Sync Status Header - Sliding Animation */}
+        {/* Sync Status Header */}
         <AnimatePresence>
           {syncStatus !== 'idle' && (
             <MotionDiv
@@ -212,12 +212,12 @@ const App: React.FC = () => {
               >
                 {/* LEFT WING */}
                 <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
-                  <div className="flex flex-col gap-4 w-[218px] shrink-0">
+                  <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full">
                     <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
                     {/* PROGRESS MODULE */}
                     <Progress trades={trades} />
                   </div>
-                  <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0">
+                  <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
                     <TradeStats trades={trades} />
                   </div>
                 </div>
