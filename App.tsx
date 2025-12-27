@@ -9,7 +9,7 @@ import { TradingCalendar } from './components/TradingCalendar';
 import { JournalTable } from './components/JournalTable';
 import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
 import TotalPnlCard from './components/TotalPnlCard';
-import TradeStats from './components/TradeStats';
+import TimeAnalysis from './components/TimeAnalysis';
 import Progress from './components/Progress';
 import { Trade } from './types';
 
@@ -218,7 +218,7 @@ const App: React.FC = () => {
                     <Progress trades={trades} />
                   </div>
                   <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
-                    <TradeStats trades={trades} />
+                    <TimeAnalysis trades={trades} />
                   </div>
                 </div>
 
