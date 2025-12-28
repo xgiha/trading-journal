@@ -44,7 +44,23 @@ const formatDuration = (seconds: number) => {
 
 const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
   const stats = useMemo(() => {
-    if (trades.length === 0) return null;
+    // Default empty stats
+    const emptyStats = {
+      bestTrade: null,
+      worstTrade: null,
+      avgWin: 0,
+      avgLoss: 0,
+      profitFactor: 0,
+      mostProfitableDay: null as [string, number] | null,
+      leastProfitableDay: null as [string, number] | null,
+      mostUsedStrategy: null as [string, number] | null,
+      mostProfitableStrategy: null as [string, number] | null,
+      avgDuration: 0,
+      avgWinDuration: 0,
+      avgLossDuration: 0
+    };
+
+    if (trades.length === 0) return emptyStats;
 
     let bestTrade = trades[0];
     let worstTrade = trades[0];
@@ -61,8 +77,8 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
 
     trades.forEach(t => {
       // P&L Stats
-      if (t.pnl > bestTrade.pnl) bestTrade = t;
-      if (t.pnl < worstTrade.pnl) worstTrade = t;
+      if (t.pnl > (bestTrade?.pnl || -Infinity)) bestTrade = t;
+      if (t.pnl < (worstTrade?.pnl || Infinity)) worstTrade = t;
       if (t.pnl > 0) { winSum += t.pnl; winCount++; }
       else if (t.pnl < 0) { lossSum += t.pnl; lossCount++; }
       
@@ -117,19 +133,6 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
     };
   }, [trades]);
 
-  if (!stats) return (
-    <div className="flex flex-col gap-4 h-full">
-      {[1, 2, 3, 4].map(i => (
-        <StatCard key={i} title="Pending Data" className="flex-1">
-          <div className="flex-1 flex flex-col items-center justify-center opacity-20 gap-2">
-            <Award size={24} />
-            <span className="text-[8px] font-bold uppercase tracking-widest">Awaiting Trades</span>
-          </div>
-        </StatCard>
-      ))}
-    </div>
-  );
-
   return (
     <div className="flex flex-col gap-4 w-full h-full pr-1">
       {/* PERFORMANCE CARD */}
@@ -163,16 +166,16 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
            <div className="flex justify-between items-end">
               <div className="flex flex-col">
                  <span className="text-[9px] font-bold text-xgiha-muted/40 uppercase tracking-widest mb-1">Best Day</span>
-                 <span className="text-[10px] font-bold text-white uppercase">{stats.mostProfitableDay?.[0]}</span>
+                 <span className="text-[10px] font-bold text-white uppercase">{stats.mostProfitableDay?.[0] || '---'}</span>
               </div>
-              <span className="text-sm font-pixel text-emerald-400">+${stats.mostProfitableDay?.[1].toFixed(0)}</span>
+              <span className="text-sm font-pixel text-emerald-400">{stats.mostProfitableDay ? `+$${stats.mostProfitableDay[1].toFixed(0)}` : '$0'}</span>
            </div>
            <div className="flex justify-between items-end">
               <div className="flex flex-col">
                  <span className="text-[9px] font-bold text-xgiha-muted/40 uppercase tracking-widest mb-1">Worst Day</span>
-                 <span className="text-[10px] font-bold text-white uppercase">{stats.leastProfitableDay?.[0]}</span>
+                 <span className="text-[10px] font-bold text-white uppercase">{stats.leastProfitableDay?.[0] || '---'}</span>
               </div>
-              <span className="text-sm font-pixel text-red-400">-${Math.abs(stats.leastProfitableDay?.[1] || 0).toFixed(0)}</span>
+              <span className="text-sm font-pixel text-red-400">{stats.leastProfitableDay ? `-$${Math.abs(stats.leastProfitableDay[1]).toFixed(0)}` : '$0'}</span>
            </div>
         </div>
       </StatCard>
@@ -186,8 +189,8 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
                  <span className="text-[9px] font-bold text-xgiha-muted uppercase tracking-widest">Top Strategy</span>
               </div>
               <div className="flex justify-between items-center bg-white/5 rounded-xl px-3 py-2">
-                 <span className="text-[10px] font-bold text-white truncate max-w-[100px]">{stats.mostProfitableStrategy?.[0]}</span>
-                 <span className="text-[10px] font-pixel text-emerald-400">+${stats.mostProfitableStrategy?.[1].toFixed(0)}</span>
+                 <span className="text-[10px] font-bold text-white truncate max-w-[100px]">{stats.mostProfitableStrategy?.[0] || '---'}</span>
+                 <span className="text-[10px] font-pixel text-emerald-400">{stats.mostProfitableStrategy ? `+$${stats.mostProfitableStrategy[1].toFixed(0)}` : '$0'}</span>
               </div>
            </div>
            <div className="flex flex-col gap-2">
@@ -196,8 +199,8 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
                  <span className="text-[9px] font-bold text-xgiha-muted uppercase tracking-widest">Volume Leader</span>
               </div>
               <div className="flex justify-between items-center bg-white/5 rounded-xl px-3 py-2">
-                 <span className="text-[10px] font-bold text-white truncate max-w-[100px]">{stats.mostUsedStrategy?.[0]}</span>
-                 <span className="text-[10px] font-bold text-xgiha-accent">{stats.mostUsedStrategy?.[1]} Trades</span>
+                 <span className="text-[10px] font-bold text-white truncate max-w-[100px]">{stats.mostUsedStrategy?.[0] || '---'}</span>
+                 <span className="text-[10px] font-bold text-xgiha-accent">{stats.mostUsedStrategy?.[1] || 0} Trades</span>
               </div>
            </div>
         </div>

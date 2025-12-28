@@ -9,60 +9,6 @@ interface ProgressProps {
   trades: Trade[];
 }
 
-// Sub-component for the background fireflies - Optimized for GPU performance
-const BackgroundFireflies: React.FC<{ speedFactor: number }> = ({ speedFactor }) => {
-  const particles = useMemo(() => {
-    const colors = ['#ffffff', '#34d399', '#ffa600']; 
-    return Array.from({ length: 25 }).map((_, i) => ({
-      id: i,
-      size: Math.random() * 1.5 + 0.5, 
-      // Use numeric values for transform-based animation
-      waypointsX: Array.from({ length: 5 }).map(() => (Math.random() * 200 - 50)), // Relative translate range
-      waypointsY: Array.from({ length: 5 }).map(() => (Math.random() * 200 - 50)),
-      // Initial fixed positions to avoid layout shifts
-      initialX: Math.random() * 100 + '%',
-      initialY: Math.random() * 100 + '%',
-      baseDuration: Math.random() * 15 + 15, 
-      delay: Math.random() * -20,
-      color: colors[i % colors.length],
-    }));
-  }, []);
-
-  const getDuration = (base: number) => base / (1 + speedFactor * 3);
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {particles.map((p) => (
-        <MotionDiv
-          key={p.id}
-          initial={{ left: p.initialX, top: p.initialY }}
-          animate={{
-            x: p.waypointsX,
-            y: p.waypointsY,
-            opacity: [0.1, 0.5, 0.1],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: getDuration(p.baseDuration),
-            repeat: Infinity,
-            repeatType: "mirror",
-            ease: "easeInOut",
-            delay: p.delay,
-          }}
-          className="absolute rounded-full blur-[1px] transform-gpu"
-          style={{
-            width: p.size,
-            height: p.size,
-            backgroundColor: p.color,
-            boxShadow: `0 0 4px ${p.color}`,
-            willChange: 'transform, opacity', // Hint to browser for optimization
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
 const Progress: React.FC<ProgressProps> = ({ trades }) => {
   const BUFFER_VAL = 2000;
   const TIER_VAL = 150;
@@ -93,13 +39,10 @@ const Progress: React.FC<ProgressProps> = ({ trades }) => {
   };
 
   const visualHeight = calculateVisualHeight(totalPnl);
-  const SEG_H = 100 / TOTAL_SEGMENTS;
-  const speedFactor = visualHeight / 100;
 
   return (
     <div className="group relative w-full h-full bg-white/[0.03] rounded-[25px] border border-white/5 shadow-xl transition-all duration-500 p-8 flex flex-col justify-end overflow-hidden">
-      <BackgroundFireflies speedFactor={speedFactor} />
-
+      
       <div className="relative h-[85%] w-full flex items-stretch mt-4 z-10">
         
         {/* The Progress Bar Track */}
@@ -126,23 +69,6 @@ const Progress: React.FC<ProgressProps> = ({ trades }) => {
                         : 'bg-gradient-to-t from-white/40 via-white/20 to-white/10'
                    }`}
                 />
-                
-                {/* Internal Fluid Shimmer (Bubbles) */}
-                <div className="absolute inset-0 overflow-hidden">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                        <motion.div 
-                            key={i}
-                            animate={{ y: [40, -40], opacity: [0, 0.4, 0] }}
-                            transition={{ 
-                                duration: 2 + Math.random() * 2, 
-                                repeat: Infinity, 
-                                delay: i * 0.5 
-                            }}
-                            className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white/30 blur-[1px] transform-gpu"
-                            style={{ left: `${20 + i * 20}%` }}
-                        />
-                    ))}
-                </div>
             </div>
 
             {/* Surface Highlights */}
