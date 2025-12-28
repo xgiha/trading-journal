@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import { useState, useMemo, useRef } from 'react';
 import { Trade } from '../types';
@@ -118,7 +117,7 @@ const WeeklyChart: React.FC<WeeklyChartProps> = ({ trades, stats, className }) =
                   transform: isHovered ? "scaleX(1.1)" : "scaleX(1)",
                 }}
               >
-                 {isHovered && (
+                 {isHovered && Math.abs(item.value) > 0 && (
                     <span className="text-black font-bold text-[9px] whitespace-nowrap [writing-mode:vertical-rl] rotate-180 drop-shadow-sm py-2">
                        {item.display}
                     </span>

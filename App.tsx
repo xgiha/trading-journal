@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { LayoutGrid, BookOpen, Plus, Cloud, CloudOff, RefreshCw, Check } from 'lucide-react';
+import { LayoutGrid, BookOpen, Plus, Cloud, CloudOff, RefreshCw, Check, PieChart, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import WeeklyChart from './components/WeeklyChart';
@@ -16,8 +15,10 @@ import { Trade } from './types';
 const MotionDiv = motion.div as any;
 
 const TABS = [
-  { id: 'dashboard', icon: LayoutGrid, label: 'Dashboard' },
+  { id: 'dashboard', icon: LayoutGrid, label: 'Dash' },
   { id: 'journal', icon: BookOpen, label: 'Journal' },
+  { id: 'stats', icon: PieChart, label: 'Stats', mobileOnly: true },
+  { id: 'analytics', icon: BarChart3, label: 'Charts', mobileOnly: true },
 ];
 
 const App: React.FC = () => {
@@ -25,9 +26,16 @@ const App: React.FC = () => {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
   
-  // Ref to prevent redundant syncs on initial load
   const lastSyncedTradesRef = useRef<string>("");
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // 1. Initial Data Load
   useEffect(() => {
@@ -49,10 +57,8 @@ const App: React.FC = () => {
         setTrades(initialTrades);
         lastSyncedTradesRef.current = JSON.stringify(initialTrades);
         
-        // Brief delay before showing the dashboard for smoother transition
         setTimeout(() => {
           setIsInitialLoading(false);
-          // Show successful sync once the dashboard appears
           setSyncStatus('success');
           setTimeout(() => setSyncStatus('idle'), 2000);
         }, 800);
@@ -78,12 +84,10 @@ const App: React.FC = () => {
     if (isInitialLoading) return;
 
     const currentTradesJson = JSON.stringify(trades);
-    // Only trigger sync if data has actually changed from what we last loaded/sent
     if (currentTradesJson === lastSyncedTradesRef.current) return;
 
     const syncTrades = async () => {
       localStorage.setItem('xgiha_trades', currentTradesJson);
-
       try {
         setSyncStatus('syncing');
         const response = await fetch('/api/trades', {
@@ -92,18 +96,16 @@ const App: React.FC = () => {
           body: currentTradesJson,
         });
         if (!response.ok) throw new Error('Sync failed');
-        
         lastSyncedTradesRef.current = currentTradesJson;
         setSyncStatus('success');
         setTimeout(() => setSyncStatus('idle'), 2000);
       } catch (e) {
-        console.error("Cloud sync failed", e);
         setSyncStatus('error');
         setTimeout(() => setSyncStatus('idle'), 3000);
       }
     };
 
-    const timeout = setTimeout(syncTrades, 1500); // 1.5s debounce
+    const timeout = setTimeout(syncTrades, 1500);
     return () => clearTimeout(timeout);
   }, [trades, isInitialLoading]);
 
@@ -182,20 +184,20 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const activeIndex = TABS.findIndex(t => t.id === activeTab);
+  const currentTabs = isMobile ? TABS : TABS.filter(t => !t.mobileOnly);
+  const activeIndex = currentTabs.findIndex(t => t.id === activeTab);
 
   return (
-    <div className="h-screen w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black">
-      <div className="w-full h-full glass-card rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
+    <div className="h-[100dvh] w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black">
+      <div className="w-full h-full glass-card lg:rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
         
-        {/* Sync Status Header - Visible only when NOT loading and status is active */}
+        {/* Sync Status Header */}
         <AnimatePresence>
           {(syncStatus !== 'idle' && !isInitialLoading) && (
             <MotionDiv
               initial={{ y: -60, x: '-50%', opacity: 0 }}
               animate={{ y: 0, x: '-50%', opacity: 1 }}
               exit={{ y: -60, x: '-50%', opacity: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
               className="absolute top-6 left-1/2 z-[150] flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl"
             >
                 {syncStatus === 'syncing' && <RefreshCw size={11} className="text-xgiha-accent animate-spin" />}
@@ -219,116 +221,126 @@ const App: React.FC = () => {
                >
                   <div className="relative flex items-center justify-center">
                     <div className="w-12 h-12 border-2 border-white/5 border-t-xgiha-accent rounded-full animate-spin" />
-                    <div className="absolute inset-0 w-12 h-12 border border-white/5 rounded-full blur-[4px]" />
                   </div>
                   <div className="flex flex-col items-center gap-2">
                     <span className="text-[10px] uppercase font-bold tracking-[0.4em] text-xgiha-accent animate-pulse">Journal Core</span>
-                    <span className="text-[8px] uppercase font-medium tracking-[0.2em] text-xgiha-muted/60">Initializing Environment...</span>
                   </div>
                </MotionDiv>
             ) : (
               <React.Fragment>
-                <MotionDiv 
-                  key="dashboard-grid"
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-                  className="flex-1 min-h-0 flex flex-row gap-4 lg:gap-6 z-10 items-stretch h-full w-full"
-                >
-                  {/* LEFT WING */}
-                  <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
-                    <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full">
-                      <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                      <Progress trades={trades} />
+                {!isMobile ? (
+                  // DESKTOP LAYOUT (Preserved High-Density)
+                  <MotionDiv 
+                    key="desktop-grid"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex-1 min-h-0 flex flex-row gap-4 lg:gap-6 z-10 items-stretch h-full w-full"
+                  >
+                    <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
+                      <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full">
+                        <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+                        <Progress trades={trades} />
+                      </div>
+                      <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
+                        <TimeAnalysis trades={trades} />
+                      </div>
                     </div>
-                    <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
-                      <TimeAnalysis trades={trades} />
-                    </div>
-                  </div>
 
-                  {/* CENTER AREA - Adjusted bottom padding to pb-24 to terminate exactly above the floating menu */}
-                  <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-24">
-                    <div className="w-full h-full relative">
-                      <AnimatePresence mode="wait" initial={false}>
-                        <MotionDiv
-                          key={activeTab}
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -12 }}
-                          transition={{ duration: 0.3, ease: "easeOut" }}
-                          className="absolute inset-0 w-full h-full flex flex-col"
-                        >
-                          {activeTab === 'dashboard' ? (
-                            <TradingCalendar 
-                              trades={trades} 
-                              currentDate={currentCalendarDate} 
-                              onMonthChange={setCurrentCalendarDate} 
-                              onAddTradeClick={handleAddTradeClick} 
-                              onViewDayClick={handleViewDayClick} 
-                              onViewWeekClick={handleViewWeekClick} 
-                            />
-                          ) : (
-                            <JournalTable 
-                              trades={trades} 
-                              onEdit={handleEditTrade} 
-                              onDelete={handleDeleteTrade} 
-                              onViewDay={handleViewDayClick}
-                              onExport={handleExportData}
-                              onImport={handleImportData}
-                            />
-                          )}
-                        </MotionDiv>
-                      </AnimatePresence>
+                    <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-24">
+                      <div className="w-full h-full relative">
+                        <AnimatePresence mode="wait" initial={false}>
+                          <MotionDiv
+                            key={activeTab}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -12 }}
+                            className="absolute inset-0 w-full h-full flex flex-col"
+                          >
+                            {activeTab === 'dashboard' ? (
+                              <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />
+                            ) : (
+                              <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} />
+                            )}
+                          </MotionDiv>
+                        </AnimatePresence>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* RIGHT WING */}
-                  <div className="flex flex-col h-full w-[460px] shrink-0 gap-4 lg:gap-6">
-                    <div className="flex-1 min-h-0">
-                        <GrowthChart trades={trades} />
+                    <div className="flex flex-col h-full w-[460px] shrink-0 gap-4 lg:gap-6">
+                      <div className="flex-1 min-h-0"><GrowthChart trades={trades} /></div>
+                      <div className="flex-1 min-h-0"><WeeklyChart trades={trades} stats={globalStats} /></div>
                     </div>
-                    <div className="flex-1 min-h-0">
-                        <WeeklyChart trades={trades} stats={globalStats} />
-                    </div>
+                  </MotionDiv>
+                ) : (
+                  // MOBILE LAYOUT (Tabbed Navigation)
+                  <div className="flex-1 min-h-0 flex flex-col z-10 w-full h-full pb-28">
+                    <AnimatePresence mode="wait">
+                      <MotionDiv
+                        key={activeTab}
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex-1 overflow-y-auto no-scrollbar pt-2"
+                      >
+                        {activeTab === 'dashboard' && (
+                          <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />
+                        )}
+                        {activeTab === 'journal' && (
+                          <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} />
+                        )}
+                        {activeTab === 'stats' && (
+                          <div className="flex flex-col gap-4 px-1 pb-4">
+                            <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+                            <div className="h-[420px] shrink-0"><Progress trades={trades} /></div>
+                            <div className="h-auto shrink-0"><TimeAnalysis trades={trades} /></div>
+                          </div>
+                        )}
+                        {activeTab === 'analytics' && (
+                          <div className="flex flex-col gap-4 px-1 pb-4">
+                            <div className="h-[320px] shrink-0"><GrowthChart trades={trades} /></div>
+                            <div className="h-[320px] shrink-0"><WeeklyChart trades={trades} stats={globalStats} /></div>
+                          </div>
+                        )}
+                      </MotionDiv>
+                    </AnimatePresence>
                   </div>
-                </MotionDiv>
+                )}
 
                 {/* NAVIGATION DOCK */}
                 <MotionDiv 
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6, ease: "circOut" }}
-                  className="absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none"
+                  style={{ bottom: 'calc(1.5rem + var(--sab))' }}
+                  className="fixed lg:absolute left-0 right-0 z-[100] flex justify-center items-center pointer-events-none px-4"
                 >
-                  <div className="flex items-center gap-6 pointer-events-auto">
-                    {/* Tab Switcher - Increased height with py-3.5 */}
-                    <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md w-[260px] shadow-2xl border border-white/5">
-                        {TABS.map((tab) => (
+                  <div className="flex items-center gap-3 lg:gap-6 pointer-events-auto w-full max-w-lg lg:max-w-none justify-center">
+                    <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md flex-1 lg:flex-none lg:w-[260px] shadow-2xl border border-white/5 overflow-hidden">
+                        {currentTabs.map((tab) => (
                           <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex-1 py-3.5 rounded-full flex items-center justify-center gap-2 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-xgiha-muted hover:text-white/60'}`}
+                            className={`flex-1 py-3.5 rounded-full flex flex-col lg:flex-row items-center justify-center gap-1 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-xgiha-muted hover:text-white/60'}`}
                           >
-                            <tab.icon size={14} />
-                            <span className="text-[10px] font-bold tracking-widest uppercase">{tab.label}</span>
+                            <tab.icon size={isMobile ? 12 : 14} />
+                            <span className="text-[8px] lg:text-[10px] font-bold tracking-widest uppercase">{tab.label}</span>
                           </button>
                         ))}
                         <MotionDiv
                           layoutId="active-tab-pill"
-                          className="absolute inset-y-1 w-[calc(50%-4px)] z-0 rounded-full bg-white/10"
-                          initial={false}
-                          animate={{ x: activeIndex === 1 ? '100%' : '0%' }}
+                          className="absolute inset-y-1 z-0 rounded-full bg-white/10"
+                          style={{ width: `calc(${100 / currentTabs.length}% - 4px)` }}
+                          animate={{ x: `${activeIndex * 100}%` }}
                           transition={{ type: "spring", stiffness: 400, damping: 35 }}
                         />
                     </div>
 
-                    {/* Add Trade Button - Removed shadows and renamed from 'Add Entry' */}
                     <button 
                       onClick={handleAddTradeBtnClick}
-                      className="bg-white text-black px-7 py-4 rounded-full flex items-center gap-2 active:scale-[0.95] transition-all duration-200"
+                      className="bg-white text-black w-12 h-12 lg:w-auto lg:h-auto lg:px-7 lg:py-4 rounded-full flex items-center justify-center gap-2 active:scale-[0.95] transition-all duration-200 shadow-xl"
                     >
-                      <Plus size={16} strokeWidth={3} />
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">Add Trade</span>
+                      <Plus size={18} strokeWidth={3} />
+                      <span className="hidden lg:inline text-[10px] font-black uppercase tracking-[0.2em]">Add Trade</span>
                     </button>
                   </div>
                 </MotionDiv>
@@ -338,25 +350,10 @@ const App: React.FC = () => {
 
         <AnimatePresence>
           {isAddModalOpen && (
-            <AddTradeModal 
-              key={editingTrade ? editingTrade.id : 'add-trade'} 
-              isOpen={true} 
-              onClose={() => setIsAddModalOpen(false)} 
-              date={selectedDate} 
-              onAdd={handleAddOrUpdateTrade} 
-              initialData={editingTrade} 
-            />
+            <AddTradeModal key={editingTrade ? editingTrade.id : 'add-trade'} isOpen={true} onClose={() => setIsAddModalOpen(false)} date={selectedDate} onAdd={handleAddOrUpdateTrade} initialData={editingTrade} />
           )}
           {isDetailModalOpen && (
-            <DayDetailsModal 
-              isOpen={true} 
-              onClose={() => setIsDetailModalOpen(false)} 
-              date={selectedDate} 
-              trades={selectedTrades} 
-              onEdit={handleEditTrade} 
-              onDelete={handleDeleteTrade} 
-              onAddTrade={() => { setIsDetailModalOpen(false); handleAddTradeBtnClick(); }} 
-            />
+            <DayDetailsModal isOpen={true} onClose={() => setIsDetailModalOpen(false)} date={selectedDate} trades={selectedTrades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onAddTrade={() => { setIsDetailModalOpen(false); handleAddTradeBtnClick(); }} />
           )}
         </AnimatePresence>
       </div>

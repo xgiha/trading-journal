@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Journal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -49,15 +48,25 @@
       }
     </script>
     <style>
+      :root {
+        --sab: env(safe-area-inset-bottom, 0px);
+      }
+
       body {
         background-color: #050505;
         color: #e4e4e7;
         margin: 0;
         overflow: hidden;
-        height: 100vh;
+        height: 100dvh;
         width: 100vw;
+        position: fixed; /* Fix for mobile bounce and address bar shift */
       }
       
+      #root {
+        height: 100%;
+        width: 100%;
+      }
+
       /* Smooth Scrollbars */
       * {
         scrollbar-width: none;
