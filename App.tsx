@@ -192,8 +192,8 @@ const App: React.FC = () => {
   const activeIndex = activeTabsList.findIndex(t => t.id === activeTab);
 
   return (
-    <div className="h-screen w-screen relative flex items-center justify-center lg:p-3 overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black">
-      <div className="w-full h-full glass-card lg:rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
+    <div className="h-[100dvh] w-screen relative flex items-center justify-center lg:p-3 overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black">
+      <div className="w-full h-full glass-card lg:rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500">
         
         {/* Sync Status Header */}
         <AnimatePresence>
@@ -278,7 +278,7 @@ const App: React.FC = () => {
                   </MotionDiv>
                 ) : (
                   // MOBILE LAYOUT (Sequential Tabbed)
-                  <div className="flex-1 flex flex-col min-h-0 w-full h-full pb-20 relative z-10">
+                  <div className="flex-1 flex flex-col min-h-0 w-full h-full relative z-10">
                      <AnimatePresence mode="wait">
                        <MotionDiv
                           key={activeTab}
@@ -286,7 +286,7 @@ const App: React.FC = () => {
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
                           transition={{ duration: 0.2 }}
-                          className="w-full h-full overflow-y-auto overflow-x-hidden pt-2"
+                          className="w-full h-full overflow-y-auto overflow-x-hidden pt-2 pb-[140px]" // Extra padding for the nav bar
                        >
                           {activeTab === 'dashboard' && (
                              <div className="h-full"><TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} /></div>
@@ -295,16 +295,16 @@ const App: React.FC = () => {
                              <div className="h-full"><JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} /></div>
                           )}
                           {activeTab === 'stats' && (
-                             <div className="flex flex-col gap-4 pb-12">
+                             <div className="flex flex-col gap-4 px-1">
                                 <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                                <div className="h-[400px]"><Progress trades={trades} /></div>
-                                <div className="min-h-[600px]"><TimeAnalysis trades={trades} /></div>
+                                <div className="h-[400px] shrink-0"><Progress trades={trades} /></div>
+                                <div className="min-h-[600px] shrink-0"><TimeAnalysis trades={trades} /></div>
                              </div>
                           )}
                           {activeTab === 'analytics' && (
-                             <div className="flex flex-col gap-4 h-full pb-12">
-                                <div className="h-[300px]"><GrowthChart trades={trades} /></div>
-                                <div className="h-[300px]"><WeeklyChart trades={trades} stats={globalStats} /></div>
+                             <div className="flex flex-col gap-4 h-full px-1">
+                                <div className="h-[300px] shrink-0"><GrowthChart trades={trades} /></div>
+                                <div className="h-[300px] shrink-0"><WeeklyChart trades={trades} stats={globalStats} /></div>
                              </div>
                           )}
                        </MotionDiv>
@@ -316,7 +316,8 @@ const App: React.FC = () => {
                 <MotionDiv 
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="fixed lg:absolute bottom-6 left-0 right-0 z-[100] flex justify-center items-center pointer-events-none px-4"
+                  style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+                  className="fixed lg:absolute left-0 right-0 z-[100] flex justify-center items-center pointer-events-none px-4"
                 >
                   <div className={`flex items-center gap-3 lg:gap-6 pointer-events-auto w-full max-w-lg lg:max-w-none justify-center`}>
                     <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md flex-1 lg:flex-none lg:w-[260px] shadow-2xl border border-white/5 overflow-hidden">
