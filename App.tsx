@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { LayoutGrid, BookOpen, Plus, Cloud, CloudOff, RefreshCw, Check, PieChart, BarChart3, LogOut } from 'lucide-react';
+import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check, PieChart, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import WeeklyChart from './components/WeeklyChart';
@@ -11,7 +11,6 @@ import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
 import TotalPnlCard from './components/TotalPnlCard';
 import TimeAnalysis from './components/TimeAnalysis';
 import Progress from './components/Progress';
-import { LoginView } from './components/LoginView';
 import { Trade } from './types';
 
 const MotionDiv = motion.div as any;
@@ -29,7 +28,6 @@ const App: React.FC = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isMobile, setIsMobile] = useState(false);
-  const [authMode, setAuthMode] = useState<'admin' | 'guest' | 'none'>('none');
   
   const lastSyncedTradesRef = useRef<string>("");
 
@@ -40,19 +38,9 @@ const App: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // 1. Initial Data Load & Auth Check
+  // 1. Initial Data Load
   useEffect(() => {
     const initData = async () => {
-      // Check auth first
-      const savedAuth = localStorage.getItem('xgiha_auth_mode');
-      if (savedAuth === 'admin' || savedAuth === 'guest') {
-        setAuthMode(savedAuth as 'admin' | 'guest');
-      } else {
-        setAuthMode('none');
-        setIsInitialLoading(false);
-        return;
-      }
-
       try {
         const response = await fetch('/api/trades');
         let initialTrades: Trade[] = [];
@@ -90,11 +78,11 @@ const App: React.FC = () => {
       }
     };
     initData();
-  }, [authMode === 'none']); // Re-run if auth resets
+  }, []);
 
-  // 2. Data Sync logic (Debounced) - Only if Admin
+  // 2. Data Sync logic (Debounced)
   useEffect(() => {
-    if (isInitialLoading || authMode !== 'admin') return;
+    if (isInitialLoading) return;
 
     const currentTradesJson = JSON.stringify(trades);
     if (currentTradesJson === lastSyncedTradesRef.current) return;
@@ -120,7 +108,7 @@ const App: React.FC = () => {
 
     const timeout = setTimeout(syncTrades, 1500);
     return () => clearTimeout(timeout);
-  }, [trades, isInitialLoading, authMode]);
+  }, [trades, isInitialLoading]);
 
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -136,45 +124,27 @@ const App: React.FC = () => {
     return { totalPnl, growthPct };
   }, [trades]);
 
-  const handleLogin = (mode: 'admin' | 'guest') => {
-    localStorage.setItem('xgiha_auth_mode', mode);
-    setAuthMode(mode);
-    setIsInitialLoading(true); // Trigger data load
-  };
-
-  const handleLogout = () => {
-    if (confirm("Disconnecting from terminal. Proceed?")) {
-      localStorage.removeItem('xgiha_auth_mode');
-      setAuthMode('none');
-      setTrades([]);
-    }
-  };
-
   const handleAddTradeClick = useCallback((date: string) => { 
-    if (authMode !== 'admin') return;
     setSelectedDate(date); 
     setEditingTrade(undefined); 
     setIsAddModalOpen(true); 
-  }, [authMode]);
+  }, []);
 
   const handleAddTradeBtnClick = useCallback(() => { 
-    if (authMode !== 'admin') return;
     setSelectedDate(new Date().toISOString().split('T')[0]); 
     setEditingTrade(undefined); 
     setIsAddModalOpen(true); 
-  }, [authMode]);
+  }, []);
 
   const handleEditTrade = useCallback((trade: Trade) => { 
-    if (authMode !== 'admin') return;
     setSelectedDate(trade.date); 
     setEditingTrade(trade); 
     setIsAddModalOpen(true); 
-  }, [authMode]);
+  }, []);
   
   const handleDeleteTrade = useCallback((tradeId: string) => { 
-    if (authMode !== 'admin') return;
     setTrades(prev => prev.filter(t => t.id !== tradeId));
-  }, [authMode]);
+  }, []);
 
   const handleViewDayClick = useCallback((date: string) => { 
     setSelectedDate(date); 
@@ -189,14 +159,13 @@ const App: React.FC = () => {
   }, []);
   
   const handleAddOrUpdateTrade = useCallback((tradeData: Trade) => { 
-    if (authMode !== 'admin') return;
     setTrades(prev => {
       const existingIndex = prev.findIndex(t => t.id === tradeData.id); 
       let newTrades = existingIndex >= 0 ? [...prev] : [...prev, tradeData];
       if (existingIndex >= 0) newTrades[existingIndex] = tradeData;
       return newTrades;
     });
-  }, [authMode]);
+  }, []);
 
   const handleExportData = useCallback(() => {
     const blob = new Blob([JSON.stringify(trades, null, 2)], { type: 'application/json' });
@@ -211,47 +180,33 @@ const App: React.FC = () => {
   }, [trades]);
 
   const handleImportData = useCallback((importedTrades: Trade[]) => {
-    if (authMode !== 'admin') return;
     if (confirm("Importing data will replace all current trades. Proceed?")) {
       setTrades(importedTrades);
     }
-  }, [authMode]);
+  }, []);
 
   const currentTabs = isMobile ? TABS : TABS.filter(t => !t.mobileOnly);
   const activeIndex = currentTabs.findIndex(t => t.id === activeTab);
-
-  if (authMode === 'none') {
-    return <LoginView onLogin={handleLogin} />;
-  }
 
   return (
     <div className="h-[100dvh] w-screen relative flex items-center justify-center p-2 lg:p-3 overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black">
       <div className="w-full h-full glass-card lg:rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500 shadow-2xl">
         
-        {/* Sync Status / Auth Label Header */}
+        {/* Sync Status Header */}
         <AnimatePresence>
-          {((syncStatus !== 'idle' && !isInitialLoading) || authMode === 'guest') && (
+          {(syncStatus !== 'idle' && !isInitialLoading) && (
             <MotionDiv
               initial={{ y: -60, x: '-50%', opacity: 0 }}
               animate={{ y: 0, x: '-50%', opacity: 1 }}
               exit={{ y: -60, x: '-50%', opacity: 0 }}
               className="absolute top-6 left-1/2 z-[150] flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl"
             >
-                {authMode === 'guest' ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-xgiha-accent animate-pulse" />
-                    <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white">Guest Terminal (Read Only)</span>
-                  </span>
-                ) : (
-                  <>
-                    {syncStatus === 'syncing' && <RefreshCw size={11} className="text-xgiha-accent animate-spin" />}
-                    {syncStatus === 'success' && <Check size={11} className="text-emerald-400" />}
-                    {syncStatus === 'error' && <CloudOff size={11} className="text-red-400" />}
-                    <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white">
-                        {syncStatus === 'syncing' ? 'Syncing Journal' : syncStatus === 'error' ? 'Sync Failed' : 'System Synced'}
-                    </span>
-                  </>
-                )}
+              {syncStatus === 'syncing' && <RefreshCw size={11} className="text-xgiha-accent animate-spin" />}
+              {syncStatus === 'success' && <Check size={11} className="text-emerald-400" />}
+              {syncStatus === 'error' && <CloudOff size={11} className="text-red-400" />}
+              <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white">
+                  {syncStatus === 'syncing' ? 'Syncing Journal' : syncStatus === 'error' ? 'Sync Failed' : 'System Synced'}
+              </span>
             </MotionDiv>
           )}
         </AnimatePresence>
@@ -275,7 +230,6 @@ const App: React.FC = () => {
             ) : (
               <React.Fragment>
                 {!isMobile ? (
-                  // DESKTOP LAYOUT (Preserved High-Density)
                   <MotionDiv 
                     key="desktop-grid"
                     initial={{ opacity: 0, scale: 0.98 }}
@@ -303,9 +257,9 @@ const App: React.FC = () => {
                             className="absolute inset-0 w-full h-full flex flex-col"
                           >
                             {activeTab === 'dashboard' ? (
-                              <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} readOnly={authMode === 'guest'} />
+                              <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />
                             ) : (
-                              <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} readOnly={authMode === 'guest'} />
+                              <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} />
                             )}
                           </MotionDiv>
                         </AnimatePresence>
@@ -318,7 +272,6 @@ const App: React.FC = () => {
                     </div>
                   </MotionDiv>
                 ) : (
-                  // MOBILE LAYOUT (Tabbed Navigation)
                   <div className="flex-1 min-h-0 flex flex-col z-10 w-full h-full pb-28">
                     <AnimatePresence mode="wait">
                       <MotionDiv
@@ -330,10 +283,10 @@ const App: React.FC = () => {
                         className="flex-1 overflow-y-auto no-scrollbar pt-2"
                       >
                         {activeTab === 'dashboard' && (
-                          <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} readOnly={authMode === 'guest'} />
+                          <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />
                         )}
                         {activeTab === 'journal' && (
-                          <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} readOnly={authMode === 'guest'} />
+                          <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} />
                         )}
                         {activeTab === 'stats' && (
                           <div className="flex flex-col gap-4 px-1 pb-4">
@@ -362,15 +315,6 @@ const App: React.FC = () => {
                 >
                   <div className="flex items-center gap-3 lg:gap-4 pointer-events-auto w-full max-w-xl lg:max-w-none justify-center">
                     
-                    {/* Log Out Button */}
-                    <button 
-                      onClick={handleLogout}
-                      className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-white/5 hover:bg-red-500/10 text-xgiha-muted hover:text-red-400 flex items-center justify-center transition-all duration-300 border border-white/5 group"
-                    >
-                      <LogOut size={isMobile ? 14 : 18} />
-                    </button>
-
-                    {/* Navigation Tabs Pill */}
                     <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md flex-1 lg:flex-none lg:w-[260px] shadow-2xl border border-white/5 overflow-hidden">
                         {currentTabs.map((tab) => (
                           <button
@@ -391,19 +335,13 @@ const App: React.FC = () => {
                         />
                     </div>
 
-                    {/* Add Trade Button (Admin Only) */}
-                    {authMode === 'admin' ? (
-                      <button 
-                        onClick={handleAddTradeBtnClick}
-                        className="bg-white text-black w-12 h-12 lg:w-auto lg:h-14 lg:px-8 rounded-full flex items-center justify-center gap-2 active:scale-[0.95] transition-all duration-200 shadow-xl"
-                      >
-                        <Plus size={18} strokeWidth={3} />
-                        <span className="hidden lg:inline text-[10px] font-black uppercase tracking-[0.2em]">Add Trade</span>
-                      </button>
-                    ) : (
-                      /* Placeholder to keep alignment for guest mode */
-                      <div className="w-12 h-12 lg:w-14 lg:h-14" />
-                    )}
+                    <button 
+                      onClick={handleAddTradeBtnClick}
+                      className="bg-white text-black w-12 h-12 lg:w-auto lg:h-14 lg:px-8 rounded-full flex items-center justify-center gap-2 active:scale-[0.95] transition-all duration-200 shadow-xl"
+                    >
+                      <Plus size={18} strokeWidth={3} />
+                      <span className="hidden lg:inline text-[10px] font-black uppercase tracking-[0.2em]">Add Trade</span>
+                    </button>
                   </div>
                 </MotionDiv>
               </React.Fragment>
@@ -411,11 +349,11 @@ const App: React.FC = () => {
         </AnimatePresence>
 
         <AnimatePresence>
-          {isAddModalOpen && authMode === 'admin' && (
+          {isAddModalOpen && (
             <AddTradeModal key={editingTrade ? editingTrade.id : 'add-trade'} isOpen={true} onClose={() => setIsAddModalOpen(false)} date={selectedDate} onAdd={handleAddOrUpdateTrade} initialData={editingTrade} />
           )}
           {isDetailModalOpen && (
-            <DayDetailsModal isOpen={true} onClose={() => setIsDetailModalOpen(false)} date={selectedDate} trades={selectedTrades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onAddTrade={handleAddTradeBtnClick} readOnly={authMode === 'guest'} />
+            <DayDetailsModal isOpen={true} onClose={() => setIsDetailModalOpen(false)} date={selectedDate} trades={selectedTrades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onAddTrade={handleAddTradeBtnClick} />
           )}
         </AnimatePresence>
       </div>
