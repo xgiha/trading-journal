@@ -6,8 +6,6 @@ import {
   Zap,
   Trash2,
   Edit2,
-  ChevronLeft,
-  ChevronRight,
   FileText,
   Download,
   Upload
@@ -16,7 +14,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trade } from '../types';
 import Pagination from './Pagination';
 
-// Cast motion elements to any to bypass environment-specific type definition issues
 const MotionDiv = motion.div as any;
 
 interface JournalTableProps {
@@ -28,7 +25,7 @@ interface JournalTableProps {
   onImport?: (trades: Trade[]) => void;
 }
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 5;
 
 const groupTradesByDate = (trades: Trade[]) => {
   const groups: { [key: string]: Trade[] } = {};
@@ -50,21 +47,12 @@ const getDateLabel = (dateStr: string) => {
   return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
 };
 
-interface SwipeableRowProps {
-  trade: Trade;
-  onEdit: (trade: Trade) => void;
-  onDelete: (id: string) => void;
-  onViewDay: (date: string) => void;
-}
-
-const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, onViewDay }) => {
+const SwipeableRow: React.FC<any> = ({ trade, onEdit, onDelete, onViewDay }) => {
     const [offset, setOffset] = useState(0);
     const ref = useRef<HTMLDivElement>(null);
     const startX = useRef(0);
     const dragStartX = useRef(0);
     const isDragging = useRef(false);
-    const isNewsTrade = !!trade.newsEvent;
-    const hasNotes = !!trade.notes;
 
     const onPointerDown = (e: React.PointerEvent) => {
         isDragging.current = true;
@@ -76,8 +64,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
     const onPointerMove = (e: React.PointerEvent) => {
         if (!isDragging.current) return;
         const x = e.clientX - startX.current;
-        const newOffset = Math.max(Math.min(x, 120), -120); 
-        setOffset(newOffset);
+        setOffset(Math.max(Math.min(x, 80), -80));
     };
 
     const onPointerUp = (e: React.PointerEvent) => {
@@ -88,75 +75,34 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
              if (offset !== 0) setOffset(0);
              else onViewDay(trade.date);
         } else {
-            if (offset > 60) setOffset(100);
-            else if (offset < -60) setOffset(-100);
+            if (offset > 40) setOffset(60);
+            else if (offset < -40) setOffset(-60);
             else setOffset(0);
         }
     };
 
     return (
-        <div className="relative h-20 w-full min-w-[600px] mb-2 rounded-[30px] select-none touch-pan-y overflow-hidden shrink-0">
-            <div className="absolute inset-0 flex justify-between items-center px-10 bg-white/5 rounded-[30px] z-0">
-                <button 
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onEdit(trade); setOffset(0); }}
-                    className={`flex items-center gap-2 text-green-500 transition-all active:scale-95 ${offset > 0 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}
-                    aria-label="Edit trade"
-                >
-                    <Edit2 size={22} />
-                </button>
-                <button 
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onDelete(trade.id); setOffset(0); }}
-                    className={`flex items-center gap-2 text-red-500 transition-all active:scale-95 ${offset < 0 ? 'opacity-100 translate-x-[2px]' : 'opacity-0 translate-x-4 pointer-events-none'}`}
-                    aria-label="Delete trade"
-                >
-                    <Trash2 size={22} />
-                </button>
+        <div className="relative h-16 w-full min-w-[500px] mb-1.5 rounded-[20px] select-none touch-pan-y overflow-hidden shrink-0">
+            <div className="absolute inset-0 flex justify-between items-center px-6 bg-white/5 rounded-[20px] z-0">
+                <button onClick={(e) => { e.stopPropagation(); onEdit(trade); setOffset(0); }} className="text-green-500"><Edit2 size={18} /></button>
+                <button onClick={(e) => { e.stopPropagation(); onDelete(trade.id); setOffset(0); }} className="text-red-500"><Trash2 size={18} /></button>
             </div>
-
             <div 
-                ref={ref}
-                onPointerDown={onPointerDown}
-                onPointerMove={onPointerMove}
-                onPointerUp={onPointerUp}
-                onPointerLeave={() => { if(isDragging.current) onPointerUp({ pointerId: 0 } as any) }}
-                className="absolute inset-0 bg-[#0F0F0F] rounded-[30px] flex items-center transition-transform duration-300 ease-out cursor-pointer hover:bg-[#141414] z-10"
+                ref={ref} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp}
+                className="absolute inset-0 bg-[#0F0F0F] rounded-[20px] flex items-center transition-transform duration-300 z-10"
                 style={{ transform: `translateX(${offset}px)` }}
             >
-                <div className="w-16 flex flex-col gap-1 justify-center items-center shrink-0 border-r border-white/5 h-full">
-                    {isNewsTrade ? <Zap size={16} className="text-yellow-500 fill-yellow-500" /> : <div className="w-1.5 h-1.5 rounded-full bg-[#333]"></div>}
-                    {hasNotes && <FileText size={12} className="text-[#555]" />}
+                <div className="w-12 flex justify-center items-center shrink-0 border-r border-white/5 h-full">
+                    {trade.newsEvent ? <Zap size={14} className="text-yellow-500 fill-yellow-500" /> : <div className="w-1 h-1 rounded-full bg-[#333]"></div>}
                 </div>
-
-                <div className="flex-1 grid grid-cols-7 gap-4 items-center px-10 h-full">
-                    <div className="font-mono text-base text-white font-bold truncate tracking-wide">{trade.pair}</div>
-                    <div className={`text-right font-mono text-base font-bold truncate ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>{trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(2)}</div>
-                    <div className="text-base text-[#AAA] font-mono truncate text-right">{trade.size || '-'}</div>
-                    <div className="flex flex-col gap-0.5 justify-center">
-                        <div className="flex items-center gap-2 text-[11px]">
-                            <span className="w-6 text-[#444] font-bold">IN</span>
-                            <span className="font-mono text-white/80 text-sm">{trade.entryTime}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[11px]">
-                            <span className="w-6 text-[#444] font-bold">OUT</span>
-                            <span className="font-mono text-white/80 text-sm">{trade.exitTime || '-'}</span>
-                        </div>
-                    </div>
-                    <div className="flex flex-col gap-0.5 justify-center">
-                        <div className="flex items-center gap-2 text-[11px]">
-                            <span className="w-6 text-[#444] font-bold">IN</span>
-                            <span className="font-mono text-white/80 text-sm">{trade.entryPrice || '-'}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[11px]">
-                            <span className="w-6 text-[#444] font-bold">OUT</span>
-                            <span className="font-mono text-white/80 text-sm">{trade.exitPrice || '-'}</span>
-                        </div>
-                    </div>
-                    <div className="text-right text-base text-[#666] font-mono truncate">${(trade.fee || 0).toFixed(2)}</div>
+                <div className="flex-1 grid grid-cols-5 gap-3 items-center px-4 lg:px-6 h-full">
+                    <div className="font-mono text-xs text-white font-bold truncate">{trade.pair}</div>
+                    <div className={`text-right font-mono text-xs font-bold truncate ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>{trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(1)}</div>
+                    <div className="text-[10px] text-[#666] font-mono text-right">{trade.size || '-'}</div>
+                    <div className="flex flex-col text-[9px] text-right"><span className="text-white/60">{trade.entryTime}</span><span className="text-white/30">{trade.exitTime || '-'}</span></div>
                     <div className="flex justify-center">
-                        <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full border ${trade.type === 'Long' ? 'bg-green-500/5 text-green-500 border-green-500/10' : 'bg-red-500/5 text-red-500 border-red-500/10'}`}>
-                          {trade.type === 'Long' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center ${trade.type === 'Long' ? 'text-green-500 border-green-500/10' : 'text-red-500 border-red-500/10'}`}>
+                          {trade.type === 'Long' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
                         </div>
                     </div>
                 </div>
@@ -167,140 +113,34 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
 
 const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, onImport }: JournalTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const sortedTrades = useMemo(() => {
-    return [...trades].sort((a, b) => {
-      const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
-      if (dateDiff !== 0) return dateDiff;
-      return b.entryTime.localeCompare(a.entryTime);
-    });
-  }, [trades]);
-
+  const sortedTrades = useMemo(() => [...trades].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime() || b.entryTime.localeCompare(a.entryTime)), [trades]);
   const totalPages = Math.max(1, Math.ceil(sortedTrades.length / ITEMS_PER_PAGE));
-  const currentTrades = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return sortedTrades.slice(start, start + ITEMS_PER_PAGE);
-  }, [sortedTrades, currentPage]);
+  const currentTrades = useMemo(() => sortedTrades.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE), [sortedTrades, currentPage]);
   const groupedTrades = useMemo(() => groupTradesByDate(currentTrades), [currentTrades]);
 
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const content = event.target?.result as string;
-          const data = JSON.parse(content);
-          if (Array.isArray(data) && onImport) {
-            onImport(data);
-          } else {
-            alert("Invalid data format. Please provide a valid xgiha backup JSON.");
-          }
-        } catch (error) {
-          alert("Error parsing file. Ensure it is a valid JSON.");
-        }
-      };
-      reader.readAsText(file);
-    }
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] rounded-[25px] relative overflow-hidden">
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        accept=".json" 
-        className="hidden" 
-      />
-      
-      <div className="shrink-0 flex flex-col gap-5 mb-4 z-10">
-        <div className="flex justify-between items-center px-2">
-            <h2 className="text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>
-            <div className="flex gap-2">
-                <button 
-                  onClick={handleImportClick}
-                  className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"
-                >
-                  <Upload size={12} />
-                  Import
-                </button>
-                <button 
-                  onClick={onExport}
-                  className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"
-                >
-                  <Download size={12} />
-                  Export
-                </button>
-            </div>
-        </div>
-        <div className="overflow-x-auto pb-1 -mx-4 px-6 no-scrollbar">
-           <div className="min-w-[600px]">
-              <div className="flex items-center w-full text-[10px] text-[#555] uppercase tracking-[0.2em] font-bold bg-[#1A1A1A] rounded-[30px] py-3 px-2 shadow-inner">
-                  <div className="w-16 shrink-0"></div>
-                  <div className="flex-1 grid grid-cols-7 gap-4 px-8">
-                      <div>Symbol</div>
-                      <div className="text-right">P&L</div>
-                      <div className="text-right">Size</div>
-                      <div className="pl-2">Time</div>
-                      <div className="pl-2">Price</div>
-                      <div className="text-right">Fees</div>
-                      <div className="text-center">Direction</div>
-                  </div>
-              </div>
-           </div>
-        </div>
+    <div className="w-full h-full p-2 lg:p-6 flex flex-col bg-white/[0.03] rounded-[20px] lg:rounded-[25px] relative overflow-hidden">
+      <div className="shrink-0 flex justify-between items-center mb-4 px-2">
+          <h2 className="text-[10px] lg:text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>
+          <div className="flex gap-1">
+              <button onClick={onExport} className="text-[8px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg bg-white/5 text-xgiha-muted"><Download size={10} /></button>
+          </div>
       </div>
-
       <div className="flex-1 relative w-full overflow-hidden z-10">
-        <div className="w-full h-full overflow-hidden">
-          <div className="min-w-[600px] w-full h-full flex flex-col relative pb-20">
-             <AnimatePresence mode="wait">
-              <MotionDiv
-                key={currentPage}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="flex flex-col gap-1 w-full"
-              >
-                {groupedTrades.length > 0 ? (
-                  groupedTrades.map(([date, dateTrades]) => (
+        <div className="w-full h-full overflow-x-auto custom-scrollbar">
+          <div className="min-w-[500px] w-full h-full flex flex-col pb-16">
+             <div className="grid grid-cols-5 gap-3 items-center px-4 lg:px-6 mb-2 text-[9px] font-black uppercase text-[#444] tracking-widest pl-16">
+                 <div>Pair</div><div className="text-right">PnL</div><div className="text-right">Qty</div><div className="text-right">Time</div><div className="text-center">Side</div>
+             </div>
+             <AnimatePresence mode="wait"><MotionDiv key={currentPage} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-1 w-full">
+                {groupedTrades.map(([date, dateTrades]) => (
                     <div key={date} className="w-full">
-                      <div className="mt-2 mb-3 pl-4">
-                          <span className="text-[12px] font-bold text-xgiha-accent uppercase tracking-[0.3em] opacity-80">
-                              {getDateLabel(date)}
-                          </span>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        {dateTrades.map((trade) => (
-                            <SwipeableRow key={trade.id} trade={trade} onEdit={onEdit} onDelete={onDelete} onViewDay={onViewDay} />
-                        ))}
-                      </div>
+                      <div className="mt-1 mb-2 px-4"><span className="text-[10px] font-bold text-xgiha-accent uppercase tracking-[0.2em]">{getDateLabel(date)}</span></div>
+                      {dateTrades.map((t) => <SwipeableRow key={t.id} trade={t} onEdit={onEdit} onDelete={onDelete} onViewDay={onViewDay} />)}
                     </div>
-                  ))
-                ) : (
-                  <div className="w-full h-40 flex flex-col items-center justify-center text-xgiha-muted/20">
-                    <span className="text-xs uppercase tracking-[0.2em] font-bold">No Entries Found</span>
-                  </div>
-                )}
-              </MotionDiv>
-            </AnimatePresence>
-            <div className="absolute bottom-0 left-0 right-0 z-50 flex flex-col items-center">
-                <div className="w-full py-2 flex justify-center items-center">
-                    <Pagination 
-                      total={totalPages} 
-                      page={currentPage - 1} 
-                      setPage={(p) => setCurrentPage(p + 1)} 
-                    />
-                </div>
-            </div>
+                ))}
+             </MotionDiv></AnimatePresence>
+             <div className="absolute bottom-0 left-0 right-0 flex justify-center py-2"><Pagination total={totalPages} page={currentPage - 1} setPage={(p) => setCurrentPage(p + 1)} /></div>
           </div>
         </div>
       </div>

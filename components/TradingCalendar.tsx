@@ -80,23 +80,23 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
               else onAddTradeClick(dateStr);
             }
           }}
-          className={`relative p-1 md:p-2 flex flex-col justify-between transition-all group rounded-lg md:rounded-xl overflow-hidden min-h-[60px] md:min-h-[80px] lg:min-h-[90px] ${
+          className={`relative p-1 lg:p-2 flex flex-col justify-between transition-all group rounded-lg lg:rounded-xl overflow-hidden min-h-[50px] lg:min-h-[90px] ${
             isDay ? 'bg-white/5 hover:bg-white/10 cursor-pointer' : 'opacity-0 pointer-events-none'
           }`}
         >
           {isDay && (
             <>
-              <span className={`text-[10px] md:text-xs font-semibold ${dayTradeCount > 0 ? 'text-xgiha-muted' : 'text-xgiha-muted/40'}`}>{dayNum}</span>
+              <span className={`text-[8px] lg:text-xs font-semibold ${dayTradeCount > 0 ? 'text-xgiha-muted' : 'text-xgiha-muted/40'}`}>{dayNum}</span>
               {dayTradeCount > 0 ? (
                 <div className="flex flex-col items-center justify-center flex-1">
-                  <span className={`text-xs md:text-sm lg:text-base font-bold tracking-tight ${dayPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {dayPnl >= 0 ? '+' : ''}{formatCurrency(dayPnl)}
+                  <span className={`text-[9px] lg:text-base font-bold tracking-tight ${dayPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {formatCurrency(dayPnl)}
                   </span>
                 </div>
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-xgiha-accent text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform">
-                      <Plus size={14} />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                   <div className="w-5 h-5 lg:w-8 lg:h-8 rounded-full bg-xgiha-accent text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform">
+                      <Plus size={10} lg:size={14} />
                    </div>
                 </div>
               )}
@@ -124,12 +124,12 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                {currentWeek}
                <div 
                 onClick={() => weekTradesCount > 0 && onViewWeekClick(weekTradesList, `Week of ${currentDate.toLocaleString('default', { month: 'short' })} ${Math.max(1, (i - 6) - firstDay + 1)}`)}
-                className={`hidden md:flex rounded-lg md:rounded-xl p-1 md:p-2 flex-col items-center justify-center transition-all relative overflow-hidden min-h-[60px] md:min-h-[80px] lg:min-h-[90px] ${
+                className={`hidden lg:flex rounded-lg lg:rounded-xl p-2 flex-col items-center justify-center transition-all relative overflow-hidden min-h-[90px] ${
                     weekTradesCount > 0 ? 'bg-white/10 hover:bg-white/15 cursor-pointer' : 'bg-white/[0.02]'
                 }`}
                >
                   {weekTradesCount > 0 && (
-                    <span className={`text-xs md:text-lg lg:text-xl font-bold tracking-tighter z-10 ${weekPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <span className={`text-xl font-bold tracking-tighter z-10 ${weekPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                          {weekPnl >= 0 ? '+' : ''}{formatCurrency(weekPnl)}
                     </span>
                   )}
@@ -143,43 +143,45 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
   };
 
   return (
-    <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 bg-white/[0.03] rounded-[25px] relative overflow-hidden">
-      <div className="flex items-center justify-between shrink-0 w-full px-2 z-10">
-         <div className="flex items-center gap-4 bg-white/5 rounded-full px-4 py-1.5">
+    <div className="w-full h-full p-2 lg:p-6 flex flex-col gap-4 lg:gap-6 bg-white/[0.03] rounded-[20px] lg:rounded-[25px] relative overflow-hidden">
+      <div className="flex flex-col lg:flex-row items-center justify-between shrink-0 w-full gap-3 lg:gap-0 px-1 lg:px-2 z-10">
+         <div className="flex items-center gap-4 bg-white/5 rounded-full px-4 py-1.5 w-full lg:w-auto justify-between lg:justify-start">
             <div className="flex gap-2">
-                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="text-xgiha-muted hover:text-white transition-colors">
+                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="p-1 text-xgiha-muted hover:text-white transition-colors">
                     <ChevronLeft size={16} />
                 </button>
-                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="text-xgiha-muted hover:text-white transition-colors">
+                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="p-1 text-xgiha-muted hover:text-white transition-colors">
                     <ChevronRight size={16} />
                 </button>
             </div>
-            <span className="text-[12px] font-bold text-white tracking-[0.2em] uppercase">
+            <span className="text-[10px] lg:text-[12px] font-bold text-white tracking-[0.2em] uppercase whitespace-nowrap">
                {currentDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
             </span>
          </div>
-         <div className="flex items-center gap-6 bg-white/5 rounded-full px-6 py-2">
+         <div className="flex items-center gap-4 lg:gap-6 bg-white/5 rounded-full px-4 lg:px-6 py-2 w-full lg:w-auto justify-center">
             <div className="flex items-center gap-2">
-               <span className={`text-[12px] font-bold font-mono ${monthlyStats.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+               <span className={`text-[10px] lg:text-[12px] font-bold font-mono ${monthlyStats.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {monthlyStats.totalPnl >= 0 ? '+' : ''}{formatCurrency(monthlyStats.totalPnl)}
                </span>
-               <span className="text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">P&L</span>
+               <span className="text-[8px] lg:text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">PnL</span>
             </div>
             <div className="w-px h-3 bg-white/10"></div>
             <div className="flex items-center gap-2">
-               <span className="text-[12px] font-bold text-white font-mono">{monthlyStats.winRate.toFixed(0)}%</span>
-               <span className="text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">Win Rate</span>
+               <span className="text-[10px] lg:text-[12px] font-bold text-white font-mono">{monthlyStats.winRate.toFixed(0)}%</span>
+               <span className="text-[8px] lg:text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">WR</span>
             </div>
          </div>
       </div>
 
-      <div className="flex-1 flex flex-col min-h-0 z-10">
-        <div className="grid grid-cols-7 md:grid-cols-8 gap-2 mb-3 shrink-0 px-2">
-            {WEEKDAYS.map(d => <div key={d} className="text-center text-[10px] uppercase tracking-[0.2em] text-xgiha-muted font-bold opacity-40">{d}</div>)}
-            <div className="hidden md:block text-center text-[10px] uppercase tracking-[0.2em] text-xgiha-accent font-bold opacity-80">Total</div>
-        </div>
-        <div className="grid grid-cols-7 md:grid-cols-8 gap-2 flex-1 auto-rows-min overflow-y-auto custom-scrollbar px-2 content-start pb-4">
-            {renderCalendarDays()}
+      <div className="flex-1 flex flex-col min-h-0 z-10 overflow-x-auto overflow-y-hidden">
+        <div className="min-w-[320px] lg:min-w-0 flex-1 flex flex-col">
+          <div className="grid grid-cols-7 lg:grid-cols-8 gap-1.5 lg:gap-2 mb-2 lg:mb-3 shrink-0 lg:px-2">
+              {WEEKDAYS.map(d => <div key={d} className="text-center text-[8px] lg:text-[10px] uppercase tracking-[0.15em] lg:tracking-[0.2em] text-xgiha-muted font-bold opacity-40">{d}</div>)}
+              <div className="hidden lg:block text-center text-[10px] uppercase tracking-[0.2em] text-xgiha-accent font-bold opacity-80">Total</div>
+          </div>
+          <div className="grid grid-cols-7 lg:grid-cols-8 gap-1.5 lg:gap-2 flex-1 auto-rows-min overflow-y-auto custom-scrollbar lg:px-2 content-start pb-4">
+              {renderCalendarDays()}
+          </div>
         </div>
       </div>
     </div>

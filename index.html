@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Journal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -55,6 +55,7 @@
         margin: 0;
         overflow: hidden;
         height: 100vh;
+        height: 100dvh;
         width: 100vw;
       }
       
@@ -86,6 +87,11 @@
       .animate-wave-1 { animation: v-wave 0.5s ease-in-out infinite; }
       .animate-wave-2 { animation: v-wave 0.5s ease-in-out infinite 0.1s; }
       .animate-wave-3 { animation: v-wave 0.5s ease-in-out infinite 0.2s; }
+
+      /* Mobile touch action support */
+      .touch-manipulation {
+        touch-action: manipulation;
+      }
     </style>
   <script type="importmap">
 {
