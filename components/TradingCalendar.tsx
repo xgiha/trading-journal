@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Trade } from '../types';
@@ -80,13 +79,21 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
               else onAddTradeClick(dateStr);
             }
           }}
-          className={`relative p-1 md:p-2 flex flex-col justify-between transition-all group rounded-lg md:rounded-xl overflow-hidden min-h-[60px] md:min-h-[80px] lg:min-h-[90px] ${
+          className={`relative p-1 md:p-2 flex flex-col transition-all group rounded-lg md:rounded-xl overflow-hidden min-h-[60px] md:min-h-[80px] lg:min-h-[90px] ${
             isDay ? 'bg-white/5 hover:bg-white/10 cursor-pointer' : 'opacity-0 pointer-events-none'
           }`}
         >
           {isDay && (
             <>
-              <span className={`text-[10px] md:text-xs font-semibold ${dayTradeCount > 0 ? 'text-xgiha-muted' : 'text-xgiha-muted/40'}`}>{dayNum}</span>
+              <div className="flex justify-between items-start">
+                <span className={`text-[10px] md:text-xs font-semibold ${dayTradeCount > 0 ? 'text-xgiha-muted' : 'text-xgiha-muted/40'}`}>{dayNum}</span>
+                {dayTradeCount > 0 && (
+                  <span className="text-[8px] font-bold bg-white/5 text-xgiha-muted/60 px-1.5 py-0.5 rounded-md min-w-[16px] text-center border border-white/5 group-hover:text-white transition-colors">
+                    {dayTradeCount}
+                  </span>
+                )}
+              </div>
+              
               {dayTradeCount > 0 ? (
                 <div className="flex flex-col items-center justify-center flex-1">
                   <span className={`text-xs md:text-sm lg:text-base font-bold tracking-tight ${dayPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -95,7 +102,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                 </div>
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-xgiha-accent text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform">
+                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-xgiha-accent text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform shadow-[0_0_15px_rgba(255,166,0,0.3)]">
                       <Plus size={14} />
                    </div>
                 </div>
@@ -124,14 +131,21 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                {currentWeek}
                <div 
                 onClick={() => weekTradesCount > 0 && onViewWeekClick(weekTradesList, `Week of ${currentDate.toLocaleString('default', { month: 'short' })} ${Math.max(1, (i - 6) - firstDay + 1)}`)}
-                className={`hidden md:flex rounded-lg md:rounded-xl p-1 md:p-2 flex-col items-center justify-center transition-all relative overflow-hidden min-h-[60px] md:min-h-[80px] lg:min-h-[90px] ${
+                className={`hidden md:flex rounded-lg md:rounded-xl p-1 md:p-2 flex-col items-center justify-center transition-all relative group overflow-hidden min-h-[60px] md:min-h-[80px] lg:min-h-[90px] ${
                     weekTradesCount > 0 ? 'bg-white/10 hover:bg-white/15 cursor-pointer' : 'bg-white/[0.02]'
                 }`}
                >
                   {weekTradesCount > 0 && (
-                    <span className={`text-xs md:text-lg lg:text-xl font-bold tracking-tighter z-10 ${weekPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                         {weekPnl >= 0 ? '+' : ''}{formatCurrency(weekPnl)}
-                    </span>
+                    <>
+                      <span className={`text-xs md:text-lg lg:text-xl font-bold tracking-tighter z-10 ${weekPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                           {weekPnl >= 0 ? '+' : ''}{formatCurrency(weekPnl)}
+                      </span>
+                      <div className="absolute top-1.5 right-1.5">
+                        <span className="text-[8px] font-bold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-md min-w-[16px] text-center border border-emerald-500/30 transition-colors">
+                          {weekTradesCount}
+                        </span>
+                      </div>
+                    </>
                   )}
                </div>
             </React.Fragment>
