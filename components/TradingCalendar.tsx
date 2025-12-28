@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Trade } from '../types';
@@ -9,6 +10,7 @@ interface TradingCalendarProps {
   onAddTradeClick: (date: string) => void;
   onViewDayClick: (date: string) => void;
   onViewWeekClick: (trades: Trade[], weekLabel: string) => void;
+  readOnly?: boolean;
 }
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -19,7 +21,8 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
   onMonthChange,
   onAddTradeClick, 
   onViewDayClick, 
-  onViewWeekClick
+  onViewWeekClick,
+  readOnly = false
 }) => {
 
   const monthlyStats = useMemo(() => {
@@ -76,7 +79,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
           onClick={() => {
             if (isDay) {
               if (dayTradeCount > 0) onViewDayClick(dateStr);
-              else onAddTradeClick(dateStr);
+              else if (!readOnly) onAddTradeClick(dateStr);
             }
           }}
           className={`relative p-1 md:p-2 flex flex-col transition-all group rounded-lg md:rounded-xl overflow-hidden min-h-[60px] md:min-h-[80px] lg:min-h-[90px] ${
@@ -100,7 +103,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                     {dayPnl >= 0 ? '+' : ''}{formatCurrency(dayPnl)}
                   </span>
                 </div>
-              ) : (
+              ) : !readOnly && (
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-xgiha-accent text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform shadow-[0_0_15px_rgba(255,166,0,0.3)]">
                       <Plus size={14} />

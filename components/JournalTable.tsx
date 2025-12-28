@@ -26,6 +26,7 @@ interface JournalTableProps {
   onViewDay: (date: string) => void;
   onExport?: () => void;
   onImport?: (trades: Trade[]) => void;
+  readOnly?: boolean;
 }
 
 const ITEMS_PER_PAGE = 4;
@@ -55,9 +56,10 @@ interface SwipeableRowProps {
   onEdit: (trade: Trade) => void;
   onDelete: (id: string) => void;
   onViewDay: (date: string) => void;
+  readOnly?: boolean;
 }
 
-const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, onViewDay }) => {
+const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, onViewDay, readOnly }) => {
     const [offset, setOffset] = useState(0);
     const ref = useRef<HTMLDivElement>(null);
     const startX = useRef(0);
@@ -67,6 +69,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
     const hasNotes = !!trade.notes;
 
     const onPointerDown = (e: React.PointerEvent) => {
+        if (readOnly) return;
         isDragging.current = true;
         startX.current = e.clientX - offset;
         dragStartX.current = e.clientX;
@@ -74,13 +77,17 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
     };
 
     const onPointerMove = (e: React.PointerEvent) => {
-        if (!isDragging.current) return;
+        if (!isDragging.current || readOnly) return;
         const x = e.clientX - startX.current;
         const newOffset = Math.max(Math.min(x, 120), -120); 
         setOffset(newOffset);
     };
 
     const onPointerUp = (e: React.PointerEvent) => {
+        if (readOnly) {
+           onViewDay(trade.date);
+           return;
+        }
         isDragging.current = false;
         ref.current?.releasePointerCapture(e.pointerId);
         const moveDist = Math.abs(e.clientX - dragStartX.current);
@@ -96,24 +103,26 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
 
     return (
         <div className="relative h-20 w-full min-w-[600px] mb-2 rounded-[30px] select-none touch-pan-y overflow-hidden shrink-0">
-            <div className="absolute inset-0 flex justify-between items-center px-10 bg-white/5 rounded-[30px] z-0">
-                <button 
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onEdit(trade); setOffset(0); }}
-                    className={`flex items-center gap-2 text-green-500 transition-all active:scale-95 ${offset > 0 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}
-                    aria-label="Edit trade"
-                >
-                    <Edit2 size={22} />
-                </button>
-                <button 
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onDelete(trade.id); setOffset(0); }}
-                    className={`flex items-center gap-2 text-red-500 transition-all active:scale-95 ${offset < 0 ? 'opacity-100 translate-x-[2px]' : 'opacity-0 translate-x-4 pointer-events-none'}`}
-                    aria-label="Delete trade"
-                >
-                    <Trash2 size={22} />
-                </button>
-            </div>
+            {!readOnly && (
+              <div className="absolute inset-0 flex justify-between items-center px-10 bg-white/5 rounded-[30px] z-0">
+                  <button 
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onEdit(trade); setOffset(0); }}
+                      className={`flex items-center gap-2 text-green-500 transition-all active:scale-95 ${offset > 0 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}
+                      aria-label="Edit trade"
+                  >
+                      <Edit2 size={22} />
+                  </button>
+                  <button 
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onDelete(trade.id); setOffset(0); }}
+                      className={`flex items-center gap-2 text-red-500 transition-all active:scale-95 ${offset < 0 ? 'opacity-100 translate-x-[2px]' : 'opacity-0 translate-x-4 pointer-events-none'}`}
+                      aria-label="Delete trade"
+                  >
+                      <Trash2 size={22} />
+                  </button>
+              </div>
+            )}
 
             <div 
                 ref={ref}
@@ -165,7 +174,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
     );
 };
 
-const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, onImport }: JournalTableProps) => {
+const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, onImport, readOnly = false }: JournalTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -185,6 +194,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
   const groupedTrades = useMemo(() => groupTradesByDate(currentTrades), [currentTrades]);
 
   const handleImportClick = () => {
+    if (readOnly) return;
     fileInputRef.current?.click();
   };
 
@@ -224,13 +234,15 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
         <div className="flex justify-between items-center px-2">
             <h2 className="text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>
             <div className="flex gap-2">
-                <button 
-                  onClick={handleImportClick}
-                  className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"
-                >
-                  <Upload size={12} />
-                  Import
-                </button>
+                {!readOnly && (
+                  <button 
+                    onClick={handleImportClick}
+                    className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"
+                  >
+                    <Upload size={12} />
+                    Import
+                  </button>
+                )}
                 <button 
                   onClick={onExport}
                   className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"
@@ -280,7 +292,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
                       </div>
                       <div className="flex flex-col gap-2">
                         {dateTrades.map((trade) => (
-                            <SwipeableRow key={trade.id} trade={trade} onEdit={onEdit} onDelete={onDelete} onViewDay={onViewDay} />
+                            <SwipeableRow key={trade.id} trade={trade} onEdit={onEdit} onDelete={onDelete} onViewDay={onViewDay} readOnly={readOnly} />
                         ))}
                       </div>
                     </div>

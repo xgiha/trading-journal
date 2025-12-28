@@ -491,10 +491,11 @@ interface DayDetailsModalProps {
   onAddTrade: () => void;
   onEdit: (trade: Trade) => void;
   onDelete: (id: string) => void;
+  readOnly?: boolean;
 }
 
 export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ 
-  isOpen, onClose, date, trades, onAddTrade, onEdit, onDelete 
+  isOpen, onClose, date, trades, onAddTrade, onEdit, onDelete, readOnly = false
 }) => {
    const totalPnl = trades.reduce((acc, t) => acc + t.pnl, 0);
    const winRate = trades.length > 0 ? (trades.filter(t => t.pnl > 0).length / trades.length) * 100 : 0;
@@ -547,10 +548,12 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                                  <div className="flex justify-between items-center mb-0.5"><div className="flex flex-col"><span className="text-white font-mono font-bold text-sm">{trade.pair}</span>{trade.strategy && <span className="text-[8px] text-xgiha-accent font-bold uppercase tracking-wider">{trade.strategy}</span>}</div><span className={`font-mono font-bold text-sm ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>{trade.pnl >= 0 ? '+' : ''}{trade.pnl}</span></div>
                                  <div className="flex justify-between items-center text-[10px] text-[#888]"><div className="flex gap-2"><span>{trade.entryTime} - {trade.exitTime}</span>{trade.newsEvent && <span className="text-yellow-500 flex items-center gap-0.5"><Zap size={8} /> News</span>}</div><span>Qty: {trade.size}</span></div>
                              </div>
-                             <div className="flex gap-1 pl-2 shrink-0">
-                                 {onEdit && <button onClick={() => { onClose(); onEdit(trade); }} className="p-2 text-[#666] hover:text-white hover:bg-white/10 rounded-lg transition-colors"><Edit2 size={14} /></button>}
-                                 {onDelete && <button onClick={() => onDelete(trade.id)} className="p-2 text-[#666] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash2 size={14} /></button>}
-                             </div>
+                             {!readOnly && (
+                               <div className="flex gap-1 pl-2 shrink-0">
+                                   {onEdit && <button onClick={() => { onClose(); onEdit(trade); }} className="p-2 text-[#666] hover:text-white hover:bg-white/10 rounded-lg transition-colors"><Edit2 size={14} /></button>}
+                                   {onDelete && <button onClick={() => onDelete(trade.id)} className="p-2 text-[#666] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash2 size={14} /></button>}
+                               </div>
+                             )}
                          </div>
                          {trade.notes && (
                              <div className="text-xs text-[#999] bg-black/20 rounded-lg p-2 font-medium leading-relaxed relative group">
@@ -568,9 +571,11 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                      </div>
                  ))}
              </div>
-             <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#141414] to-transparent pt-10 pointer-events-none flex justify-center">
-                 <button onClick={onAddTrade} className="pointer-events-auto flex items-center gap-2 bg-xgiha-accent text-black px-6 py-3 rounded-full font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-xl"><Plus size={16} /> Add Trade</button>
-             </div>
+             {!readOnly && (
+               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#141414] to-transparent pt-10 pointer-events-none flex justify-center">
+                   <button onClick={onAddTrade} className="pointer-events-auto flex items-center gap-2 bg-xgiha-accent text-black px-6 py-3 rounded-full font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-xl"><Plus size={16} /> Add Trade</button>
+               </div>
+             )}
         </MotionDiv>
      </div>
      <AnimatePresence>
