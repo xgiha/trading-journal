@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud, Loader2, Edit2, FileText, Target } from 'lucide-react';
 import { Trade } from '../types';
@@ -381,12 +382,8 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/90" onClick={onClose} />
-      <MotionDiv initial={{ y: "100%", opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: "100%", opacity: 0, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="relative w-[95%] md:max-w-[420px] bg-[#141414] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] md:max-h-[95vh]">
-        <div className="px-6 pt-6 pb-2 flex justify-between items-center shrink-0 z-10">
-          <h2 className="text-xl font-normal text-white tracking-tight">{tradeToEdit ? 'Edit Trade' : 'Add Trade'}</h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-[#888] hover:text-white transition-all hover:rotate-90 duration-300"><X size={18} /></button>
-        </div>
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-5 custom-scrollbar pb-24 relative">
+      <MotionDiv initial={{ y: "100%", opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: "100%", opacity: 0, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="relative w-[95%] md:max-w-[420px] bg-[#141414] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col">
+        <div className="p-5 pb-24 relative overflow-visible">
           <form id="entry-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 relative">
             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
                  <label htmlFor="symbol" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><Type size={10} /> Symbol</label>
