@@ -537,8 +537,12 @@ const App: React.FC = () => {
                       <TooltipProvider delayDuration={0.1}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="outline" size="icon" className="rounded-full shrink-0 border-none bg-white/5 backdrop-blur-md hover:bg-white/10 group">
-                              <User className="size-5 text-white/40 group-hover:text-white transition-colors" />
+                            <Button variant="outline" size="icon" className="rounded-full shrink-0 shadow-xl p-0 overflow-hidden ring-1 ring-white/10 border-none bg-white hover:bg-zinc-100 active:scale-[0.95]">
+                               <img 
+                                  src="https://i.imgur.com/FVC6bkF.png" 
+                                  alt="User Avatar"
+                                  className="w-full h-full object-cover rounded-full"
+                                />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="top" align="center">
