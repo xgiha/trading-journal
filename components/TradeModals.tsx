@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud, Loader2, Edit2, FileText, Target } from 'lucide-react';
 import { Trade } from '../types';
@@ -473,7 +472,12 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           </form>
         </div>
         <div className="absolute bottom-6 left-0 right-0 flex justify-center z-20 pointer-events-none">
-          <button type="submit" form="entry-form" disabled={isUploading} className="pointer-events-auto relative px-8 py-[18px] rounded-full text-white group overflow-hidden bg-white/[0.02] hover:bg-white/[0.08] active:scale-95 active:bg-white/[0.12] transition-all duration-300 shadow-xl font-bold text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed">
+          <button 
+            type="submit" 
+            form="entry-form" 
+            disabled={isUploading} 
+            className="pointer-events-auto relative px-12 py-[18px] rounded-full text-black bg-white hover:bg-zinc-100 active:scale-95 transition-all duration-300 shadow-xl font-bold text-[10px] uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             {isUploading ? 'Uploading...' : 'Save Trade'}
           </button>
         </div>
