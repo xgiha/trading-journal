@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check, PieChart, BarChart3, Lock, Unlock, Loader2, User, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -537,13 +536,9 @@ const App: React.FC = () => {
                       <TooltipProvider delayDuration={0.1}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="outline" size="icon" className="rounded-full shrink-0 shadow-xl p-0 overflow-hidden ring-1 ring-white/10 border-none bg-white hover:bg-zinc-100 active:scale-[0.95]">
-                               <img 
-                                  src="https://i.imgur.com/FVC6bkF.png" 
-                                  alt="User Avatar"
-                                  className="w-full h-full object-cover rounded-full"
-                                />
-                            </Button>
+                            <button className="bg-white w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 overflow-hidden">
+                               <img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" />
+                            </button>
                           </TooltipTrigger>
                           <TooltipContent side="top" align="center">
                             <QuickUserOptions onLogout={handleLogout} />
