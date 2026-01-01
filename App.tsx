@@ -452,7 +452,7 @@ const App: React.FC = () => {
       <div className="w-full h-full p-2 lg:p-3 relative overflow-hidden flex flex-col">
         <div className="w-full h-full glass-card lg:rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 shadow-2xl">
           <AnimatePresence>
-            {(syncStatus !== 'idle' && !isInitialLoading) && (
+            {(syncStatus !== 'idle' && !isInitialLoading && isAuthenticated) && (
               <MotionDiv
                 initial={{ y: -60, x: '-50%', opacity: 0 }}
                 animate={{ y: 0, x: '-50%', opacity: 1 }}
@@ -469,7 +469,7 @@ const App: React.FC = () => {
           </AnimatePresence>
 
           <AnimatePresence mode="wait">
-              {isInitialLoading ? (
+              {(isInitialLoading && isAuthenticated) ? (
                 <MotionDiv key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center gap-6">
                     <Loader2 size={32} className="text-xgiha-accent animate-spin" />
                     <span className="text-[10px] uppercase font-bold tracking-[0.4em] text-xgiha-accent animate-pulse">Initializing Vault</span>
@@ -567,8 +567,8 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* SIGN IN SCREEN OVERLAY - ONLY SLIDING ELEMENT */}
-      <AnimatePresence>
+      {/* SIGN IN SCREEN OVERLAY - initial={false} suppresses slide on mount */}
+      <AnimatePresence initial={false}>
         {!isAuthenticated && (
           <SignInScreen onSignIn={handleSignIn} />
         )}

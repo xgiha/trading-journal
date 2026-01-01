@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo } from 'react';
 import { 
   ArrowUpRight, 
@@ -239,7 +238,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
                     onClick={handleImportClick}
                     className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"
                   >
-                    <Upload size={12} />
+                    <Download size={12} />
                     Import
                   </button>
                 )}
@@ -247,7 +246,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
                   onClick={onExport}
                   className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"
                 >
-                  <Download size={12} />
+                  <Upload size={12} />
                   Export
                 </button>
             </div>
