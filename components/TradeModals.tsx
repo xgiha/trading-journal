@@ -220,7 +220,7 @@ const ScrollableTimeInput = ({ value, onChange, label, type }: { value: string, 
                  </div>
                  <span className="text-[9px] font-bold text-[#666] uppercase tracking-widest">{label}</span>
             </div>
-            <div className={`flex items-center justify-between bg-[#141414] rounded-xl p-1 h-[38px] cursor-pointer transition-colors ${isOpen ? 'ring-1 ring-xgiha-accent' : 'hover:bg-white/[0.02]'}`} onClick={() => setIsOpen(!isOpen)}>
+            <div className={`flex items-center justify-between bg-[#141414] rounded-xl p-1 h-[38px] cursor-pointer transition-colors ${isOpen ? 'ring-1 ring-white' : 'hover:bg-white/[0.02]'}`} onClick={() => setIsOpen(!isOpen)}>
                 <div className="flex-1 text-center text-xs font-mono text-white">{h}</div>
                 <span className="text-[10px] text-[#333] font-mono">:</span>
                 <div className="flex-1 text-center text-xs font-mono text-white">{m}</div>
@@ -382,37 +382,38 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/90" onClick={onClose} />
       <MotionDiv initial={{ y: "100%", opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: "100%", opacity: 0, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="relative w-[95%] md:max-w-[420px] bg-[#141414] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col">
-        <div className="p-5 pb-24 relative overflow-visible">
+        {/* Scroll removed as requested by prompt "do not add scrolling to the add trade menu" */}
+        <div className="p-5 pb-32 relative overflow-visible">
           <form id="entry-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 relative">
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
                  <label htmlFor="symbol" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><Type size={10} /> Symbol</label>
                  <input type="text" required className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none text-left" placeholder="BTCUSD" id="symbol" value={formData.symbol} onChange={e => setFormData({...formData, symbol: e.target.value})} />
             </div>
-             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
+             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><DollarSign size={10} /> Net P&L</label>
                  <div className="flex items-center gap-1 h-full">
                      <span className={`text-lg font-mono font-light ${(parseFloat(unformatNumber(formData.pnl || '0'))) > 0 ? 'text-green-500' : (parseFloat(unformatNumber(formData.pnl || '0'))) < 0 ? 'text-red-500' : 'text-[#666]'}`}>$</span>
                      <input type="text" className={`w-full bg-transparent text-lg font-mono font-medium focus:outline-none text-right ${(parseFloat(unformatNumber(formData.pnl || '0'))) > 0 ? 'text-green-500' : (parseFloat(unformatNumber(formData.pnl || '0'))) < 0 ? 'text-red-500' : 'text-white'}`} placeholder="0.00" value={formData.pnl} onChange={e => handleNumberInput('pnl', e.target.value)} />
                  </div>
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-1 flex relative isolate h-[56px]">
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-1 flex relative isolate h-[56px] transition-colors">
                 <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] -z-10 shadow-lg ${formData.direction === 'Long' ? 'left-1 bg-[#153422] shadow-[0_0_15px_rgba(34,197,94,0.15)]' : 'left-[50%] bg-[#381515] shadow-[0_0_15px_rgba(239,68,68,0.15)]'}`}></div>
                 <button type="button" onClick={() => setFormData({...formData, direction: 'Long'})} className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors duration-200 z-10 ${formData.direction === 'Long' ? 'text-green-400' : 'text-[#666] hover:text-[#999]'}`}><ArrowUpRight size={14} /><span className="text-[10px] font-bold uppercase tracking-wider">Long</span></button>
                 <button type="button" onClick={() => setFormData({...formData, direction: 'Short'})} className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors duration-200 z-10 ${formData.direction === 'Short' ? 'text-red-400' : 'text-[#666] hover:text-[#999]'}`}><ArrowDownRight size={14} /><span className="text-[10px] font-bold uppercase tracking-wider">Short</span></button>
             </div>
-            <div className="col-span-2 relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
+            <div className="col-span-2 relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
                  <label htmlFor="strategy" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><Target size={10} /> Strategy</label>
                  <input type="text" className="w-full bg-transparent text-sm text-white font-medium placeholder-white/10 focus:outline-none text-left" placeholder="e.g., VWAP Rejection" id="strategy" value={formData.strategy} onChange={e => setFormData({...formData, strategy: e.target.value})} />
             </div>
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><Hash size={10} /> Lots</label>
                   <input type="text" className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none text-right" placeholder="Qty" value={formData.size} onChange={e => handleNumberInput('size', e.target.value)} />
             </div>
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><DollarSign size={10} /> Fees</label>
                   <input type="text" className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none text-right" placeholder="0.00" value={formData.fees} onChange={e => handleNumberInput('fees', e.target.value)} />
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col md:flex-row items-start gap-4 z-40 relative h-auto md:h-[84px]" ref={dateContainerRef}>
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col md:flex-row items-start gap-4 z-40 relative h-auto md:h-[84px] focus-within:ring-1 focus-within:ring-white transition-colors" ref={dateContainerRef}>
                  <div className="w-full md:flex-1 relative group h-full">
                       <div className="cursor-pointer h-full" onClick={() => setShowCalendar(!showCalendar)}>
                           <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5 pointer-events-none mb-1.5"><CalendarIcon size={10} /> Date</label>
@@ -429,15 +430,15 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                      <ScrollableTimeInput label="Exit" type="OUT" value={formData.timeOut || '10:00:00'} onChange={(val) => setFormData({...formData, timeOut: val})} />
                  </div>
             </div>
-             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
+             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider">Entry Price</label>
                   <input type="text" className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none text-right" placeholder="0.00" value={formData.priceIn} onChange={e => handleNumberInput('priceIn', e.target.value)} />
             </div>
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-xgiha-accent transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider">Exit Price</label>
                   <input type="text" className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none text-right" placeholder="0.00" value={formData.priceOut} onChange={e => handleNumberInput('priceOut', e.target.value)} />
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 transition-colors h-[64px]">
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 transition-colors h-[64px] focus-within:ring-1 focus-within:ring-white transition-colors">
                 <div onClick={() => setIsNewsTrade(!isNewsTrade)} className={`cursor-pointer h-full px-4 rounded-xl flex items-center gap-2 transition-all shrink-0 ${isNewsTrade ? 'bg-yellow-500/10 text-yellow-500' : 'bg-white/5 text-[#666] hover:bg-white/10 hover:text-[#888]'}`}>
                     <Zap size={14} fill={isNewsTrade ? "currentColor" : "none"} />
                     <span className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">News Event</span>
@@ -446,15 +447,15 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                     <input type="text" className={`w-full bg-transparent text-sm text-white font-medium focus:outline-none placeholder-white/20 transition-opacity ${isNewsTrade ? 'opacity-100' : 'opacity-30 pointer-events-none'}`} placeholder={isNewsTrade ? "Event name..." : "Enable news event"} value={formData.news} onChange={e => setFormData({...formData, news: e.target.value})} disabled={!isNewsTrade} />
                 </div>
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px] focus-within:ring-1 focus-within:ring-white transition-colors">
                 <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><FileText size={10} /> Notes</label>
                 <textarea className="w-full h-full bg-transparent text-sm text-white placeholder-white/10 focus:outline-none resize-none custom-scrollbar leading-relaxed whitespace-pre-wrap break-words pt-1" placeholder="Add trading notes..." value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} />
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 h-[72px]">
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 h-[72px] focus-within:ring-1 focus-within:ring-white transition-colors">
                  <div className="pl-2 pr-3 h-full flex items-center"><label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0"><ImageIcon size={12} /> Attachments</label></div>
                  <div className="flex-1 flex gap-2 overflow-x-auto custom-scrollbar items-center">
                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
-                     <div onClick={() => !isUploading && fileInputRef.current?.click()} className={`w-10 h-10 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center transition-colors shrink-0 bg-white/[0.02] ${isUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-white hover:border-xgiha-accent text-[#666]'}`} title="Add Image">{isUploading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}</div>
+                     <div onClick={() => !isUploading && fileInputRef.current?.click()} className={`w-10 h-10 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center transition-colors shrink-0 bg-white/[0.02] ${isUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-white hover:border-white text-[#666]'}`} title="Add Image">{isUploading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}</div>
                      {formData.images.map((img, idx) => (
                          <div key={idx} className="w-10 h-10 rounded-lg relative shrink-0 group overflow-hidden bg-black/40">
                              <img src={img} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
@@ -472,7 +473,12 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
             type="submit" 
             form="entry-form" 
             disabled={isUploading} 
-            className="pointer-events-auto relative px-12 py-[18px] rounded-full text-black bg-white hover:bg-zinc-100 active:scale-95 transition-all duration-300 shadow-xl font-bold text-[10px] uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed"
+            /* 
+               Width padding: px-[141px].
+               Height increase: py-[27.5px].
+               Text size increased from [11px] to [13px].
+            */
+            className="pointer-events-auto relative px-[141px] py-[27.5px] rounded-full text-black bg-white hover:bg-zinc-100 active:scale-95 transition-all duration-300 shadow-xl font-bold text-[13px] uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploading ? 'Uploading...' : 'Save Trade'}
           </button>
@@ -558,7 +564,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
                          {trade.notes && (
                              <div className="text-xs text-[#999] bg-black/20 rounded-lg p-2 font-medium leading-relaxed relative group">
                                  <span className="text-white/70">{trade.notes.length > 60 ? trade.notes.substring(0, 60).trim() + '...' : trade.notes}</span>
-                                 {trade.notes.length > 60 && <button onClick={(e) => { e.stopPropagation(); setViewingNote(trade.notes!); }} className="ml-1 text-xgiha-accent hover:text-white text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-0.5 cursor-pointer">Read More</button>}
+                                 {trade.notes.length > 60 && <button onClick={(e) => { e.stopPropagation(); setViewingNote(trade.notes!); }} className="ml-1 text-xgiha-accent hover:text-white text-[10px] font-bold uppercase tracking-wider items-center gap-0.5 cursor-pointer">Read More</button>}
                              </div>
                          )}
                          {(trade.images || trade.image) && (

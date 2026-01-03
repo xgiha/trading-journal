@@ -107,8 +107,8 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                 </div>
               ) : !readOnly && (
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-xgiha-accent text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform shadow-[0_0_15px_rgba(255,166,0,0.3)]">
-                      <Plus size={14} />
+                   <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white text-black flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                      <Plus size={14} strokeWidth={3} />
                    </div>
                 </div>
               )}
@@ -161,6 +161,9 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
     return grid;
   };
 
+  const handleMonthPrev = () => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const handleMonthNext = () => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+
   return (
     <div className="w-full h-full p-4 md:p-6 flex flex-col gap-6 bg-white/[0.03] rounded-[25px] relative overflow-hidden">
       <div className="flex items-center justify-between shrink-0 w-full px-2 z-10">
@@ -173,10 +176,10 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                     </>
                 ) : (
                     <>
-                        <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="text-xgiha-muted hover:text-white transition-colors">
+                        <button onClick={handleMonthPrev} className="text-xgiha-muted hover:text-white transition-colors">
                             <ChevronLeft size={16} />
                         </button>
-                        <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="text-xgiha-muted hover:text-white transition-colors">
+                        <button onClick={handleMonthNext} className="text-xgiha-muted hover:text-white transition-colors">
                             <ChevronRight size={16} />
                         </button>
                     </>
