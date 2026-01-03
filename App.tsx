@@ -526,22 +526,23 @@ const App: React.FC = () => {
 
               <div style={{ bottom: 'calc(1.5rem + var(--sab))' }} className="fixed lg:absolute left-0 right-0 z-[100] flex justify-center items-center pointer-events-none px-4">
                 <div className="flex items-center gap-3 lg:gap-4 pointer-events-auto w-full max-w-2xl lg:max-w-none justify-center">
-                  <TooltipProvider delayDuration={0.1}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        {isInitialLoading ? (
-                            <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" />
-                        ) : (
-                            <button className="bg-white w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 overflow-hidden">
-                                <img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" />
-                            </button>
-                        )}
-                      </TooltipTrigger>
-                      <TooltipContent side="top" align="center">
-                        <QuickUserOptions onLogout={handleLogout} />
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  
+                  {isInitialLoading ? (
+                      <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" />
+                  ) : (
+                    <TooltipProvider delayDuration={0.1}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                              <button className="bg-white w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 overflow-hidden">
+                                  <img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" />
+                              </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="center">
+                          <QuickUserOptions onLogout={handleLogout} />
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
 
                   <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md flex-1 lg:flex-none lg:w-[240px] h-14 shadow-2xl border border-white/5 overflow-hidden">
                       {isInitialLoading ? (

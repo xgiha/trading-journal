@@ -42,7 +42,6 @@ const TotalPnlCardComponent: React.FC<TotalPnlCardProps> = ({ totalPnl, growthPc
         ) : (
           <>
             <div className="flex flex-col items-center z-10">
-              <span className="text-[10px] font-bold text-white/20 uppercase tracking-[0.3em] mb-2">Total Balance</span>
               <div className="flex items-start gap-1">
                 <span className="font-pixel text-2xl text-white/20 mt-3">$</span>
                 <h2
