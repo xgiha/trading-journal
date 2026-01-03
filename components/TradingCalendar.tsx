@@ -1,7 +1,7 @@
-
 import React, { useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Trade } from '../types';
+import { Skeleton } from './Skeleton';
 
 interface TradingCalendarProps {
   trades: Trade[];
@@ -11,6 +11,7 @@ interface TradingCalendarProps {
   onViewDayClick: (date: string) => void;
   onViewWeekClick: (trades: Trade[], weekLabel: string) => void;
   readOnly?: boolean;
+  loading?: boolean;
 }
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -22,7 +23,8 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
   onAddTradeClick, 
   onViewDayClick, 
   onViewWeekClick,
-  readOnly = false
+  readOnly = false,
+  loading = false
 }) => {
 
   const monthlyStats = useMemo(() => {
@@ -164,39 +166,76 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
       <div className="flex items-center justify-between shrink-0 w-full px-2 z-10">
          <div className="flex items-center gap-4 bg-white/5 rounded-full px-4 py-1.5">
             <div className="flex gap-2">
-                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="text-xgiha-muted hover:text-white transition-colors">
-                    <ChevronLeft size={16} />
-                </button>
-                <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="text-xgiha-muted hover:text-white transition-colors">
-                    <ChevronRight size={16} />
-                </button>
+                {loading ? (
+                    <>
+                        <Skeleton className="h-4 w-4 rounded-full" />
+                        <Skeleton className="h-4 w-4 rounded-full" />
+                    </>
+                ) : (
+                    <>
+                        <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="text-xgiha-muted hover:text-white transition-colors">
+                            <ChevronLeft size={16} />
+                        </button>
+                        <button onClick={() => onMonthChange(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="text-xgiha-muted hover:text-white transition-colors">
+                            <ChevronRight size={16} />
+                        </button>
+                    </>
+                )}
             </div>
-            <span className="text-[12px] font-bold text-white tracking-[0.2em] uppercase">
-               {currentDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
-            </span>
+            {loading ? (
+                <Skeleton className="h-4 w-32 rounded-full" />
+            ) : (
+                <span className="text-[12px] font-bold text-white tracking-[0.2em] uppercase">
+                {currentDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+                </span>
+            )}
          </div>
-         <div className="flex items-center gap-6 bg-white/5 rounded-full px-6 py-2">
-            <div className="flex items-center gap-2">
-               <span className={`text-[12px] font-bold font-mono ${monthlyStats.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {monthlyStats.totalPnl >= 0 ? '+' : ''}{formatCurrency(monthlyStats.totalPnl)}
-               </span>
-               <span className="text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">P&L</span>
+         {loading ? (
+            <Skeleton className="h-8 w-48 rounded-full" />
+         ) : (
+            <div className="flex items-center gap-6 bg-white/5 rounded-full px-6 py-2">
+                <div className="flex items-center gap-2">
+                <span className={`text-[12px] font-bold font-mono ${monthlyStats.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {monthlyStats.totalPnl >= 0 ? '+' : ''}{formatCurrency(monthlyStats.totalPnl)}
+                </span>
+                <span className="text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">P&L</span>
+                </div>
+                <div className="w-px h-3 bg-white/10"></div>
+                <div className="flex items-center gap-2">
+                <span className="text-[12px] font-bold text-white font-mono">{monthlyStats.winRate.toFixed(0)}%</span>
+                <span className="text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">Win Rate</span>
+                </div>
             </div>
-            <div className="w-px h-3 bg-white/10"></div>
-            <div className="flex items-center gap-2">
-               <span className="text-[12px] font-bold text-white font-mono">{monthlyStats.winRate.toFixed(0)}%</span>
-               <span className="text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">Win Rate</span>
-            </div>
-         </div>
+         )}
       </div>
 
       <div className="flex-1 flex flex-col min-h-0 z-10">
         <div className="grid grid-cols-7 md:grid-cols-8 gap-2 mb-3 shrink-0 px-2">
-            {WEEKDAYS.map(d => <div key={d} className="text-center text-[10px] uppercase tracking-[0.2em] text-xgiha-muted font-bold opacity-40">{d}</div>)}
-            <div className="hidden md:block text-center text-[10px] uppercase tracking-[0.2em] text-xgiha-accent font-bold opacity-80">Total</div>
+            {WEEKDAYS.map(d => (
+              <div key={d} className="text-center flex justify-center">
+                {loading ? (
+                  <Skeleton className="h-2 w-8 rounded-full opacity-20" />
+                ) : (
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-xgiha-muted font-bold opacity-40">{d}</div>
+                )}
+              </div>
+            ))}
+            <div className="hidden md:flex justify-center text-center">
+              {loading ? (
+                <Skeleton className="h-2 w-10 rounded-full opacity-40" />
+              ) : (
+                <div className="text-[10px] uppercase tracking-[0.2em] text-xgiha-accent font-bold opacity-80">Total</div>
+              )}
+            </div>
         </div>
         <div className="grid grid-cols-7 md:grid-cols-8 gap-2 flex-1 auto-rows-min overflow-y-auto custom-scrollbar px-2 content-start pb-4">
-            {renderCalendarDays()}
+            {loading ? (
+                [...Array(32)].map((_, i) => (
+                    <Skeleton key={i} className="min-h-[60px] md:min-h-[80px] lg:min-h-[90px] rounded-xl" />
+                ))
+            ) : (
+                renderCalendarDays()
+            )}
         </div>
       </div>
     </div>

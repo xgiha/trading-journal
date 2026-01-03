@@ -1,25 +1,41 @@
-
 import React, { useMemo } from 'react';
 import { Trade } from '../types';
-import { Award, TrendingUp, TrendingDown, Target, Zap, Clock, Timer, History } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, Zap, Clock, Timer, History } from 'lucide-react';
+import { Skeleton } from './Skeleton';
 
 interface TimeAnalysisProps {
   trades: Trade[];
+  loading?: boolean;
 }
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
-const StatCard: React.FC<{ title: string; children?: React.ReactNode; className?: string }> = ({ title, children, className }) => (
+const StatCard: React.FC<{ title: string; children?: React.ReactNode; className?: string; loading?: boolean }> = ({ title, children, className, loading = false }) => (
   <div className={cn(
     "relative w-full overflow-hidden bg-white/[0.03] rounded-[25px] p-5 transition-all duration-500 border border-white/5",
     className
   )}>
     <div className="relative z-30 flex flex-col h-full">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
-        <span className="text-[10px] font-bold text-xgiha-muted tracking-[0.2em] uppercase">{title}</span>
+        {loading ? (
+          <Skeleton className="w-1.5 h-1.5 rounded-full" />
+        ) : (
+          <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
+        )}
+        {loading ? (
+            <Skeleton className="h-3 w-20 rounded-full" />
+        ) : (
+            <span className="text-[10px] font-bold text-xgiha-muted tracking-[0.2em] uppercase">{title}</span>
+        )}
       </div>
-      {children}
+      {loading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-full rounded-xl" />
+          <Skeleton className="h-8 w-3/4 rounded-xl" />
+        </div>
+      ) : (
+        children
+      )}
     </div>
   </div>
 );
@@ -42,9 +58,8 @@ const formatDuration = (seconds: number) => {
   return `${hrs}h ${mins}m ${secs}s`;
 };
 
-const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
+const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) => {
   const stats = useMemo(() => {
-    // Default empty stats
     const emptyStats = {
       bestTrade: null,
       worstTrade: null,
@@ -54,6 +69,7 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
       mostProfitableDay: null as [string, number] | null,
       leastProfitableDay: null as [string, number] | null,
       mostUsedStrategy: null as [string, number] | null,
+      mostUsedStrategyCount: 0,
       mostProfitableStrategy: null as [string, number] | null,
       avgDuration: 0,
       avgWinDuration: 0,
@@ -72,11 +88,10 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
     let lossDurationSum = 0, lossDurationCount = 0;
 
     const dayMap = new Map<string, number>();
-    const strategyCount = new Map<string, number>();
-    const strategyPnl = new Map<string, number>();
+    const strategyCountMap = new Map<string, number>();
+    const strategyPnlMap = new Map<string, number>();
 
     trades.forEach(t => {
-      // P&L Stats
       if (t.pnl > (bestTrade?.pnl || -Infinity)) bestTrade = t;
       if (t.pnl < (worstTrade?.pnl || Infinity)) worstTrade = t;
       if (t.pnl > 0) { winSum += t.pnl; winCount++; }
@@ -85,15 +100,13 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
       dayMap.set(t.date, (dayMap.get(t.date) || 0) + t.pnl);
       
       const strat = t.strategy || 'Uncategorized';
-      strategyCount.set(strat, (strategyCount.get(strat) || 0) + 1);
-      strategyPnl.set(strat, (strategyPnl.get(strat) || 0) + t.pnl);
+      strategyCountMap.set(strat, (strategyCountMap.get(strat) || 0) + 1);
+      strategyPnlMap.set(strat, (strategyPnlMap.get(strat) || 0) + t.pnl);
 
-      // Duration Stats
       if (t.entryTime && t.exitTime) {
         const start = getSeconds(t.entryTime);
         const end = getSeconds(t.exitTime);
         let duration = end - start;
-        // Handle potential cross-midnight (simple logic)
         if (duration < 0) duration += 86400; 
 
         totalDuration += duration;
@@ -116,10 +129,10 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
     const mostProfitableDay = dayEntries.length > 0 ? dayEntries.sort((a,b) => b[1] - a[1])[0] : null;
     const leastProfitableDay = dayEntries.length > 0 ? dayEntries.sort((a,b) => a[1] - b[1])[0] : null;
     
-    const strategyEntries = Array.from(strategyCount.entries());
-    const mostUsedStrategy = strategyEntries.length > 0 ? strategyEntries.sort((a,b) => b[1] - a[1])[0] : null;
-    const strategyPnlEntries = Array.from(strategyPnl.entries());
-    const mostProfitableStrategy = strategyPnlEntries.length > 0 ? strategyPnlEntries.sort((a,b) => b[1] - a[1])[0] : null;
+    const strategyEntries = Array.from(strategyCountMap.entries());
+    const mostUsedStrategyEntry = strategyEntries.length > 0 ? strategyEntries.sort((a,b) => b[1] - a[1])[0] : null;
+    const strategyPnlEntries = Array.from(strategyPnlMap.entries());
+    const mostProfitableStrategyEntry = strategyPnlEntries.length > 0 ? strategyPnlEntries.sort((a,b) => b[1] - a[1])[0] : null;
 
     const avgDuration = totalDurationCount > 0 ? totalDuration / totalDurationCount : 0;
     const avgWinDuration = winDurationCount > 0 ? winDurationSum / winDurationCount : 0;
@@ -128,15 +141,16 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
     return {
       bestTrade, worstTrade, avgWin, avgLoss, profitFactor,
       mostProfitableDay, leastProfitableDay,
-      mostUsedStrategy, mostProfitableStrategy,
+      mostUsedStrategy: mostUsedStrategyEntry ? [mostUsedStrategyEntry[0], mostUsedStrategyEntry[1]] as [string, number] : null,
+      mostUsedStrategyCount: mostUsedStrategyEntry ? mostUsedStrategyEntry[1] : 0,
+      mostProfitableStrategy: mostProfitableStrategyEntry ? [mostProfitableStrategyEntry[0], mostProfitableStrategyEntry[1]] as [string, number] : null,
       avgDuration, avgWinDuration, avgLossDuration
     };
   }, [trades]);
 
   return (
     <div className="flex flex-col gap-4 w-full h-full pr-1">
-      {/* PERFORMANCE CARD */}
-      <StatCard title="Trade Performance">
+      <StatCard title="Trade Performance" loading={loading}>
         <div className="flex flex-col gap-4">
            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -160,8 +174,7 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
         </div>
       </StatCard>
 
-      {/* BEST & WORST CARD */}
-      <StatCard title="Best & Worst">
+      <StatCard title="Best & Worst" loading={loading}>
         <div className="flex flex-col gap-3">
            <div className="flex justify-between items-end">
               <div className="flex flex-col">
@@ -180,8 +193,7 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
         </div>
       </StatCard>
 
-      {/* STRATEGY CARD */}
-      <StatCard title="Strategy">
+      <StatCard title="Strategy" loading={loading}>
         <div className="flex flex-col gap-4">
            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
@@ -200,16 +212,14 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
               </div>
               <div className="flex justify-between items-center bg-white/5 rounded-xl px-3 py-2">
                  <span className="text-[10px] font-bold text-white truncate max-w-[100px]">{stats.mostUsedStrategy?.[0] || '---'}</span>
-                 <span className="text-[10px] font-bold text-xgiha-accent">{stats.mostUsedStrategy?.[1] || 0} Trades</span>
+                 <span className="text-[10px] font-bold text-xgiha-accent">{stats.mostUsedStrategyCount} Trades</span>
               </div>
            </div>
         </div>
       </StatCard>
 
-      {/* TIME ANALYSIS CARD */}
-      <StatCard title="Time Analysis" className="flex-1">
+      <StatCard title="Time Analysis" className="flex-1" loading={loading}>
         <div className="flex flex-col gap-2">
-           {/* AVG TRADE DURATION SECTION */}
            <div className="flex flex-col gap-1 p-2 rounded-xl bg-white/5 border border-white/5">
               <div className="flex items-center gap-2">
                  <History size={11} className="text-blue-400" />
@@ -220,7 +230,6 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
               </span>
            </div>
 
-           {/* AVG WIN DURATION SECTION */}
            <div className="flex flex-col gap-1 p-2 rounded-xl bg-white/5 border border-white/5">
               <div className="flex items-center gap-2">
                  <Clock size={11} className="text-emerald-400" />
@@ -231,7 +240,6 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades }) => {
               </span>
            </div>
 
-           {/* AVG LOSS DURATION SECTION */}
            <div className="flex flex-col gap-1 p-2 rounded-xl bg-white/5 border border-white/5">
               <div className="flex items-center gap-2">
                  <Timer size={11} className="text-red-400" />

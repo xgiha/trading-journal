@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Maximize2, Trash2, UploadCloud, Loader2, Edit2, FileText, Target } from 'lucide-react';
+import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Trash2, UploadCloud, Loader2, Edit2, FileText, Target } from 'lucide-react';
 import { Trade } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -103,7 +102,7 @@ const CustomDatePicker = ({ selectedDate, onChange }: { selectedDate: string, on
     const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
     const changeMonth = (e: React.MouseEvent, delta: number) => {
-        e.stopPropagation(); // Critical: prevent closing the dropdown
+        e.stopPropagation(); 
         const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + delta, 1);
         setViewDate(newDate);
     };

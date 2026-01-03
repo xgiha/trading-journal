@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trade } from '../types';
 import Pagination from './Pagination';
+import { Skeleton } from './Skeleton';
 
 // Cast motion elements to any to bypass environment-specific type definition issues
 const MotionDiv = motion.div as any;
@@ -26,6 +27,7 @@ interface JournalTableProps {
   onExport?: () => void;
   onImport?: (trades: Trade[]) => void;
   readOnly?: boolean;
+  loading?: boolean;
 }
 
 const ITEMS_PER_PAGE = 4;
@@ -173,7 +175,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
     );
 };
 
-const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, onImport, readOnly = false }: JournalTableProps) => {
+const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, onImport, readOnly = false, loading = false }: JournalTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -281,7 +283,14 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
                 transition={{ duration: 0.3 }}
                 className="flex flex-col gap-1 w-full"
               >
-                {groupedTrades.length > 0 ? (
+                {loading ? (
+                    <div className="flex flex-col gap-3">
+                        <Skeleton className="h-6 w-32 ml-4 rounded-md" />
+                        {[...Array(4)].map((_, i) => (
+                            <Skeleton key={i} className="h-20 w-full rounded-[30px]" />
+                        ))}
+                    </div>
+                ) : groupedTrades.length > 0 ? (
                   groupedTrades.map(([date, dateTrades]) => (
                     <div key={date} className="w-full">
                       <div className="mt-2 mb-3 pl-4">
@@ -303,15 +312,17 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
                 )}
               </MotionDiv>
             </AnimatePresence>
-            <div className="absolute bottom-0 left-0 right-0 z-50 flex flex-col items-center">
-                <div className="w-full py-2 flex justify-center items-center">
-                    <Pagination 
-                      total={totalPages} 
-                      page={currentPage - 1} 
-                      setPage={(p) => setCurrentPage(p + 1)} 
-                    />
+            {!loading && (
+                <div className="absolute bottom-0 left-0 right-0 z-50 flex flex-col items-center">
+                    <div className="w-full py-2 flex justify-center items-center">
+                        <Pagination 
+                        total={totalPages} 
+                        page={currentPage - 1} 
+                        setPage={(p) => setCurrentPage(p + 1)} 
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

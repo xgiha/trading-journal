@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check, PieChart, BarChart3, Lock, Unlock, Loader2, User, LogOut } from 'lucide-react';
+import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check, PieChart, BarChart3, Lock, Unlock, Loader2, LogOut, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
 
 import WeeklyChart from './components/WeeklyChart';
 import GrowthChart from './components/GrowthChart';
@@ -16,6 +15,7 @@ import TotalPnlCard from './components/TotalPnlCard';
 import TimeAnalysis from './components/TimeAnalysis';
 import Progress from './components/Progress';
 import { Trade } from './types';
+import { Skeleton } from './components/Skeleton';
 
 const MotionDiv = motion.div as any;
 
@@ -59,49 +59,6 @@ const TooltipContent = React.forwardRef<
 ));
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
-// --- Button Component ---
-const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 active:scale-[0.96]",
-  {
-    variants: {
-      variant: {
-        default: "bg-white text-black shadow-sm hover:bg-zinc-100",
-        destructive: "bg-red-500 text-white shadow-sm hover:bg-red-600",
-        outline: "border border-white/10 bg-white/5 shadow-sm hover:bg-white/10 text-white",
-        secondary: "bg-white/10 text-white shadow-sm hover:bg-white/20",
-        ghost: "hover:bg-white/5 text-white",
-        link: "text-white underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-8 rounded-lg px-3 text-xs",
-        lg: "h-12 rounded-lg px-8",
-        icon: "h-12 w-12",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  },
-);
-
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
-}
-
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
-    return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
-    );
-  },
-);
-Button.displayName = "Button";
-
 const QuickUserOptions = ({ onLogout }: { onLogout: () => void }) => {
   return (
     <div className="flex flex-col min-w-[140px]">
@@ -119,10 +76,12 @@ const QuickUserOptions = ({ onLogout }: { onLogout: () => void }) => {
 };
 
 // --- Input Component ---
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  rightElement?: React.ReactNode;
+}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, rightElement, ...props }, ref) => {
     const radius = 100;
     const containerRef = useRef<HTMLDivElement | null>(null);
     const gradientRef = useRef(null);
@@ -179,15 +138,23 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         onMouseLeave={handleMouseLeave}
       >
         <div ref={gradientRef} className="absolute inset-0 rounded-2xl" />
-        <input
-          type={type}
-          className={cn(
-            `relative z-10 w-full rounded-2xl border-none bg-[#0a0a0a] px-5 py-4 text-sm text-white transition duration-400 focus:outline-none placeholder:text-white/10`,
-            className,
+        <div className="relative flex items-center w-full">
+          <input
+            type={type}
+            className={cn(
+              `relative z-10 w-full rounded-2xl border-none bg-[#0a0a0a] px-5 py-4 text-sm text-white transition duration-400 focus:outline-none placeholder:text-white/10`,
+              rightElement && "pr-12",
+              className,
+            )}
+            ref={ref}
+            {...props}
+          />
+          {rightElement && (
+            <div className="absolute right-4 z-20 flex items-center justify-center">
+              {rightElement}
+            </div>
           )}
-          ref={ref}
-          {...props}
-        />
+        </div>
       </div>
     );
   }
@@ -209,6 +176,7 @@ const CREDENTIALS = {
 const SignInScreen: React.FC<{ onSignIn: () => void }> = ({ onSignIn }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -271,11 +239,20 @@ const SignInScreen: React.FC<{ onSignIn: () => void }> = ({ onSignIn }) => {
           <div className="flex flex-col gap-1.5">
             <label className="text-[9px] font-bold text-white/20 uppercase tracking-widest pl-1">Keycode</label>
             <Input 
-              type="password" 
+              type={showPassword ? "text" : "password"} 
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
               disabled={isLoading || isUnlocked}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-white/20 hover:text-white/40 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              }
             />
           </div>
 
@@ -323,34 +300,37 @@ const App: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  useEffect(() => {
-    const initData = async () => {
-      try {
-        const response = await fetch('/api/trades');
-        let initialTrades: Trade[] = [];
-        if (response.ok) {
-          const cloudTrades = await response.json();
-          if (cloudTrades && Array.isArray(cloudTrades)) initialTrades = cloudTrades;
-        } else {
-          const saved = localStorage.getItem('xgiha_trades');
-          if (saved) initialTrades = JSON.parse(saved);
-        }
-        setTrades(initialTrades);
-        lastSyncedTradesRef.current = JSON.stringify(initialTrades);
-        setTimeout(() => {
-          setIsInitialLoading(false);
-          setSyncStatus('success');
-          setTimeout(() => setSyncStatus('idle'), 2000);
-        }, 600);
-      } catch (e) {
+  const initData = useCallback(async () => {
+    setIsInitialLoading(true);
+    try {
+      const response = await fetch('/api/trades');
+      let initialTrades: Trade[] = [];
+      if (response.ok) {
+        const cloudTrades = await response.json();
+        if (cloudTrades && Array.isArray(cloudTrades)) initialTrades = cloudTrades;
+      } else {
         const saved = localStorage.getItem('xgiha_trades');
-        if (saved) setTrades(JSON.parse(saved));
-        setIsInitialLoading(false);
-        setSyncStatus('error');
+        if (saved) initialTrades = JSON.parse(saved);
       }
-    };
-    initData();
+      setTrades(initialTrades);
+      lastSyncedTradesRef.current = JSON.stringify(initialTrades);
+      
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      setIsInitialLoading(false);
+      setSyncStatus('success');
+      setTimeout(() => setSyncStatus('idle'), 2000);
+    } catch (e) {
+      const saved = localStorage.getItem('xgiha_trades');
+      if (saved) setTrades(JSON.parse(saved));
+      setIsInitialLoading(false);
+      setSyncStatus('error');
+    }
   }, []);
+
+  useEffect(() => {
+    initData();
+  }, [initData]);
 
   useEffect(() => {
     if (isInitialLoading) return;
@@ -448,7 +428,6 @@ const App: React.FC = () => {
   return (
     <div className="h-[100dvh] w-screen relative flex items-center justify-center overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black bg-[#050505]">
       
-      {/* DASHBOARD CONTENT - ALWAYS RENDERED BUT STATIC */}
       <div className="w-full h-full p-2 lg:p-3 relative overflow-hidden flex flex-col">
         <div className="w-full h-full glass-card lg:rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 shadow-2xl">
           <AnimatePresence>
@@ -457,7 +436,8 @@ const App: React.FC = () => {
                 initial={{ y: -60, x: '-50%', opacity: 0 }}
                 animate={{ y: 0, x: '-50%', opacity: 1 }}
                 exit={{ y: -60, x: '-50%', opacity: 0 }}
-                className="absolute top-6 left-1/2 z-[150] flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl"
+                onClick={() => initData()}
+                className="absolute top-6 left-1/2 z-[150] flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl cursor-pointer hover:bg-white/10 transition-colors"
               >
                 {syncStatus === 'syncing' ? <RefreshCw size={11} className="text-xgiha-accent animate-spin" /> : 
                  syncStatus === 'success' ? <Check size={11} className="text-emerald-400" /> : <CloudOff size={11} className="text-red-400" />}
@@ -468,106 +448,116 @@ const App: React.FC = () => {
             )}
           </AnimatePresence>
 
-          <AnimatePresence mode="wait">
-              {(isInitialLoading && isAuthenticated) ? (
-                <MotionDiv key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex flex-col items-center justify-center gap-6">
-                    <Loader2 size={32} className="text-xgiha-accent animate-spin" />
-                    <span className="text-[10px] uppercase font-bold tracking-[0.4em] text-xgiha-accent animate-pulse">Initializing Vault</span>
-                </MotionDiv>
-              ) : (
-                <React.Fragment>
-                  {!isMobile ? (
-                    <div className="flex-1 min-h-0 flex flex-row gap-4 lg:gap-6 z-10 items-stretch h-full w-full">
-                      <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
-                        <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full">
-                          <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                          <Progress trades={trades} />
-                        </div>
-                        <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
-                          <TimeAnalysis trades={trades} />
-                        </div>
-                      </div>
-
-                      <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-24">
-                        <div className="w-full h-full relative">
-                          <AnimatePresence mode="wait">
-                            <MotionDiv key={activeTab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="absolute inset-0 w-full h-full flex flex-col">
-                              {activeTab === 'dashboard' ? (
-                                <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />
-                              ) : (
-                                <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} />
-                              )}
-                            </MotionDiv>
-                          </AnimatePresence>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col h-full w-[460px] shrink-0 gap-4 lg:gap-6">
-                        <div className="flex-1 min-h-0"><GrowthChart trades={trades} /></div>
-                        <div className="flex-1 min-h-0"><WeeklyChart trades={trades} stats={globalStats} /></div>
-                      </div>
+          {isAuthenticated && (
+            <React.Fragment>
+              {!isMobile ? (
+                <div className="flex-1 min-h-0 flex flex-row gap-4 lg:gap-6 z-10 items-stretch h-full w-full">
+                  <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
+                    <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full">
+                      <TotalPnlCard loading={isInitialLoading} trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+                      <Progress loading={isInitialLoading} trades={trades} />
                     </div>
-                  ) : (
-                    <div className="flex-1 min-h-0 flex flex-col z-10 w-full h-full pb-28">
+                    <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
+                      <TimeAnalysis loading={isInitialLoading} trades={trades} />
+                    </div>
+                  </div>
+
+                  <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-24">
+                    <div className="w-full h-full relative">
                       <AnimatePresence mode="wait">
-                        <MotionDiv key={activeTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }} className="flex-1 overflow-y-auto no-scrollbar pt-2">
-                          {activeTab === 'dashboard' && <TradingCalendar trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />}
-                          {activeTab === 'journal' && <JournalTable trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} />}
-                          {activeTab === 'stats' && (
-                            <div className="flex flex-col gap-4 px-1 pb-4">
-                              <TotalPnlCard trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                              <div className="h-[420px] shrink-0"><Progress trades={trades} /></div>
-                              <TimeAnalysis trades={trades} />
-                            </div>
-                          )}
-                          {activeTab === 'analytics' && (
-                            <div className="flex flex-col gap-4 px-1 pb-4">
-                              <div className="h-[320px] shrink-0"><GrowthChart trades={trades} /></div>
-                              <div className="h-[320px] shrink-0"><WeeklyChart trades={trades} stats={globalStats} /></div>
-                            </div>
+                        <MotionDiv key={activeTab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="absolute inset-0 w-full h-full flex flex-col">
+                          {activeTab === 'dashboard' ? (
+                            <TradingCalendar loading={isInitialLoading} trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />
+                          ) : (
+                            <JournalTable loading={isInitialLoading} trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} />
                           )}
                         </MotionDiv>
                       </AnimatePresence>
                     </div>
-                  )}
+                  </div>
 
-                  <div style={{ bottom: 'calc(1.5rem + var(--sab))' }} className="fixed lg:absolute left-0 right-0 z-[100] flex justify-center items-center pointer-events-none px-4">
-                    <div className="flex items-center gap-3 lg:gap-4 pointer-events-auto w-full max-w-2xl lg:max-w-none justify-center">
-                      <TooltipProvider delayDuration={0.1}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+                  <div className="flex flex-col h-full w-[460px] shrink-0 gap-4 lg:gap-6">
+                    <div className="flex-1 min-h-0"><GrowthChart loading={isInitialLoading} trades={trades} /></div>
+                    <div className="flex-1 min-h-0"><WeeklyChart loading={isInitialLoading} trades={trades} stats={globalStats} /></div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 min-h-0 flex flex-col z-10 w-full h-full pb-28">
+                  <AnimatePresence mode="wait">
+                    <MotionDiv key={activeTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }} className="flex-1 overflow-y-auto no-scrollbar pt-2">
+                      {activeTab === 'dashboard' && <TradingCalendar loading={isInitialLoading} trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />}
+                      {activeTab === 'journal' && <JournalTable loading={isInitialLoading} trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} />}
+                      {activeTab === 'stats' && (
+                        <div className="flex flex-col gap-4 px-1 pb-4">
+                          <TotalPnlCard loading={isInitialLoading} trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+                          <div className="h-[420px] shrink-0"><Progress loading={isInitialLoading} trades={trades} /></div>
+                          <TimeAnalysis loading={isInitialLoading} trades={trades} />
+                        </div>
+                      )}
+                      {activeTab === 'analytics' && (
+                        <div className="flex flex-col gap-4 px-1 pb-4">
+                          <div className="h-[320px] shrink-0"><GrowthChart loading={isInitialLoading} trades={trades} /></div>
+                          <div className="h-[320px] shrink-0"><WeeklyChart loading={isInitialLoading} trades={trades} stats={globalStats} /></div>
+                        </div>
+                      )}
+                    </MotionDiv>
+                  </AnimatePresence>
+                </div>
+              )}
+
+              <div style={{ bottom: 'calc(1.5rem + var(--sab))' }} className="fixed lg:absolute left-0 right-0 z-[100] flex justify-center items-center pointer-events-none px-4">
+                <div className="flex items-center gap-3 lg:gap-4 pointer-events-auto w-full max-w-2xl lg:max-w-none justify-center">
+                  <TooltipProvider delayDuration={0.1}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {isInitialLoading ? (
+                            <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" />
+                        ) : (
                             <button className="bg-white w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 overflow-hidden">
-                               <img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" />
+                                <img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" />
                             </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" align="center">
-                            <QuickUserOptions onLogout={handleLogout} />
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                        )}
+                      </TooltipTrigger>
+                      <TooltipContent side="top" align="center">
+                        <QuickUserOptions onLogout={handleLogout} />
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
 
-                      <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md flex-1 lg:flex-none lg:w-[240px] h-14 shadow-2xl border border-white/5 overflow-hidden">
-                          {currentTabs.map((tab) => (
-                            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 h-full rounded-full flex flex-col lg:flex-row items-center justify-center gap-1.5 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-xgiha-muted hover:text-white/60'}`}>
-                              <tab.icon size={isMobile ? 12 : 14} />
-                              <span className="text-[8px] lg:text-[10px] font-bold tracking-widest uppercase">{tab.label}</span>
-                            </button>
-                          ))}
-                          <MotionDiv layoutId="active-pill" className="absolute inset-y-1 z-0 rounded-full bg-white/10" style={{ width: `calc(${100 / currentTabs.length}% - 4px)` }} animate={{ x: `${activeIndex * 100}%` }} transition={{ type: "spring", stiffness: 400, damping: 35 }} />
-                      </div>
+                  <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md flex-1 lg:flex-none lg:w-[240px] h-14 shadow-2xl border border-white/5 overflow-hidden">
+                      {isInitialLoading ? (
+                          <div className="flex-1 h-full px-6 flex items-center justify-between gap-4">
+                             <Skeleton className="h-4 flex-1 rounded-full" />
+                             <Skeleton className="h-4 flex-1 rounded-full" />
+                             <Skeleton className="h-4 flex-1 rounded-full" />
+                          </div>
+                      ) : (
+                          <>
+                            {currentTabs.map((tab) => (
+                                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 h-full rounded-full flex flex-col lg:flex-row items-center justify-center gap-1.5 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-xgiha-muted hover:text-white/60'}`}>
+                                <tab.icon size={isMobile ? 12 : 14} />
+                                <span className="text-[8px] lg:text-[10px] font-bold tracking-widest uppercase">{tab.label}</span>
+                                </button>
+                            ))}
+                            <MotionDiv layoutId="active-pill" className="absolute inset-y-1 z-0 rounded-full bg-white/10" style={{ width: `calc(${100 / currentTabs.length}% - 4px)` }} animate={{ x: `${activeIndex * 100}%` }} transition={{ type: "spring", stiffness: 400, damping: 35 }} />
+                          </>
+                      )}
+                  </div>
 
+                  {isInitialLoading ? (
+                      <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" />
+                  ) : (
                       <button onClick={handleAddTradeBtnClick} className="bg-white text-black w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 hover:bg-zinc-100">
                         <Plus size={20} strokeWidth={3} />
                       </button>
-                    </div>
-                  </div>
-                </React.Fragment>
-              )}
-          </AnimatePresence>
+                  )}
+                </div>
+              </div>
+            </React.Fragment>
+          )}
         </div>
       </div>
 
-      {/* SIGN IN SCREEN OVERLAY - initial={false} suppresses slide on mount */}
       <AnimatePresence initial={false}>
         {!isAuthenticated && (
           <SignInScreen onSignIn={handleSignIn} />

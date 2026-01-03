@@ -1,7 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
+import { Skeleton } from './Skeleton';
 
-export const MarketStatusCard: React.FC = () => {
+interface MarketStatusCardProps {
+  loading?: boolean;
+}
+
+export const MarketStatusCard: React.FC<MarketStatusCardProps> = ({ loading = false }) => {
   const [isMarketOpen, setIsMarketOpen] = useState(false);
 
   useEffect(() => {
@@ -21,9 +25,17 @@ export const MarketStatusCard: React.FC = () => {
     };
 
     updateMarketStatus();
-    const timer = setInterval(updateMarketStatus, 60000); // Check every minute is enough for status
+    const timer = setInterval(updateMarketStatus, 60000);
     return () => clearInterval(timer);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] shadow-inner">
+        <Skeleton className="h-2.5 w-20 rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] shadow-inner">
