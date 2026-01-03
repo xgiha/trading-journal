@@ -303,24 +303,37 @@ const App: React.FC = () => {
   const initData = useCallback(async () => {
     setIsInitialLoading(true);
     try {
+      // 1. Get Local Data first as it's fastest
+      const saved = localStorage.getItem('xgiha_trades');
+      const localTrades: Trade[] = saved ? JSON.parse(saved) : [];
+
+      // 2. Try to fetch from Cloud
       const response = await fetch('/api/trades');
-      let initialTrades: Trade[] = [];
-      if (response.ok) {
-        const cloudTrades = await response.json();
-        if (cloudTrades && Array.isArray(cloudTrades)) initialTrades = cloudTrades;
-      } else {
-        const saved = localStorage.getItem('xgiha_trades');
-        if (saved) initialTrades = JSON.parse(saved);
-      }
-      setTrades(initialTrades);
-      lastSyncedTradesRef.current = JSON.stringify(initialTrades);
+      let cloudTrades: Trade[] = [];
       
+      if (response.ok) {
+        const data = await response.json();
+        if (data && Array.isArray(data)) cloudTrades = data;
+      }
+
+      // 3. Intelligent Merge / Selection
+      // If cloud is empty but local has data, trust local.
+      // Otherwise, use cloud as it's the primary source.
+      const finalTrades = (cloudTrades.length === 0 && localTrades.length > 0) 
+        ? localTrades 
+        : cloudTrades;
+
+      setTrades(finalTrades);
+      lastSyncedTradesRef.current = JSON.stringify(finalTrades);
+      
+      // Artificial delay to show beautiful skeleton loading as requested by design
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       setIsInitialLoading(false);
       setSyncStatus('success');
       setTimeout(() => setSyncStatus('idle'), 2000);
     } catch (e) {
+      // Fallback completely to local on error
       const saved = localStorage.getItem('xgiha_trades');
       if (saved) setTrades(JSON.parse(saved));
       setIsInitialLoading(false);
@@ -332,12 +345,18 @@ const App: React.FC = () => {
     initData();
   }, [initData]);
 
+  // Sync to Cloud Effect (Debounced)
   useEffect(() => {
     if (isInitialLoading) return;
+    
     const currentTradesJson = JSON.stringify(trades);
+    
+    // Immediate save to localStorage for safety
+    localStorage.setItem('xgiha_trades', currentTradesJson);
+
     if (currentTradesJson === lastSyncedTradesRef.current) return;
+    
     const timeout = setTimeout(async () => {
-      localStorage.setItem('xgiha_trades', currentTradesJson);
       try {
         setSyncStatus('syncing');
         const response = await fetch('/api/trades', {
