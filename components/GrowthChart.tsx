@@ -20,12 +20,19 @@ const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className, l
     });
     let cumulative = 0;
     const sortedDates = Array.from(dailyMap.keys()).sort();
+    
+    // Default to at least one point if no trades
+    if (sortedDates.length === 0) {
+      return [{ name: 'Initial', pnl: 0 }];
+    }
+
     const initialPoint = { name: 'Initial', pnl: 0 };
     const points = sortedDates.map(date => {
       cumulative += dailyMap.get(date)!;
-      const d = new Date(date);
+      const d = new Date(date + 'T00:00:00');
       return {
-        name: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        // Explicitly format as Month/Day for high visibility
+        name: d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }),
         pnl: cumulative
       };
     });
@@ -64,18 +71,33 @@ const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className, l
             <Skeleton className="w-full h-full rounded-2xl" />
         ) : (
             <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 25 }}>
                 <defs>
                 <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="white" stopOpacity={0.2}/>
                     <stop offset="95%" stopColor="white" stopOpacity={0}/>
                 </linearGradient>
                 </defs>
-                <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.03)" strokeDasharray="3 3" />
-                <XAxis dataKey="name" axisLine={{ stroke: 'rgba(255, 255, 255, 0.15)', strokeWidth: 1 }} tickLine={{ stroke: 'rgba(255, 255, 255, 0.15)' }} tick={{ fill: 'rgba(161, 161, 170, 0.4)', fontSize: 9, fontWeight: 600 }} dy={10} interval="preserveStart" minTickGap={30} />
-                <YAxis axisLine={{ stroke: 'rgba(255, 255, 255, 0.15)', strokeWidth: 1 }} tickLine={{ stroke: 'rgba(255, 255, 255, 0.15)' }} tick={{ fill: 'rgba(161, 161, 170, 0.4)', fontSize: 9, fontWeight: 600 }} tickFormatter={(val) => `$${val}`} domain={[0, 'auto']} width={40} />
-                <Tooltip contentStyle={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} itemStyle={{ fontSize: '10px', color: '#fff' }} labelStyle={{ fontSize: '9px', color: '#666' }} formatter={(val: number) => [`$${val.toLocaleString()}`, 'Total PnL']} />
-                <Area type="monotone" dataKey="pnl" stroke="white" strokeWidth={2} fill="url(#equityGradient)" dot={false} activeDot={{ r: 4, fill: '#fff', strokeWidth: 0 }} animationDuration={800} isAnimationActive={true} />
+                <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} 
+                  tickLine={{ stroke: 'white', strokeOpacity: 1 }} 
+                  tick={{ fill: 'white', fontSize: 10, fontWeight: 800 }} 
+                  dy={10} 
+                  interval="preserveStart" 
+                  minTickGap={20} 
+                />
+                <YAxis 
+                  axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} 
+                  tickLine={{ stroke: 'white', strokeOpacity: 1 }} 
+                  tick={{ fill: 'white', fontSize: 10, fontWeight: 800 }} 
+                  tickFormatter={(val) => `$${val}`} 
+                  domain={['auto', 'auto']} 
+                  width={45} 
+                />
+                <Tooltip contentStyle={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px' }} itemStyle={{ fontSize: '10px', color: '#fff' }} labelStyle={{ fontSize: '9px', color: '#666' }} formatter={(val: number) => [`$${val.toLocaleString()}`, 'Equity']} />
+                <Area type="monotone" dataKey="pnl" stroke="white" strokeWidth={3} fill="url(#equityGradient)" dot={false} activeDot={{ r: 4, fill: '#fff', strokeWidth: 0 }} animationDuration={800} isAnimationActive={true} />
             </AreaChart>
             </ResponsiveContainer>
         )}

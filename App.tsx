@@ -403,6 +403,7 @@ const App: React.FC = () => {
   
   const handleDeleteTrade = useCallback((tradeId: string) => { 
     setTrades(prev => prev.filter(t => t.id !== tradeId));
+    setSelectedTrades(prev => prev.filter(t => t.id !== tradeId));
   }, []);
 
   const handleViewDayClick = useCallback((date: string) => { 
@@ -419,7 +420,13 @@ const App: React.FC = () => {
       let next = [...prev]; if (idx >= 0) next[idx] = tradeData; else next.push(tradeData);
       return next;
     });
-  }, []);
+    setSelectedTrades(prev => {
+      const idx = prev.findIndex(t => t.id === tradeData.id);
+      let next = [...prev];
+      if (idx >= 0) next[idx] = tradeData; else if (tradeData.date === selectedDate) next.push(tradeData);
+      return next;
+    });
+  }, [selectedDate]);
 
   const handleExportData = useCallback(() => {
     const blob = new Blob([JSON.stringify(trades, null, 2)], { type: 'application/json' });
@@ -585,8 +592,8 @@ const App: React.FC = () => {
       </AnimatePresence>
 
       <AnimatePresence>
-        {isAddModalOpen && <AddTradeModal isOpen={true} onClose={() => setIsAddModalOpen(false)} date={selectedDate} onAdd={handleAddOrUpdateTrade} initialData={editingTrade} />}
         {isDetailModalOpen && <DayDetailsModal isOpen={true} onClose={() => setIsDetailModalOpen(false)} date={selectedDate} trades={selectedTrades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onAddTrade={handleAddTradeBtnClick} />}
+        {isAddModalOpen && <AddTradeModal isOpen={true} onClose={() => setIsAddModalOpen(false)} date={selectedDate} onAdd={handleAddOrUpdateTrade} initialData={editingTrade} />}
       </AnimatePresence>
     </div>
   );

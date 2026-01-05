@@ -1,24 +1,47 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Trash2, UploadCloud, Loader2, Edit2, FileText, Target } from 'lucide-react';
+import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Trash2, UploadCloud, Loader2, Edit2, FileText, Target, Maximize2 } from 'lucide-react';
 import { Trade } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MotionDiv = motion.div as any;
 
+// --- Animation Configs ---
+// A refined "middle-ground" spring: snappy with a premium feel and controlled bounce.
+const MODAL_SPRING = {
+  type: "spring",
+  stiffness: 280,
+  damping: 24,
+  mass: 0.8
+};
+
+const BACKDROP_VARIANTS = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 }
+};
+
+const MODAL_VARIANTS = {
+  initial: { y: 60, opacity: 0, scale: 0.94 },
+  animate: { y: 0, opacity: 1, scale: 1 },
+  exit: { y: 40, opacity: 0, scale: 0.96 }
+};
+
 // --- Helper: Number Formatter ---
-const formatNumber = (value: string) => {
-  if (!value) return '';
-  const raw = value.replace(/,/g, '');
-  if (isNaN(Number(raw))) return value;
+const formatNumber = (value: any) => {
+  if (value === null || value === undefined) return '';
+  const str = String(value);
+  const raw = str.replace(/,/g, '');
+  if (isNaN(Number(raw))) return str;
   
   const parts = raw.split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return parts.join('.');
 };
 
-const unformatNumber = (value: string) => {
-    return value.replace(/,/g, '');
+const unformatNumber = (value: any) => {
+    if (value === null || value === undefined) return '';
+    return String(value).replace(/,/g, '');
 };
 
 // --- Helper: Image Processor (Resize to Base64) ---
@@ -92,7 +115,84 @@ const uploadImageToBlob = async (file: File) => {
     return base64;
 };
 
-// --- Custom Calendar Component ---
+// --- ImageZoomOverlay ---
+const ImageZoomOverlay = ({ src, onClose }: { src: string, onClose: () => void }) => {
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const startPos = useRef({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setScale(prev => Math.min(Math.max(prev * delta, 1), 5));
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (scale <= 1) return;
+    setIsDragging(true);
+    startPos.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setPosition({ x: e.clientX - startPos.current.x, y: e.clientY - startPos.current.y });
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  useEffect(() => {
+    if (scale === 1) setPosition({ x: 0, y: 0 });
+  }, [scale]);
+
+  return (
+    <MotionDiv variants={BACKDROP_VARIANTS} initial="initial" animate="animate" exit="exit" className="fixed inset-0 z-[350] bg-black/90 flex items-center justify-center p-8 backdrop-blur-sm" onClick={onClose}>
+        <div className="absolute top-8 right-8 z-[360] flex gap-2">
+            <div className="bg-white/10 px-3 py-1.5 rounded-full text-[10px] font-bold text-white uppercase tracking-widest border border-white/5 backdrop-blur-md">
+                Scroll to Zoom • Drag to Pan
+            </div>
+            <button onClick={onClose} className="p-2 text-white/50 hover:text-white bg-white/10 rounded-full transition-colors backdrop-blur-md"><X size={20} /></button>
+        </div>
+        
+        <div 
+          ref={containerRef}
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          className={`relative max-w-[85vw] max-h-[85vh] overflow-hidden rounded-2xl shadow-2xl cursor-${isDragging ? 'grabbing' : scale > 1 ? 'grab' : 'zoom-in'}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+            <motion.img 
+              src={src} 
+              alt="Zoomed" 
+              className="w-full h-full object-contain pointer-events-none select-none"
+              animate={{ 
+                scale: scale,
+                x: position.x,
+                y: position.y
+              }}
+              transition={isDragging ? { type: 'tween', duration: 0 } : { type: 'spring', stiffness: 300, damping: 30 }}
+            />
+        </div>
+    </MotionDiv>
+  );
+};
+
+// --- NoteZoomOverlay ---
+const NoteZoomOverlay = ({ content, onClose }: { content: string, onClose: () => void }) => (
+    <MotionDiv variants={BACKDROP_VARIANTS} initial="initial" animate="animate" exit="exit" className="fixed inset-0 z-[350] bg-black/95 flex items-center justify-center p-4" onClick={onClose}>
+        <button className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full transition-colors"><X size={24} /></button>
+        <MotionDiv variants={MODAL_VARIANTS} transition={MODAL_SPRING} className="bg-[#141414] p-6 md:p-8 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar shadow-2xl relative border border-white/5" onClick={(e: any) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5 sticky top-0 bg-[#141414] z-10 -mt-2 pt-2"><FileText size={18} className="text-white" /><h3 className="text-base font-bold text-white uppercase tracking-widest">Trade Note</h3></div>
+            <div className="text-white/80 text-base leading-relaxed whitespace-pre-wrap font-sans break-words">{content}</div>
+        </MotionDiv>
+    </MotionDiv>
+);
+
+// --- Custom Calendar ---
 const CustomDatePicker = ({ selectedDate, onChange }: { selectedDate: string, onChange: (date: string) => void }) => {
     const [viewDate, setViewDate] = useState(() => {
         return selectedDate ? new Date(selectedDate) : new Date();
@@ -170,7 +270,7 @@ const CustomDatePicker = ({ selectedDate, onChange }: { selectedDate: string, on
     );
 };
 
-// --- Helper Components for UI ---
+// --- Time Scroll Column ---
 const TimeScrollColumn = ({ max, value, onChange }: { max: number, value: string, onChange: (val: string) => void }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -247,25 +347,7 @@ const ScrollableTimeInput = ({ value, onChange, label, type }: { value: string, 
     );
 };
 
-const ImageZoomOverlay = ({ src, onClose }: { src: string, onClose: () => void }) => (
-    <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out" onClick={onClose}>
-        <button className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full transition-colors"><X size={24} /></button>
-        <MotionDiv initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="max-w-[95vw] max-h-[95vh] relative" onClick={(e: any) => e.stopPropagation()}>
-            <img src={src} alt="Zoomed" className="w-full h-full object-contain rounded-xl shadow-2xl" />
-        </MotionDiv>
-    </MotionDiv>
-);
-
-const NoteZoomOverlay = ({ content, onClose }: { content: string, onClose: () => void }) => (
-    <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4" onClick={onClose}>
-        <button className="absolute top-4 right-4 p-2 text-white/50 hover:text-white z-50 bg-white/10 rounded-full transition-colors"><X size={24} /></button>
-        <MotionDiv initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="bg-[#141414] p-6 md:p-8 rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar shadow-2xl relative" onClick={(e: any) => e.stopPropagation()}>
-            <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5 sticky top-0 bg-[#141414] z-10 -mt-2 pt-2"><FileText size={18} className="text-xgiha-accent" /><h3 className="text-base font-bold text-white uppercase tracking-widest">Trade Note</h3></div>
-            <div className="text-[#e4e4e7] text-base leading-relaxed whitespace-pre-wrap font-sans break-words">{content}</div>
-        </MotionDiv>
-    </MotionDiv>
-);
-
+// --- AddTradeModal ---
 interface AddTradeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -314,8 +396,8 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           symbol: tradeToEdit.pair, news: tradeToEdit.newsEvent || '', size: tradeToEdit.size || '',
           date: tradeToEdit.date, timeIn: tradeToEdit.entryTime, timeOut: tradeToEdit.exitTime || '00:00:00',
           priceIn: tradeToEdit.entryPrice?.toString() || '', priceOut: tradeToEdit.exitPrice?.toString() || '',
-          fees: formatNumber(tradeToEdit.fee?.toString() || '0'), direction: tradeToEdit.type,
-          pnl: formatNumber(tradeToEdit.pnl.toString()), strategy: tradeToEdit.strategy || '',
+          fees: formatNumber(tradeToEdit.fee), direction: tradeToEdit.type,
+          pnl: formatNumber(tradeToEdit.pnl), strategy: tradeToEdit.strategy || '',
           images: tradeToEdit.images || (tradeToEdit.image ? [tradeToEdit.image] : []), notes: tradeToEdit.notes || '',
       });
     } else {
@@ -358,6 +440,10 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (formData.images.length >= 5) {
+          alert("Maximum 5 images allowed per trade.");
+          return;
+      }
       const file = e.target.files?.[0];
       if (file) {
           try {
@@ -379,41 +465,54 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/90" onClick={onClose} />
-      <MotionDiv initial={{ y: "100%", opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: "100%", opacity: 0, scale: 0.95 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="relative w-[95%] md:max-w-[420px] bg-[#141414] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col">
-        {/* Scroll removed as requested by prompt "do not add scrolling to the add trade menu" */}
+    <MotionDiv 
+      className="fixed inset-0 z-[210] flex items-center justify-center p-4"
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
+      <MotionDiv 
+        variants={BACKDROP_VARIANTS} 
+        transition={{ duration: 0.3 }}
+        className="absolute inset-0 bg-black/90 backdrop-blur-sm" 
+        onClick={onClose} 
+      />
+      <MotionDiv 
+        variants={MODAL_VARIANTS}
+        transition={MODAL_SPRING}
+        className="relative w-[95%] md:max-w-[420px] bg-[#141414] rounded-[2rem] shadow-[0_0_80px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col border border-white/5"
+      >
         <div className="p-5 pb-32 relative overflow-visible">
           <form id="entry-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 relative">
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
                  <label htmlFor="symbol" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><Type size={10} /> Symbol</label>
-                 <input type="text" required className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none text-left" placeholder="BTCUSD" id="symbol" value={formData.symbol} onChange={e => setFormData({...formData, symbol: e.target.value})} />
+                 <input type="text" required className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none" placeholder="BTCUSD" id="symbol" value={formData.symbol} onChange={e => setFormData({...formData, symbol: e.target.value})} />
             </div>
-             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
+             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><DollarSign size={10} /> Net P&L</label>
                  <div className="flex items-center gap-1 h-full">
                      <span className={`text-lg font-mono font-light ${(parseFloat(unformatNumber(formData.pnl || '0'))) > 0 ? 'text-green-500' : (parseFloat(unformatNumber(formData.pnl || '0'))) < 0 ? 'text-red-500' : 'text-[#666]'}`}>$</span>
-                     <input type="text" className={`w-full bg-transparent text-lg font-mono font-medium focus:outline-none text-right ${(parseFloat(unformatNumber(formData.pnl || '0'))) > 0 ? 'text-green-500' : (parseFloat(unformatNumber(formData.pnl || '0'))) < 0 ? 'text-red-500' : 'text-white'}`} placeholder="0.00" value={formData.pnl} onChange={e => handleNumberInput('pnl', e.target.value)} />
+                     <input type="text" className={`w-full bg-transparent text-lg font-mono font-medium focus:outline-none text-right ${(parseFloat(unformatNumber(formData.pnl || '0'))) > 0 ? 'text-green-500' : (parseFloat(unformatNumber(formData.pnl || '0'))) < 0 ? 'text-red-500' : 'text-white'}`} placeholder="0.00" value={formData.pnl} onChange={(e) => handleNumberInput('pnl', e.target.value)} />
                  </div>
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-1 flex relative isolate h-[56px] transition-colors">
-                <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] -z-10 shadow-lg ${formData.direction === 'Long' ? 'left-1 bg-[#153422] shadow-[0_0_15px_rgba(34,197,94,0.15)]' : 'left-[50%] bg-[#381515] shadow-[0_0_15px_rgba(239,68,68,0.15)]'}`}></div>
-                <button type="button" onClick={() => setFormData({...formData, direction: 'Long'})} className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors duration-200 z-10 ${formData.direction === 'Long' ? 'text-green-400' : 'text-[#666] hover:text-[#999]'}`}><ArrowUpRight size={14} /><span className="text-[10px] font-bold uppercase tracking-wider">Long</span></button>
-                <button type="button" onClick={() => setFormData({...formData, direction: 'Short'})} className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors duration-200 z-10 ${formData.direction === 'Short' ? 'text-red-400' : 'text-[#666] hover:text-[#999]'}`}><ArrowDownRight size={14} /><span className="text-[10px] font-bold uppercase tracking-wider">Short</span></button>
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-1 flex relative isolate h-[56px]">
+                <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] -z-10 shadow-lg ${formData.direction === 'Long' ? 'left-1 bg-[#153422]' : 'left-[50%] bg-[#381515]'}`}></div>
+                <button type="button" onClick={() => setFormData({...formData, direction: 'Long'})} className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors duration-200 z-10 ${formData.direction === 'Long' ? 'text-green-400' : 'text-[#666]'}`}><ArrowUpRight size={14} /><span className="text-[10px] font-bold uppercase tracking-wider">Long</span></button>
+                <button type="button" onClick={() => setFormData({...formData, direction: 'Short'})} className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors duration-200 z-10 ${formData.direction === 'Short' ? 'text-red-400' : 'text-[#666]'}`}><ArrowDownRight size={14} /><span className="text-[10px] font-bold uppercase tracking-wider">Short</span></button>
             </div>
-            <div className="col-span-2 relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
+            <div className="col-span-2 relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
                  <label htmlFor="strategy" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><Target size={10} /> Strategy</label>
-                 <input type="text" className="w-full bg-transparent text-sm text-white font-medium placeholder-white/10 focus:outline-none text-left" placeholder="e.g., VWAP Rejection" id="strategy" value={formData.strategy} onChange={e => setFormData({...formData, strategy: e.target.value})} />
+                 <input type="text" className="w-full bg-transparent text-sm text-white font-medium focus:outline-none" placeholder="e.g., VWAP Rejection" id="strategy" value={formData.strategy} onChange={e => setFormData({...formData, strategy: e.target.value})} />
             </div>
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><Hash size={10} /> Lots</label>
-                  <input type="text" className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none text-right" placeholder="Qty" value={formData.size} onChange={e => handleNumberInput('size', e.target.value)} />
+                  <input type="text" className="w-full bg-transparent text-lg text-white font-mono focus:outline-none text-right" placeholder="Qty" value={formData.size} onChange={e => handleNumberInput('size', e.target.value)} />
             </div>
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><DollarSign size={10} /> Fees</label>
-                  <input type="text" className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none text-right" placeholder="0.00" value={formData.fees} onChange={e => handleNumberInput('fees', e.target.value)} />
+                  <input type="text" className="w-full bg-transparent text-lg text-white font-mono focus:outline-none text-right" placeholder="0.00" value={formData.fees} onChange={e => handleNumberInput('fees', e.target.value)} />
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col md:flex-row items-start gap-4 z-40 relative h-auto md:h-[84px] focus-within:ring-1 focus-within:ring-white transition-colors" ref={dateContainerRef}>
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col md:flex-row items-start gap-4 z-40 relative h-auto md:h-[84px]" ref={dateContainerRef}>
                  <div className="w-full md:flex-1 relative group h-full">
                       <div className="cursor-pointer h-full" onClick={() => setShowCalendar(!showCalendar)}>
                           <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5 pointer-events-none mb-1.5"><CalendarIcon size={10} /> Date</label>
@@ -430,32 +529,38 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                      <ScrollableTimeInput label="Exit" type="OUT" value={formData.timeOut || '10:00:00'} onChange={(val) => setFormData({...formData, timeOut: val})} />
                  </div>
             </div>
-             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
+             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider">Entry Price</label>
-                  <input type="text" className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none text-right" placeholder="0.00" value={formData.priceIn} onChange={e => handleNumberInput('priceIn', e.target.value)} />
+                  <input type="text" className="w-full bg-transparent text-lg text-white font-mono focus:outline-none text-right" placeholder="0.00" value={formData.priceIn} onChange={e => handleNumberInput('priceIn', e.target.value)} />
             </div>
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 focus-within:ring-1 focus-within:ring-white transition-colors h-[72px]">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
                   <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider">Exit Price</label>
-                  <input type="text" className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none text-right" placeholder="0.00" value={formData.priceOut} onChange={e => handleNumberInput('priceOut', e.target.value)} />
+                  <input type="text" className="w-full bg-transparent text-lg text-white font-mono focus:outline-none text-right" placeholder="0.00" value={formData.priceOut} onChange={e => handleNumberInput('priceOut', e.target.value)} />
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 transition-colors h-[64px] focus-within:ring-1 focus-within:ring-white transition-colors">
-                <div onClick={() => setIsNewsTrade(!isNewsTrade)} className={`cursor-pointer h-full px-4 rounded-xl flex items-center gap-2 transition-all shrink-0 ${isNewsTrade ? 'bg-yellow-500/10 text-yellow-500' : 'bg-white/5 text-[#666] hover:bg-white/10 hover:text-[#888]'}`}>
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 transition-colors h-[64px]">
+                <div onClick={() => setIsNewsTrade(!isNewsTrade)} className={`cursor-pointer h-full px-4 rounded-xl flex items-center gap-2 transition-all shrink-0 ${isNewsTrade ? 'bg-yellow-500/10 text-yellow-500' : 'bg-white/5 text-[#666]'}`}>
                     <Zap size={14} fill={isNewsTrade ? "currentColor" : "none"} />
                     <span className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">News Event</span>
                 </div>
                 <div className="flex-1 h-full relative flex flex-col justify-center">
-                    <input type="text" className={`w-full bg-transparent text-sm text-white font-medium focus:outline-none placeholder-white/20 transition-opacity ${isNewsTrade ? 'opacity-100' : 'opacity-30 pointer-events-none'}`} placeholder={isNewsTrade ? "Event name..." : "Enable news event"} value={formData.news} onChange={e => setFormData({...formData, news: e.target.value})} disabled={!isNewsTrade} />
+                    <input type="text" className={`w-full bg-transparent text-sm text-white font-medium focus:outline-none placeholder-white/20 ${isNewsTrade ? 'opacity-100' : 'opacity-30 pointer-events-none'}`} placeholder={isNewsTrade ? "Event name..." : "Enable news event"} value={formData.news} onChange={e => setFormData({...formData, news: e.target.value})} disabled={!isNewsTrade} />
                 </div>
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px] focus-within:ring-1 focus-within:ring-white transition-colors">
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
                 <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><FileText size={10} /> Notes</label>
-                <textarea className="w-full h-full bg-transparent text-sm text-white placeholder-white/10 focus:outline-none resize-none custom-scrollbar leading-relaxed whitespace-pre-wrap break-words pt-1" placeholder="Add trading notes..." value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} />
+                <textarea className="w-full h-full bg-transparent text-sm text-white placeholder-white/10 focus:outline-none resize-none custom-scrollbar leading-relaxed" placeholder="Add trading notes..." value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} />
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 h-[72px] focus-within:ring-1 focus-within:ring-white transition-colors">
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 h-[72px]">
                  <div className="pl-2 pr-3 h-full flex items-center"><label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0"><ImageIcon size={12} /> Attachments</label></div>
                  <div className="flex-1 flex gap-2 overflow-x-auto custom-scrollbar items-center">
                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
-                     <div onClick={() => !isUploading && fileInputRef.current?.click()} className={`w-10 h-10 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center transition-colors shrink-0 bg-white/[0.02] ${isUploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-white hover:border-white text-[#666]'}`} title="Add Image">{isUploading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}</div>
+                     <div 
+                        onClick={() => !isUploading && formData.images.length < 5 && fileInputRef.current?.click()} 
+                        className={`w-10 h-10 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center transition-colors shrink-0 bg-white/[0.02] ${isUploading || formData.images.length >= 5 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-white hover:border-white text-[#666]'}`} 
+                        title={formData.images.length >= 5 ? "Limit reached (5 max)" : "Add Image"}
+                     >
+                        {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                     </div>
                      {formData.images.map((img, idx) => (
                          <div key={idx} className="w-10 h-10 rounded-lg relative shrink-0 group overflow-hidden bg-black/40">
                              <img src={img} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
@@ -473,22 +578,17 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
             type="submit" 
             form="entry-form" 
             disabled={isUploading} 
-            /* 
-               Width padding: px-[141px].
-               Height increase: py-[27.5px].
-               Text size increased from [11px] to [13px].
-            */
             className="pointer-events-auto relative px-[141px] py-[27.5px] rounded-full text-black bg-white hover:bg-zinc-100 active:scale-95 transition-all duration-300 shadow-xl font-bold text-[13px] uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploading ? 'Uploading...' : 'Save Trade'}
           </button>
         </div>
       </MotionDiv>
-    </div>
+    </MotionDiv>
   );
 };
 
-// --- DayDetailsModalProps interface definition ---
+// --- DayDetailsModal ---
 interface DayDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -507,87 +607,263 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({
    const winRate = trades.length > 0 ? (trades.filter(t => t.pnl > 0).length / trades.length) * 100 : 0;
    const sortedTrades = [...trades].sort((a, b) => a.entryTime.localeCompare(b.entryTime));
    const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-   const [viewingNote, setViewingNote] = useState<string | null>(null);
+   const [zoomedNote, setZoomedNote] = useState<string | null>(null);
 
    const chartData = useMemo(() => {
      let runningPnl = 0;
-     return [{ time: 'Start', pnl: 0 }, ...sortedTrades.map(t => {
+     const firstEntryTime = sortedTrades.length > 0 ? sortedTrades[0].entryTime : 'Start';
+     return [{ time: firstEntryTime, pnl: 0 }, ...sortedTrades.map(t => {
        runningPnl += t.pnl;
        return { time: t.exitTime || t.entryTime, pnl: runningPnl };
      })];
    }, [sortedTrades]);
 
    return (
-     <>
-     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/90" onClick={onClose} />
-        <MotionDiv initial={{ y: "100%", opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: "100%", opacity: 0, scale: 0.95 }} className="relative w-[95%] md:max-w-[500px] bg-[#141414] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-             <div className="px-6 pt-6 pb-2 shrink-0 flex justify-between items-start">
-                 <div>
-                     <h2 className="text-xl font-normal text-white tracking-tight">{date}</h2>
-                     <div className="flex gap-4 mt-2">
-                         <div className="flex flex-col"><span className="text-[10px] uppercase text-[#888] font-bold">Net P&L</span><span className={`text-lg font-mono ${totalPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>{totalPnl >= 0 ? '+' : ''}{formatNumber(totalPnl.toFixed(2))}</span></div>
-                         <div className="w-px bg-white/10 my-1"></div>
-                         <div className="flex flex-col"><span className="text-[10px] uppercase text-[#888] font-bold">Win Rate</span><span className="text-lg font-mono text-white">{winRate.toFixed(0)}%</span></div>
+     <MotionDiv 
+        className="fixed inset-0 z-[100] flex items-center justify-center p-2 lg:p-4"
+        initial="initial"
+        animate="animate"
+        exit="exit"
+     >
+        <MotionDiv variants={BACKDROP_VARIANTS} transition={{ duration: 0.3 }} className="absolute inset-0 bg-black/95 backdrop-blur-md" onClick={onClose} />
+        <MotionDiv 
+            variants={MODAL_VARIANTS}
+            transition={MODAL_SPRING}
+            className="relative w-full h-full lg:w-[98%] lg:h-[95%] bg-[#0a0a0a] rounded-[2.5rem] shadow-[0_0_120px_rgba(0,0,0,0.8)] border border-white/5 overflow-hidden flex flex-col"
+        >
+             {/* Header Section */}
+             <div className="px-8 lg:px-12 pt-10 pb-6 shrink-0 flex justify-between items-center border-b border-white/5 bg-black/20">
+                 <div className="flex items-center gap-8">
+                     <div>
+                         <span className="text-[10px] uppercase text-white font-black tracking-[0.3em] mb-1 block">Selected Session</span>
+                         <h2 className="text-2xl font-bold text-white tracking-tight">{date}</h2>
+                     </div>
+                     <div className="h-10 w-px bg-white/10"></div>
+                     <div className="flex gap-10">
+                         <div className="flex flex-col">
+                             <span className="text-[10px] uppercase text-white font-black tracking-[0.3em] mb-1">Session P&L</span>
+                             <span className={`text-2xl font-mono font-bold ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                 {totalPnl >= 0 ? '+' : ''}${Math.abs(totalPnl).toLocaleString()}
+                             </span>
+                         </div>
+                         <div className="flex flex-col">
+                             <span className="text-[10px] uppercase text-white font-black tracking-[0.3em] mb-1">Win Rate</span>
+                             <span className="text-2xl font-mono font-bold text-white">{winRate.toFixed(0)}%</span>
+                         </div>
+                         <div className="flex flex-col">
+                             <span className="text-[10px] uppercase text-white font-black tracking-[0.3em] mb-1">Executions</span>
+                             <span className="text-2xl font-mono font-bold text-white">{trades.length}</span>
+                         </div>
                      </div>
                  </div>
-                 <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center text-[#888] hover:text-white transition-all"><X size={18} /></button>
+                 
+                 <div className="flex items-center gap-4">
+                     {!readOnly && (
+                         <button onClick={onAddTrade} className="bg-white text-black h-12 px-8 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 hover:bg-zinc-100 font-black text-xs uppercase tracking-[0.2em] gap-2">
+                            <Plus size={18} strokeWidth={4} /> Add trade
+                         </button>
+                     )}
+                     <button onClick={onClose} className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-[#888] hover:text-white transition-all hover:bg-white/10 active:scale-95">
+                         <X size={24} />
+                     </button>
+                 </div>
              </div>
-             {sortedTrades.length > 0 && (
-                <div className="h-32 w-full px-2 mt-2 shrink-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData}>
-                           <defs><linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={totalPnl >= 0 ? '#10b981' : '#ef4444'} stopOpacity={0.3}/><stop offset="95%" stopColor={totalPnl >= 0 ? '#10b981' : '#ef4444'} stopOpacity={0}/></linearGradient></defs>
-                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                           <Tooltip cursor={{ stroke: 'rgba(255,255,255,0.2)' }} contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '12px', fontSize: '12px' }} formatter={(val: number) => [`$${val.toFixed(2)}`, 'PnL']} />
-                           <Area type="monotone" dataKey="pnl" stroke={totalPnl >= 0 ? '#10b981' : '#ef4444'} strokeWidth={2} fill="url(#pnlGradient)" />
-                        </AreaChart>
-                    </ResponsiveContainer>
+
+             {/* Main Content Pane */}
+             <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
+                <div className="w-full lg:w-[45%] flex flex-col p-8 lg:p-12 overflow-hidden border-r border-white/5">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_15px_rgba(255,255,255,0.8)]"></div>
+                            <span className="text-[11px] uppercase text-white font-black tracking-[0.25em]">Performance Chart</span>
+                        </div>
+                    </div>
+                    {sortedTrades.length > 0 ? (
+                        <div className="flex-1 w-full min-h-[350px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chartData} margin={{ top: 10, right: 40, left: 10, bottom: 20 }}>
+                                    <defs>
+                                        <linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="white" stopOpacity={0.4}/>
+                                            <stop offset="95%" stopColor="white" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.2)" />
+                                    <XAxis 
+                                        dataKey="time" 
+                                        axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} 
+                                        tickLine={{ stroke: 'white', strokeOpacity: 1 }} 
+                                        tick={{ fill: 'white', fontSize: 11, fontWeight: 800 }}
+                                        dy={10}
+                                    />
+                                    <YAxis 
+                                        axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} 
+                                        tickLine={{ stroke: 'white', strokeOpacity: 1 }} 
+                                        tick={{ fill: 'white', fontSize: 11, fontWeight: 800 }}
+                                        tickFormatter={(val) => `$${val.toLocaleString()}`}
+                                        domain={['auto', 'auto']}
+                                        dx={-5}
+                                    />
+                                    <Tooltip 
+                                        cursor={{ stroke: 'rgba(255,255,255,0.6)', strokeWidth: 2 }} 
+                                        contentStyle={{ backgroundColor: '#000', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '12px', fontSize: '12px' }} 
+                                        itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                        formatter={(val: number) => [`$${val.toFixed(2)}`, 'Equity']} 
+                                    />
+                                    <Area 
+                                        type="monotone" 
+                                        dataKey="pnl" 
+                                        stroke="white" 
+                                        strokeWidth={4} 
+                                        fill="url(#pnlGradient)" 
+                                        animationDuration={1000}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center border border-dashed border-white/10 rounded-[2rem]">
+                            <span className="text-[10px] uppercase text-[#333] font-bold tracking-[0.3em]">No Visual Data Available</span>
+                        </div>
+                    )}
                 </div>
-             )}
-             <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-20 pt-4 flex flex-col gap-2">
-                 {sortedTrades.length === 0 ? <div className="py-10 text-center text-[#555] text-xs uppercase font-bold tracking-widest">No trades recorded</div> : sortedTrades.map(trade => (
-                     <div key={trade.id} className="bg-[#1E1E1E] rounded-xl p-3 flex flex-col gap-3 group hover:bg-[#252525] transition-colors">
-                         <div className="flex items-center gap-3">
-                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${trade.type === 'Long' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>{trade.type === 'Long' ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}</div>
-                             <div className="flex-1 min-w-0">
-                                 <div className="flex justify-between items-center mb-0.5"><div className="flex flex-col"><span className="text-white font-mono font-bold text-sm">{trade.pair}</span>{trade.strategy && <span className="text-[8px] text-xgiha-accent font-bold uppercase tracking-wider">{trade.strategy}</span>}</div><span className={`font-mono font-bold text-sm ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>{trade.pnl >= 0 ? '+' : ''}{trade.pnl}</span></div>
-                                 <div className="flex justify-between items-center text-[10px] text-[#888]"><div className="flex gap-2"><span>{trade.entryTime} - {trade.exitTime}</span>{trade.newsEvent && <span className="text-yellow-500 flex items-center gap-0.5"><Zap size={8} /> News</span>}</div><span>Qty: {trade.size}</span></div>
-                             </div>
-                             {!readOnly && (
-                               <div className="flex gap-1 pl-2 shrink-0">
-                                   {onEdit && <button onClick={() => { onClose(); onEdit(trade); }} className="p-2 text-[#666] hover:text-white hover:bg-white/10 rounded-lg transition-colors"><Edit2 size={14} /></button>}
-                                   {onDelete && <button onClick={() => onDelete(trade.id)} className="p-2 text-[#666] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"><Trash2 size={14} /></button>}
-                               </div>
-                             )}
-                         </div>
-                         {trade.notes && (
-                             <div className="text-xs text-[#999] bg-black/20 rounded-lg p-2 font-medium leading-relaxed relative group">
-                                 <span className="text-white/70">{trade.notes.length > 60 ? trade.notes.substring(0, 60).trim() + '...' : trade.notes}</span>
-                                 {trade.notes.length > 60 && <button onClick={(e) => { e.stopPropagation(); setViewingNote(trade.notes!); }} className="ml-1 text-xgiha-accent hover:text-white text-[10px] font-bold uppercase tracking-wider items-center gap-0.5 cursor-pointer">Read More</button>}
-                             </div>
-                         )}
-                         {(trade.images || trade.image) && (
-                             <div className="flex gap-2 overflow-x-auto custom-scrollbar pt-1 pb-1">{(trade.images || (trade.image ? [trade.image] : [])).map((img, idx) => (
-                                 <div key={idx} className="relative h-16 w-16 shrink-0 rounded-lg overflow-hidden cursor-zoom-in group/img bg-black/40" onClick={() => setZoomedImage(img)}>
-                                     <img src={img} alt="Evidence" className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-110 opacity-80 group-hover/img:opacity-100" />
-                                 </div>
-                             ))}</div>
-                         )}
-                     </div>
-                 ))}
+
+                <div className="flex-1 border-t lg:border-t-0 flex flex-col min-h-0 bg-white/[0.01]">
+                    <div className="px-8 pt-8 lg:px-12 lg:pt-12 shrink-0">
+                         <span className="text-[10px] uppercase text-white font-black tracking-[0.25em] mb-6 block">All trades of the day</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar px-8 pb-12 lg:px-12 flex flex-col gap-6 pt-2">
+                        {sortedTrades.length === 0 ? (
+                            <div className="py-20 text-center flex flex-col items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-[#333]">
+                                    <FileText size={24} />
+                                </div>
+                                <span className="text-[10px] uppercase text-[#333] font-bold tracking-widest">No trades recorded for this session</span>
+                            </div>
+                        ) : (
+                            sortedTrades.map(trade => (
+                                <div key={trade.id} className="bg-[#141414] rounded-3xl p-7 border border-white/5 flex flex-col gap-8 group hover:bg-[#181818] hover:border-white/10 transition-all duration-300">
+                                    <div className="flex items-start gap-5">
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border mt-1.5 ${trade.type === 'Long' ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/20' : 'bg-red-500/5 text-red-400 border-red-500/20'}`}>
+                                            {trade.type === 'Long' ? <ArrowUpRight size={28} /> : <ArrowDownRight size={28} />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-center mb-8">
+                                                <div className="flex items-center gap-4">
+                                                    <span className="text-white font-mono font-black text-2xl tracking-tight uppercase">{trade.pair}</span>
+                                                    {trade.newsEvent ? (
+                                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-500/10 text-yellow-500 text-[11px] font-black uppercase tracking-wider border border-yellow-500/20">
+                                                            <Zap size={12} fill="currentColor" /> News trade
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 text-[#888] text-[11px] font-black uppercase tracking-wider border border-white/5">
+                                                            Technical Entry
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col items-end">
+                                                    <span className={`font-mono font-black text-2xl ${trade.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                        {trade.pnl >= 0 ? '+' : ''}${Math.abs(trade.pnl).toLocaleString()}
+                                                    </span>
+                                                    <span className="text-[9px] text-[#555] font-bold uppercase tracking-widest">Result</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-x-14 gap-y-6">
+                                                <div className="flex flex-col gap-2">
+                                                    <span className="text-[10px] text-white font-black uppercase tracking-[0.2em]">Entry/Exit Time</span>
+                                                    <div className="flex items-center gap-2.5 text-sm text-white font-mono font-black">
+                                                        <Clock size={14} className="text-white" />
+                                                        <span>{trade.entryTime}</span>
+                                                        <span className="text-white/20">→</span>
+                                                        <span>{trade.exitTime || 'Open'}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col gap-2">
+                                                    <span className="text-[10px] text-white font-black uppercase tracking-[0.2em]">Entry/exit price</span>
+                                                    <div className="flex items-center gap-2.5 text-sm text-white font-mono font-black">
+                                                        <DollarSign size={14} className="text-white" />
+                                                        <span>{trade.entryPrice?.toLocaleString() || '---'}</span>
+                                                        <span className="text-white/20">→</span>
+                                                        <span>{trade.exitPrice?.toLocaleString() || '---'}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col gap-2">
+                                                    <span className="text-[10px] text-white font-black uppercase tracking-[0.2em]">Contracts</span>
+                                                    <div className="flex items-center gap-2.5 text-sm text-white font-mono font-black">
+                                                        <Hash size={14} className="text-white" />
+                                                        <span>{trade.size || '---'} Lots</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col gap-2">
+                                                    <span className="text-[10px] text-white font-black uppercase tracking-[0.2em]">Fees</span>
+                                                    <div className="flex items-center gap-2.5 text-sm text-white font-mono font-black">
+                                                        <DollarSign size={14} className="text-white" />
+                                                        <span>${(trade.fee || 0).toLocaleString()}</span>
+                                                    </div>
+                                                </div>
+                                                {trade.strategy && (
+                                                    <div className="flex flex-col gap-2">
+                                                        <span className="text-[10px] text-white font-black uppercase tracking-[0.2em]">Strategy</span>
+                                                        <div className="flex items-center gap-2.5 text-sm text-white font-mono font-black">
+                                                            <Target size={14} className="text-white" />
+                                                            <span className="uppercase">{trade.strategy}</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {!readOnly && (
+                                            <div className="flex flex-col gap-3 pl-4 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => onEdit(trade)} className="p-3 text-[#555] hover:text-white hover:bg-white/5 rounded-2xl transition-all"><Edit2 size={20} /></button>
+                                                <button onClick={() => onDelete(trade.id)} className="p-3 text-[#555] hover:text-red-500 hover:bg-red-500/5 rounded-2xl transition-all"><Trash2 size={20} /></button>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {trade.notes && (
+                                        <div className="flex flex-col gap-3">
+                                            <div className="relative text-[13px] text-white/70 bg-black/40 rounded-2xl p-4 font-medium leading-relaxed border border-white/[0.03] min-h-[52px] flex items-center justify-between gap-4">
+                                                <div className="flex-1 overflow-hidden">
+                                                    <span className="text-white/80">
+                                                        {trade.notes.length > 80 ? trade.notes.substring(0, 80) + "..." : trade.notes}
+                                                    </span>
+                                                </div>
+                                                {trade.notes.length > 80 && (
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); setZoomedNote(trade.notes!); }} 
+                                                        className="p-2 text-white/40 hover:text-white bg-white/5 rounded-xl transition-all shrink-0"
+                                                        title="Read full note"
+                                                    >
+                                                        <Maximize2 size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {((trade.images && trade.images.length > 0) || trade.image) && (
+                                        <div className="flex gap-3 overflow-x-auto no-scrollbar pt-1">
+                                          {(trade.images || (trade.image ? [trade.image] : [])).map((img, idx) => (
+                                            <div key={idx} className="relative h-20 w-32 shrink-0 rounded-xl overflow-hidden cursor-zoom-in group/img border border-white/5 bg-black" onClick={() => setZoomedImage(img)}>
+                                                <img src={img} alt="Trade capture" className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110 opacity-60 group-hover/img:opacity-100" />
+                                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity bg-black/20">
+                                                    <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center">
+                                                        <ImageIcon size={14} className="text-white" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
              </div>
-             {!readOnly && (
-               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#141414] to-transparent pt-10 pointer-events-none flex justify-center">
-                   <button onClick={onAddTrade} className="pointer-events-auto flex items-center gap-2 bg-xgiha-accent text-black px-6 py-3 rounded-full font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-xl"><Plus size={16} /> Add Trade</button>
-               </div>
-             )}
         </MotionDiv>
-     </div>
-     <AnimatePresence>
-        {zoomedImage && <ImageZoomOverlay src={zoomedImage} onClose={() => setZoomedImage(null)} />}
-        {viewingNote && <NoteZoomOverlay content={viewingNote} onClose={() => setViewingNote(null)} />}
-     </AnimatePresence>
-     </>
+        <AnimatePresence>
+            {zoomedImage && <ImageZoomOverlay src={zoomedImage} onClose={() => setZoomedImage(null)} />}
+            {zoomedNote && <NoteZoomOverlay content={zoomedNote} onClose={() => setZoomedNote(null)} />}
+        </AnimatePresence>
+     </MotionDiv>
    )
 };
