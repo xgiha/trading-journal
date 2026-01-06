@@ -134,7 +134,7 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
         </div>
       </StatCard>
 
-      <StatCard title="Session Analytics" loading={loading}>
+      <StatCard title="Best & Worst" loading={loading}>
         <div className="flex-1 flex flex-col justify-center gap-4">
           <div className="bg-black/20 rounded-2xl p-3 flex items-center justify-between border border-white/5">
             <div className="flex items-center gap-3">
@@ -157,7 +157,7 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
         </div>
       </StatCard>
 
-      <StatCard title="Duration Analysis" loading={loading}>
+      <StatCard title="Trade Durations" loading={loading}>
         <div className="flex-1 flex flex-col justify-center gap-4">
            <div className="flex flex-col gap-1.5">
               <div className="flex justify-between items-center text-[9px] font-bold text-white/20 uppercase tracking-widest">
@@ -180,23 +180,23 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
         </div>
       </StatCard>
 
-      <StatCard title="Strategy Alpha" loading={loading}>
+      <StatCard title="Strategy" loading={loading}>
         <div className="flex-1 flex flex-col justify-center gap-4">
            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-white/10 text-white/60"><Zap size={16} /></div>
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><Zap size={16} /></div>
               <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Main Engine</span>
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Most Profitable</span>
                 <span className="text-[11px] font-bold text-white uppercase truncate max-w-[120px]">
-                  {stats.mostUsedStrategy ? stats.mostUsedStrategy[0] : 'None'}
+                  {stats.mostProfitableStrategy ? stats.mostProfitableStrategy[0] : 'None'}
                 </span>
               </div>
            </div>
            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-xgiha-accent/10 text-xgiha-accent"><Target size={16} /></div>
+              <div className="p-2 rounded-xl bg-white/10 text-white/60"><Target size={16} /></div>
               <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Peak Alpha</span>
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Most Used</span>
                 <span className="text-[11px] font-bold text-white uppercase truncate max-w-[120px]">
-                  {stats.mostProfitableStrategy ? stats.mostProfitableStrategy[0] : 'None'}
+                  {stats.mostUsedStrategy ? stats.mostUsedStrategy[0] : 'None'}
                 </span>
               </div>
            </div>

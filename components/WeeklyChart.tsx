@@ -48,15 +48,14 @@ const WeeklyChart: React.FC<WeeklyChartProps> = ({ trades, stats, className, loa
         display: dayNetPnl >= 0 ? `+$${dayNetPnl.toLocaleString()}` : `-$${Math.abs(dayNetPnl).toLocaleString()}`
       });
     }
-    return { bars: result, weekTotal };
+    // Calculate maxAbsValue here once to avoid the block-scoped variable usage error inside map
+    const maxAbsValue = Math.max(...result.map((d) => Math.abs(d.value)), 100);
+    return { bars: result, weekTotal, maxAbsValue };
   }, [trades]);
 
   const headerValue = hoveredIndex !== null 
     ? chartData.bars[hoveredIndex].value 
     : chartData.weekTotal;
-
-  const isPositiveValue = headerValue >= 0;
-  const maxAbsValue = Math.max(...chartData.bars.map((d) => Math.abs(d.value)), 100);
 
   return (
     <div
@@ -75,9 +74,8 @@ const WeeklyChart: React.FC<WeeklyChartProps> = ({ trades, stats, className, loa
         {!loading && (
             <div className="relative h-7 flex items-baseline">
                 <span className={cn("text-2xl font-bold tabular-nums transition-all duration-300 ease-out text-white")}>
-                    {isPositiveValue ? '+' : '-'}${Math.abs(headerValue).toLocaleString()}
+                    {headerValue < 0 ? '-' : ''}${Math.abs(headerValue).toLocaleString()}
                 </span>
-                <span className="text-[9px] font-bold text-xgiha-muted/40 uppercase tracking-widest ml-1.5">NET</span>
             </div>
         )}
       </div>
@@ -91,7 +89,8 @@ const WeeklyChart: React.FC<WeeklyChartProps> = ({ trades, stats, className, loa
             ))
         ) : (
             chartData.bars.map((item, index) => {
-                const heightPct = (Math.abs(item.value) / maxAbsValue) * 85 + 5; 
+                // Fix: Access maxAbsValue from chartData instead of declaring it inside the loop after usage
+                const heightPct = (Math.abs(item.value) / chartData.maxAbsValue) * 85 + 5; 
                 const isHovered = hoveredIndex === index;
                 return (
                     <div key={`${item.label}-${index}`} className="relative flex-1 flex flex-col items-center justify-end h-full" onMouseEnter={() => setHoveredIndex(index)}>

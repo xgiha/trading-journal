@@ -63,7 +63,6 @@ const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className, l
         ) : (
             <div className="flex items-baseline gap-1">
                 <span className={`text-2xl font-bold tabular-nums ${currentPnl >= 0 ? 'text-white' : 'text-red-400'}`}>${Math.abs(currentPnl).toLocaleString()}</span>
-                <span className="text-[10px] font-bold text-xgiha-muted opacity-60 uppercase tracking-widest">NET EQUITY</span>
             </div>
         )}
       </div>
