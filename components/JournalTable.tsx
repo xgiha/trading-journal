@@ -69,8 +69,8 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
     const isNewsTrade = !!trade.newsEvent;
     const hasNotes = !!trade.notes;
 
-    // Use Net P&L (Gross - Fees)
-    const netTradePnl = trade.pnl - (trade.fee || 0);
+    // Use Net P&L
+    const netPnl = trade.pnl - (trade.fee || 0);
 
     const onPointerDown = (e: React.PointerEvent) => {
         if (readOnly) return;
@@ -144,8 +144,8 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
 
                 <div className="flex-1 grid grid-cols-7 gap-4 items-center px-10 h-full">
                     <div className="font-mono text-base text-white font-bold truncate tracking-wide uppercase">{trade.pair}</div>
-                    <div className={`text-right font-mono text-base font-bold truncate ${netTradePnl >= 0 ? 'text-green-500' : 'text-red-400'}`}>
-                        {netTradePnl >= 0 ? '+' : ''}{netTradePnl.toFixed(2)}
+                    <div className={`text-right font-mono text-base font-bold truncate ${netPnl >= 0 ? 'text-green-500' : 'text-red-400'}`}>
+                        {netPnl >= 0 ? '+' : ''}{netPnl.toFixed(2)}
                     </div>
                     <div className="text-base text-[#AAA] font-mono truncate text-right">{trade.size || '-'}</div>
                     <div className="flex flex-col gap-0.5 justify-center">

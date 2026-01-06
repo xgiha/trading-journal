@@ -350,10 +350,8 @@ const App: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [modalReadOnly, setModalReadOnly] = useState(false);
 
   const globalStats = useMemo(() => {
-    // Calculate total Net P&L (Gross - Fees)
     const totalNetPnl = trades.reduce((sum, t) => sum + (t.pnl - (t.fee || 0)), 0);
     const growthPct = trades.length > 0 ? (totalNetPnl / 50000) * 100 : 0;
     return { totalPnl: totalNetPnl, growthPct };
@@ -363,8 +361,10 @@ const App: React.FC = () => {
     setSelectedDate(date); setEditingTrade(undefined); setIsAddModalOpen(true); 
   }, []);
 
-  const handleAddTradeBtnClick = useCallback(() => { 
-    setSelectedDate(new Date().toISOString().split('T')[0]); setEditingTrade(undefined); setIsAddModalOpen(true); 
+  const handleAddTradeBtnClick = useCallback((specificDate?: string) => { 
+    setSelectedDate(specificDate || new Date().toISOString().split('T')[0]); 
+    setEditingTrade(undefined); 
+    setIsAddModalOpen(true); 
   }, []);
 
   const handleEditTrade = useCallback((trade: Trade) => { 
@@ -377,12 +377,10 @@ const App: React.FC = () => {
   }, []);
 
   const handleViewDayClick = useCallback((date: string) => { 
-    setModalReadOnly(false);
     setSelectedDate(date); setSelectedTrades(trades.filter(t => t.date === date)); setIsDetailModalOpen(true); 
   }, [trades]);
 
   const handleViewWeekClick = useCallback((weekTrades: Trade[], weekLabel: string) => { 
-    setModalReadOnly(true);
     setSelectedDate(weekLabel); setSelectedTrades(weekTrades); setIsDetailModalOpen(true); 
   }, []);
   
@@ -516,7 +514,7 @@ const App: React.FC = () => {
                       )}
                   </div>
                   {isInitialLoading ? <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" /> : (
-                      <button onClick={handleAddTradeBtnClick} className="bg-white text-black w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 hover:bg-zinc-100">
+                      <button onClick={() => handleAddTradeBtnClick()} className="bg-white text-black w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 hover:bg-zinc-100">
                         <Plus size={20} strokeWidth={3} />
                       </button>
                   )}
@@ -528,29 +526,8 @@ const App: React.FC = () => {
       </div>
       <AnimatePresence initial={false}>{!isAuthenticated && <SignInScreen onSignIn={handleSignIn} />}</AnimatePresence>
       <AnimatePresence>
-        {isDetailModalOpen && (
-          <DayDetailsModal 
-            key="detail-modal" 
-            isOpen={true} 
-            onClose={() => setIsDetailModalOpen(false)} 
-            date={selectedDate} 
-            trades={selectedTrades} 
-            onEdit={handleEditTrade} 
-            onDelete={handleDeleteTrade} 
-            onAddTrade={() => handleAddTradeClick(selectedDate)}
-            readOnly={modalReadOnly}
-          />
-        )}
-        {isAddModalOpen && (
-          <AddTradeModal 
-            key="add-modal" 
-            isOpen={true} 
-            onClose={() => setIsAddModalOpen(false)} 
-            date={selectedDate} 
-            onAdd={handleAddOrUpdateTrade} 
-            initialData={editingTrade} 
-          />
-        )}
+        {isDetailModalOpen && <DayDetailsModal key="detail-modal" isOpen={true} onClose={() => setIsDetailModalOpen(false)} date={selectedDate} trades={selectedTrades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onAddTrade={() => handleAddTradeBtnClick(selectedDate)} />}
+        {isAddModalOpen && <AddTradeModal key="add-modal" isOpen={true} onClose={() => setIsAddModalOpen(false)} date={selectedDate} onAdd={handleAddOrUpdateTrade} initialData={editingTrade} />}
       </AnimatePresence>
     </div>
   );
