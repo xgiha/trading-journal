@@ -69,6 +69,9 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
     const isNewsTrade = !!trade.newsEvent;
     const hasNotes = !!trade.notes;
 
+    // Use Net P&L (Gross - Fees)
+    const netTradePnl = trade.pnl - (trade.fee || 0);
+
     const onPointerDown = (e: React.PointerEvent) => {
         if (readOnly) return;
         isDragging.current = true;
@@ -140,8 +143,10 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
                 </div>
 
                 <div className="flex-1 grid grid-cols-7 gap-4 items-center px-10 h-full">
-                    <div className="font-mono text-base text-white font-bold truncate tracking-wide">{trade.pair}</div>
-                    <div className={`text-right font-mono text-base font-bold truncate ${trade.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>{trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(2)}</div>
+                    <div className="font-mono text-base text-white font-bold truncate tracking-wide uppercase">{trade.pair}</div>
+                    <div className={`text-right font-mono text-base font-bold truncate ${netTradePnl >= 0 ? 'text-green-500' : 'text-red-400'}`}>
+                        {netTradePnl >= 0 ? '+' : ''}{netTradePnl.toFixed(2)}
+                    </div>
                     <div className="text-base text-[#AAA] font-mono truncate text-right">{trade.size || '-'}</div>
                     <div className="flex flex-col gap-0.5 justify-center">
                         <div className="flex items-center gap-2 text-[11px]">
@@ -165,7 +170,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
                     </div>
                     <div className="text-right text-base text-[#666] font-mono truncate">${(trade.fee || 0).toFixed(2)}</div>
                     <div className="flex justify-center">
-                        <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full border ${trade.type === 'Long' ? 'bg-green-500/5 text-green-500 border-green-500/10' : 'bg-red-500/5 text-red-500 border-red-500/10'}`}>
+                        <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full border ${trade.type === 'Long' ? 'bg-green-500/5 text-green-500 border-green-500/10' : 'bg-red-500/5 text-red-400 border-red-500/10'}`}>
                           {trade.type === 'Long' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                         </div>
                     </div>
@@ -210,10 +215,10 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
           if (Array.isArray(data) && onImport) {
             onImport(data);
           } else {
-            alert("Invalid data format. Please provide a valid xgiha backup JSON.");
+            alert("Invalid data format. Please provide a valid backup JSON.");
           }
         } catch (error) {
-          alert("Error parsing file. Ensure it is a valid JSON.");
+          alert("Error parsing file.");
         }
       };
       reader.readAsText(file);
@@ -223,34 +228,15 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
 
   return (
     <div className="w-full h-full p-4 md:p-6 flex flex-col bg-white/[0.03] rounded-[25px] relative overflow-hidden">
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        accept=".json" 
-        className="hidden" 
-      />
-      
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
       <div className="shrink-0 flex flex-col gap-5 mb-4 z-10">
         <div className="flex justify-between items-center px-2">
             <h2 className="text-sm font-bold tracking-[0.3em] text-white uppercase">Journal</h2>
             <div className="flex gap-2">
                 {!readOnly && (
-                  <button 
-                    onClick={handleImportClick}
-                    className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"
-                  >
-                    <Download size={12} />
-                    Import
-                  </button>
+                  <button onClick={handleImportClick} className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"><Download size={12} />Import</button>
                 )}
-                <button 
-                  onClick={onExport}
-                  className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"
-                >
-                  <Upload size={12} />
-                  Export
-                </button>
+                <button onClick={onExport} className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl bg-white/5 text-xgiha-muted hover:text-white transition-all flex items-center gap-2"><Upload size={12} />Export</button>
             </div>
         </div>
         <div className="overflow-x-auto pb-1 -mx-4 px-6 no-scrollbar">
@@ -259,7 +245,7 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
                   <div className="w-16 shrink-0"></div>
                   <div className="flex-1 grid grid-cols-7 gap-4 px-8">
                       <div>Symbol</div>
-                      <div className="text-right">P&L</div>
+                      <div className="text-right">Net P&L</div>
                       <div className="text-right">Size</div>
                       <div className="pl-2">Time</div>
                       <div className="pl-2">Price</div>
@@ -270,59 +256,27 @@ const JournalTableComponent = ({ trades, onEdit, onDelete, onViewDay, onExport, 
            </div>
         </div>
       </div>
-
       <div className="flex-1 relative w-full overflow-hidden z-10">
         <div className="w-full h-full overflow-hidden">
           <div className="min-w-[600px] w-full h-full flex flex-col relative pb-20">
              <AnimatePresence mode="wait">
-              <MotionDiv
-                key={currentPage}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="flex flex-col gap-1 w-full"
-              >
+              <MotionDiv key={currentPage} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="flex flex-col gap-1 w-full">
                 {loading ? (
                     <div className="flex flex-col gap-3">
                         <Skeleton className="h-6 w-32 ml-4 rounded-md" />
-                        {[...Array(4)].map((_, i) => (
-                            <Skeleton key={i} className="h-20 w-full rounded-[30px]" />
-                        ))}
+                        {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-[30px]" />)}
                     </div>
                 ) : groupedTrades.length > 0 ? (
                   groupedTrades.map(([date, dateTrades]) => (
                     <div key={date} className="w-full">
-                      <div className="mt-2 mb-3 pl-4">
-                          <span className="text-[12px] font-bold text-xgiha-accent uppercase tracking-[0.3em] opacity-80">
-                              {getDateLabel(date)}
-                          </span>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        {dateTrades.map((trade) => (
-                            <SwipeableRow key={trade.id} trade={trade} onEdit={onEdit} onDelete={onDelete} onViewDay={onViewDay} readOnly={readOnly} />
-                        ))}
-                      </div>
+                      <div className="mt-2 mb-3 pl-4"><span className="text-[12px] font-bold text-xgiha-accent uppercase tracking-[0.3em] opacity-80">{getDateLabel(date)}</span></div>
+                      <div className="flex flex-col gap-2">{dateTrades.map((trade) => <SwipeableRow key={trade.id} trade={trade} onEdit={onEdit} onDelete={onDelete} onViewDay={onViewDay} readOnly={readOnly} />)}</div>
                     </div>
                   ))
-                ) : (
-                  <div className="w-full h-40 flex flex-col items-center justify-center text-xgiha-muted/20">
-                    <span className="text-xs uppercase tracking-[0.2em] font-bold">No Entries Found</span>
-                  </div>
-                )}
+                ) : <div className="w-full h-40 flex flex-col items-center justify-center text-xgiha-muted/20"><span className="text-xs uppercase tracking-[0.2em] font-bold">No Entries Found</span></div>}
               </MotionDiv>
             </AnimatePresence>
-            {!loading && (
-                <div className="absolute bottom-0 left-0 right-0 z-50 flex flex-col items-center">
-                    <div className="w-full py-2 flex justify-center items-center">
-                        <Pagination 
-                        total={totalPages} 
-                        page={currentPage - 1} 
-                        setPage={(p) => setCurrentPage(p + 1)} 
-                        />
-                    </div>
-                </div>
-            )}
+            {!loading && <div className="absolute bottom-0 left-0 right-0 z-50 flex flex-col items-center"><div className="w-full py-2 flex justify-center items-center"><Pagination total={totalPages} page={currentPage - 1} setPage={(p) => setCurrentPage(p + 1)} /></div></div>}
           </div>
         </div>
       </div>

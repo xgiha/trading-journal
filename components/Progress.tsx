@@ -15,8 +15,9 @@ const Progress: React.FC<ProgressProps> = ({ trades, loading = false }) => {
   const TIER_VAL = 150;
   const TOTAL_SEGMENTS = 6; 
 
-  const totalPnl = useMemo(() => {
-    return trades.reduce((sum, trade) => sum + trade.pnl, 0);
+  const totalNetPnl = useMemo(() => {
+    // Calculate total Net P&L (Gross - Fees)
+    return trades.reduce((sum, trade) => sum + (trade.pnl - (trade.fee || 0)), 0);
   }, [trades]);
 
   const milestones = useMemo(() => [
@@ -39,7 +40,7 @@ const Progress: React.FC<ProgressProps> = ({ trades, loading = false }) => {
     return Math.min(totalSegments * SEG_H, 100);
   };
 
-  const visualHeight = calculateVisualHeight(totalPnl);
+  const visualHeight = calculateVisualHeight(totalNetPnl);
 
   return (
     <div className="group relative w-full h-full bg-white/[0.03] rounded-[25px] border border-white/5 shadow-xl transition-all duration-500 p-8 flex flex-col justify-end overflow-hidden">
@@ -83,7 +84,7 @@ const Progress: React.FC<ProgressProps> = ({ trades, loading = false }) => {
                 <div className="absolute inset-0 z-10">
                     <div 
                       className={`w-full h-full transition-colors duration-1000 ${
-                        totalPnl >= BUFFER_VAL 
+                        totalNetPnl >= BUFFER_VAL 
                             ? 'bg-gradient-to-t from-emerald-600 via-emerald-400 to-emerald-300' 
                             : 'bg-gradient-to-t from-white/40 via-white/20 to-white/10'
                       }`}
@@ -98,7 +99,7 @@ const Progress: React.FC<ProgressProps> = ({ trades, loading = false }) => {
             <div className="relative h-full ml-4 flex-1 z-10">
               {milestones.map((m, index) => {
                 const posPct = ((index + 1) / TOTAL_SEGMENTS) * 100;
-                const isHit = totalPnl >= m.value;
+                const isHit = totalNetPnl >= m.value;
                 const isFoundation = m.type === 'foundation';
 
                 return (
@@ -139,11 +140,11 @@ const Progress: React.FC<ProgressProps> = ({ trades, loading = false }) => {
             <div className="flex flex-col">
                 <span className="text-[8px] font-pixel text-white/30 uppercase tracking-widest">Payout Progress</span>
                 <span className="text-[10px] font-bold text-white tracking-tight">
-                    ${Math.max(0, totalPnl).toLocaleString()} <span className="text-white/20">/</span> ${milestones[5].value.toLocaleString()}
+                    ${Math.max(0, totalNetPnl).toLocaleString()} <span className="text-white/20">/</span> ${milestones[5].value.toLocaleString()}
                 </span>
             </div>
-            <div className={`px-2 py-1 rounded-md text-[8px] font-pixel uppercase transition-colors duration-500 ${totalPnl >= BUFFER_VAL ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-white/20'}`}>
-                {totalPnl >= BUFFER_VAL ? 'Buffer Clear' : 'Accumulating'}
+            <div className={`px-2 py-1 rounded-md text-[8px] font-pixel uppercase transition-colors duration-500 ${totalNetPnl >= BUFFER_VAL ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-white/20'}`}>
+                {totalNetPnl >= BUFFER_VAL ? 'Buffer Clear' : 'Accumulating'}
             </div>
           </div>
         </>

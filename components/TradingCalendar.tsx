@@ -33,12 +33,13 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
     const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
     const monthTrades = trades.filter(t => t.date.startsWith(monthPrefix));
     
-    const totalPnl = monthTrades.reduce((sum, t) => sum + t.pnl, 0);
+    // Use Net P&L (Gross - Fees)
+    const totalNetPnl = monthTrades.reduce((sum, t) => sum + (t.pnl - (t.fee || 0)), 0);
     const count = monthTrades.length;
-    const wins = monthTrades.filter(t => t.pnl > 0).length;
+    const wins = monthTrades.filter(t => (t.pnl - (t.fee || 0)) > 0).length;
     const winRate = count > 0 ? (wins / count) * 100 : 0;
     
-    return { totalPnl, count, winRate };
+    return { totalPnl: totalNetPnl, count, winRate };
   }, [trades, currentDate]);
 
   const getDaysInMonth = (date: Date) => {
@@ -72,7 +73,8 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
         : '';
 
       const dayTrades = trades.filter(t => t.date === dateStr);
-      const dayPnl = dayTrades.reduce((sum, t) => sum + t.pnl, 0);
+      // Use Net P&L (Gross - Fees)
+      const dayNetPnl = dayTrades.reduce((sum, t) => sum + (t.pnl - (t.fee || 0)), 0);
       const dayTradeCount = dayTrades.length;
 
       currentWeek.push(
@@ -101,8 +103,8 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
               
               {dayTradeCount > 0 ? (
                 <div className="flex flex-col items-center justify-center flex-1">
-                  <span className={`text-xs md:text-sm lg:text-base font-bold tracking-tight ${dayPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {dayPnl >= 0 ? '+' : ''}{formatCurrency(dayPnl)}
+                  <span className={`text-xs md:text-sm lg:text-base font-bold tracking-tight ${dayNetPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {dayNetPnl >= 0 ? '+' : ''}{formatCurrency(dayNetPnl)}
                   </span>
                 </div>
               ) : !readOnly && (
@@ -118,7 +120,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
       );
 
       if ((i + 1) % 7 === 0) {
-        let weekPnl = 0;
+        let weekNetPnl = 0;
         let weekTradesCount = 0;
         const weekTradesList: Trade[] = [];
         for (let k = 0; k < 7; k++) {
@@ -127,7 +129,8 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                 const dStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(dNum).padStart(2, '0')}`;
                 const t = trades.filter(tr => tr.date === dStr);
                 weekTradesList.push(...t);
-                weekPnl += t.reduce((sum, tr) => sum + tr.pnl, 0);
+                // Use Net P&L (Gross - Fees)
+                weekNetPnl += t.reduce((sum, tr) => sum + (tr.pnl - (tr.fee || 0)), 0);
                 weekTradesCount += t.length;
              }
         }
@@ -142,8 +145,8 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                >
                   {weekTradesCount > 0 && (
                     <>
-                      <span className={`text-xs md:text-lg lg:text-xl font-bold tracking-tighter z-10 ${weekPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                           {weekPnl >= 0 ? '+' : ''}{formatCurrency(weekPnl)}
+                      <span className={`text-xs md:text-lg lg:text-xl font-bold tracking-tighter z-10 ${weekNetPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                           {weekNetPnl >= 0 ? '+' : ''}{formatCurrency(weekNetPnl)}
                       </span>
                       <div className="absolute top-1.5 right-1.5">
                         <span className="text-[8px] font-bold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-md min-w-[16px] text-center border border-emerald-500/30 transition-colors">
@@ -201,7 +204,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                 <span className={`text-[12px] font-bold font-mono ${monthlyStats.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {monthlyStats.totalPnl >= 0 ? '+' : ''}{formatCurrency(monthlyStats.totalPnl)}
                 </span>
-                <span className="text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">P&L</span>
+                <span className="text-[9px] uppercase tracking-widest text-xgiha-muted font-bold opacity-60">Net P&L</span>
                 </div>
                 <div className="w-px h-3 bg-white/10"></div>
                 <div className="flex items-center gap-2">

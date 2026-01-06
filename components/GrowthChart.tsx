@@ -15,13 +15,16 @@ const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className, l
   const chartData = useMemo(() => {
     const dailyMap = new Map<string, number>();
     const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
     sortedTrades.forEach(t => {
-      dailyMap.set(t.date, (dailyMap.get(t.date) || 0) + t.pnl);
+      // Calculate Net P&L for each trade
+      const netPnl = t.pnl - (t.fee || 0);
+      dailyMap.set(t.date, (dailyMap.get(t.date) || 0) + netPnl);
     });
+    
     let cumulative = 0;
     const sortedDates = Array.from(dailyMap.keys()).sort();
     
-    // Default to at least one point if no trades
     if (sortedDates.length === 0) {
       return [{ name: 'Initial', pnl: 0 }];
     }
@@ -31,7 +34,6 @@ const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className, l
       cumulative += dailyMap.get(date)!;
       const d = new Date(date + 'T00:00:00');
       return {
-        // Explicitly format as Month/Day for high visibility
         name: d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }),
         pnl: cumulative
       };
@@ -60,8 +62,8 @@ const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className, l
             <Skeleton className="h-6 w-32 rounded-lg" />
         ) : (
             <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold tabular-nums text-white">${Math.abs(currentPnl).toLocaleString()}</span>
-                <span className="text-[10px] font-bold text-xgiha-muted opacity-60 uppercase tracking-widest">Equity</span>
+                <span className={`text-2xl font-bold tabular-nums ${currentPnl >= 0 ? 'text-white' : 'text-red-400'}`}>${Math.abs(currentPnl).toLocaleString()}</span>
+                <span className="text-[10px] font-bold text-xgiha-muted opacity-60 uppercase tracking-widest">NET EQUITY</span>
             </div>
         )}
       </div>
@@ -79,23 +81,8 @@ const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className, l
                 </linearGradient>
                 </defs>
                 <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} 
-                  tickLine={{ stroke: 'white', strokeOpacity: 1 }} 
-                  tick={{ fill: 'white', fontSize: 10, fontWeight: 800 }} 
-                  dy={10} 
-                  interval="preserveStart" 
-                  minTickGap={20} 
-                />
-                <YAxis 
-                  axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} 
-                  tickLine={{ stroke: 'white', strokeOpacity: 1 }} 
-                  tick={{ fill: 'white', fontSize: 10, fontWeight: 800 }} 
-                  tickFormatter={(val) => `$${val}`} 
-                  domain={['auto', 'auto']} 
-                  width={45} 
-                />
+                <XAxis dataKey="name" axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} tickLine={{ stroke: 'white', strokeOpacity: 1 }} tick={{ fill: 'white', fontSize: 10, fontWeight: 800 }} dy={10} interval="preserveStart" minTickGap={20} />
+                <YAxis axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} tickLine={{ stroke: 'white', strokeOpacity: 1 }} tick={{ fill: 'white', fontSize: 10, fontWeight: 800 }} tickFormatter={(val) => `$${val}`} domain={['auto', 'auto']} width={45} />
                 <Tooltip contentStyle={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px' }} itemStyle={{ fontSize: '10px', color: '#fff' }} labelStyle={{ fontSize: '9px', color: '#666' }} formatter={(val: number) => [`$${val.toLocaleString()}`, 'Equity']} />
                 <Area type="monotone" dataKey="pnl" stroke="white" strokeWidth={3} fill="url(#equityGradient)" dot={false} activeDot={{ r: 4, fill: '#fff', strokeWidth: 0 }} animationDuration={800} isAnimationActive={true} />
             </AreaChart>

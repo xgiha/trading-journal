@@ -303,37 +303,22 @@ const App: React.FC = () => {
   const initData = useCallback(async () => {
     setIsInitialLoading(true);
     try {
-      // 1. Get Local Data first as it's fastest
       const saved = localStorage.getItem('xgiha_trades');
       const localTrades: Trade[] = saved ? JSON.parse(saved) : [];
-
-      // 2. Try to fetch from Cloud
       const response = await fetch('/api/trades');
       let cloudTrades: Trade[] = [];
-      
       if (response.ok) {
         const data = await response.json();
         if (data && Array.isArray(data)) cloudTrades = data;
       }
-
-      // 3. Intelligent Merge / Selection
-      // If cloud is empty but local has data, trust local.
-      // Otherwise, use cloud as it's the primary source.
-      const finalTrades = (cloudTrades.length === 0 && localTrades.length > 0) 
-        ? localTrades 
-        : cloudTrades;
-
+      const finalTrades = (cloudTrades.length === 0 && localTrades.length > 0) ? localTrades : cloudTrades;
       setTrades(finalTrades);
       lastSyncedTradesRef.current = JSON.stringify(finalTrades);
-      
-      // Artificial delay to show beautiful skeleton loading as requested by design
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
       setIsInitialLoading(false);
       setSyncStatus('success');
       setTimeout(() => setSyncStatus('idle'), 2000);
     } catch (e) {
-      // Fallback completely to local on error
       const saved = localStorage.getItem('xgiha_trades');
       if (saved) setTrades(JSON.parse(saved));
       setIsInitialLoading(false);
@@ -341,37 +326,20 @@ const App: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    initData();
-  }, [initData]);
+  useEffect(() => { initData(); }, [initData]);
 
-  // Sync to Cloud Effect (Debounced)
   useEffect(() => {
     if (isInitialLoading) return;
-    
     const currentTradesJson = JSON.stringify(trades);
-    
-    // Immediate save to localStorage for safety
     localStorage.setItem('xgiha_trades', currentTradesJson);
-
     if (currentTradesJson === lastSyncedTradesRef.current) return;
-    
     const timeout = setTimeout(async () => {
       try {
         setSyncStatus('syncing');
-        const response = await fetch('/api/trades', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: currentTradesJson,
-        });
-        if (response.ok) {
-          lastSyncedTradesRef.current = currentTradesJson;
-          setSyncStatus('success');
-        } else throw new Error();
+        const response = await fetch('/api/trades', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: currentTradesJson });
+        if (response.ok) { lastSyncedTradesRef.current = currentTradesJson; setSyncStatus('success'); }
         setTimeout(() => setSyncStatus('idle'), 2000);
-      } catch (e) {
-        setSyncStatus('error');
-      }
+      } catch (e) { setSyncStatus('error'); }
     }, 1500);
     return () => clearTimeout(timeout);
   }, [trades, isInitialLoading]);
@@ -382,11 +350,13 @@ const App: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [modalReadOnly, setModalReadOnly] = useState(false);
 
   const globalStats = useMemo(() => {
-    const totalPnl = trades.reduce((sum, t) => sum + t.pnl, 0);
-    const growthPct = trades.length > 0 ? (totalPnl / 50000) * 100 : 0;
-    return { totalPnl, growthPct };
+    // Calculate total Net P&L (Gross - Fees)
+    const totalNetPnl = trades.reduce((sum, t) => sum + (t.pnl - (t.fee || 0)), 0);
+    const growthPct = trades.length > 0 ? (totalNetPnl / 50000) * 100 : 0;
+    return { totalPnl: totalNetPnl, growthPct };
   }, [trades]);
 
   const handleAddTradeClick = useCallback((date: string) => { 
@@ -407,10 +377,12 @@ const App: React.FC = () => {
   }, []);
 
   const handleViewDayClick = useCallback((date: string) => { 
+    setModalReadOnly(false);
     setSelectedDate(date); setSelectedTrades(trades.filter(t => t.date === date)); setIsDetailModalOpen(true); 
   }, [trades]);
 
   const handleViewWeekClick = useCallback((weekTrades: Trade[], weekLabel: string) => { 
+    setModalReadOnly(true);
     setSelectedDate(weekLabel); setSelectedTrades(weekTrades); setIsDetailModalOpen(true); 
   }, []);
   
@@ -438,22 +410,14 @@ const App: React.FC = () => {
     if (confirm("Import and replace all current trades?")) setTrades(imported);
   }, []);
 
-  const handleSignIn = () => {
-    setIsAuthenticated(true);
-    sessionStorage.setItem('xgiha_auth', 'true');
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem('xgiha_auth');
-    setIsAuthenticated(false);
-  };
+  const handleSignIn = () => { setIsAuthenticated(true); sessionStorage.setItem('xgiha_auth', 'true'); };
+  const handleLogout = () => { sessionStorage.removeItem('xgiha_auth'); setIsAuthenticated(false); };
 
   const currentTabs = isMobile ? TABS : TABS.filter(t => !t.mobileOnly);
   const activeIndex = currentTabs.findIndex(t => t.id === activeTab);
 
   return (
     <div className="h-[100dvh] w-screen relative flex items-center justify-center overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black bg-[#050505]">
-      
       <div className="w-full h-full p-2 lg:p-3 relative overflow-hidden flex flex-col">
         <div className="w-full h-full glass-card lg:rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 shadow-2xl">
           <AnimatePresence>
@@ -462,8 +426,7 @@ const App: React.FC = () => {
                 initial={{ y: -60, x: '-50%', opacity: 0 }}
                 animate={{ y: 0, x: '-50%', opacity: 1 }}
                 exit={{ y: -60, x: '-50%', opacity: 0 }}
-                onClick={() => initData()}
-                className="absolute top-6 left-1/2 z-[150] flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl cursor-pointer hover:bg-white/10 transition-colors"
+                className="absolute top-6 left-1/2 z-[150] flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl"
               >
                 {syncStatus === 'syncing' ? <RefreshCw size={11} className="text-xgiha-accent animate-spin" /> : 
                  syncStatus === 'success' ? <Check size={11} className="text-emerald-400" /> : <CloudOff size={11} className="text-red-400" />}
@@ -487,7 +450,6 @@ const App: React.FC = () => {
                       <TimeAnalysis loading={isInitialLoading} trades={trades} />
                     </div>
                   </div>
-
                   <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-24">
                     <div className="w-full h-full relative">
                       <AnimatePresence mode="wait">
@@ -501,7 +463,6 @@ const App: React.FC = () => {
                       </AnimatePresence>
                     </div>
                   </div>
-
                   <div className="flex flex-col h-full w-[460px] shrink-0 gap-4 lg:gap-6">
                     <div className="flex-1 min-h-0"><GrowthChart loading={isInitialLoading} trades={trades} /></div>
                     <div className="flex-1 min-h-0"><WeeklyChart loading={isInitialLoading} trades={trades} stats={globalStats} /></div>
@@ -530,50 +491,31 @@ const App: React.FC = () => {
                   </AnimatePresence>
                 </div>
               )}
-
               <div style={{ bottom: 'calc(1.5rem + var(--sab))' }} className="fixed lg:absolute left-0 right-0 z-[100] flex justify-center items-center pointer-events-none px-4">
                 <div className="flex items-center gap-3 lg:gap-4 pointer-events-auto w-full max-w-2xl lg:max-w-none justify-center">
-                  
-                  {isInitialLoading ? (
-                      <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" />
-                  ) : (
+                  {isInitialLoading ? <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" /> : (
                     <TooltipProvider delayDuration={0.1}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                              <button className="bg-white w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 overflow-hidden">
-                                  <img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" />
-                              </button>
+                              <button className="bg-white w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 overflow-hidden"><img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" /></button>
                         </TooltipTrigger>
-                        <TooltipContent side="top" align="center">
-                          <QuickUserOptions onLogout={handleLogout} />
-                        </TooltipContent>
+                        <TooltipContent side="top" align="center"><QuickUserOptions onLogout={handleLogout} /></TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   )}
-
                   <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md flex-1 lg:flex-none lg:w-[240px] h-14 shadow-2xl border border-white/5 overflow-hidden">
-                      {isInitialLoading ? (
-                          <div className="flex-1 h-full px-6 flex items-center justify-between gap-4">
-                             <Skeleton className="h-4 flex-1 rounded-full" />
-                             <Skeleton className="h-4 flex-1 rounded-full" />
-                             <Skeleton className="h-4 flex-1 rounded-full" />
-                          </div>
-                      ) : (
+                      {isInitialLoading ? <div className="flex-1 h-full px-6 flex items-center justify-between gap-4"><Skeleton className="h-4 flex-1 rounded-full" /><Skeleton className="h-4 flex-1 rounded-full" /><Skeleton className="h-4 flex-1 rounded-full" /></div> : (
                           <>
                             {currentTabs.map((tab) => (
                                 <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 h-full rounded-full flex flex-col lg:flex-row items-center justify-center gap-1.5 transition-all duration-300 z-10 ${activeTab === tab.id ? 'text-white font-bold' : 'text-xgiha-muted hover:text-white/60'}`}>
-                                <tab.icon size={isMobile ? 12 : 14} />
-                                <span className="text-[8px] lg:text-[10px] font-bold tracking-widest uppercase">{tab.label}</span>
+                                <tab.icon size={isMobile ? 12 : 14} /><span className="text-[8px] lg:text-[10px] font-bold tracking-widest uppercase">{tab.label}</span>
                                 </button>
                             ))}
                             <MotionDiv layoutId="active-pill" className="absolute inset-y-1 z-0 rounded-full bg-white/10" style={{ width: `calc(${100 / currentTabs.length}% - 4px)` }} animate={{ x: `${activeIndex * 100}%` }} transition={{ type: "spring", stiffness: 400, damping: 35 }} />
                           </>
                       )}
                   </div>
-
-                  {isInitialLoading ? (
-                      <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" />
-                  ) : (
+                  {isInitialLoading ? <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" /> : (
                       <button onClick={handleAddTradeBtnClick} className="bg-white text-black w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 hover:bg-zinc-100">
                         <Plus size={20} strokeWidth={3} />
                       </button>
@@ -584,16 +526,31 @@ const App: React.FC = () => {
           )}
         </div>
       </div>
-
-      <AnimatePresence initial={false}>
-        {!isAuthenticated && (
-          <SignInScreen onSignIn={handleSignIn} />
-        )}
-      </AnimatePresence>
-
+      <AnimatePresence initial={false}>{!isAuthenticated && <SignInScreen onSignIn={handleSignIn} />}</AnimatePresence>
       <AnimatePresence>
-        {isDetailModalOpen && <DayDetailsModal isOpen={true} onClose={() => setIsDetailModalOpen(false)} date={selectedDate} trades={selectedTrades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onAddTrade={handleAddTradeBtnClick} />}
-        {isAddModalOpen && <AddTradeModal isOpen={true} onClose={() => setIsAddModalOpen(false)} date={selectedDate} onAdd={handleAddOrUpdateTrade} initialData={editingTrade} />}
+        {isDetailModalOpen && (
+          <DayDetailsModal 
+            key="detail-modal" 
+            isOpen={true} 
+            onClose={() => setIsDetailModalOpen(false)} 
+            date={selectedDate} 
+            trades={selectedTrades} 
+            onEdit={handleEditTrade} 
+            onDelete={handleDeleteTrade} 
+            onAddTrade={() => handleAddTradeClick(selectedDate)}
+            readOnly={modalReadOnly}
+          />
+        )}
+        {isAddModalOpen && (
+          <AddTradeModal 
+            key="add-modal" 
+            isOpen={true} 
+            onClose={() => setIsAddModalOpen(false)} 
+            date={selectedDate} 
+            onAdd={handleAddOrUpdateTrade} 
+            initialData={editingTrade} 
+          />
+        )}
       </AnimatePresence>
     </div>
   );
