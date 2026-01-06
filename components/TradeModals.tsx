@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Trash2, UploadCloud, Loader2, Edit2, FileText, Target, Maximize2, Info } from 'lucide-react';
+import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Trash2, Loader2, Edit2, FileText, Target, Maximize2 } from 'lucide-react';
 import { Trade } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -54,8 +54,8 @@ const processImageFile = (file: File): Promise<string> => {
       img.onload = () => {
         clearTimeout(timeout);
         const elem = document.createElement('canvas');
-        const maxWidth = 1000; 
-        const maxHeight = 1000;
+        const maxWidth = 1600; 
+        const maxHeight = 1600;
         let width = img.width;
         let height = img.height;
 
@@ -71,7 +71,7 @@ const processImageFile = (file: File): Promise<string> => {
         if (!ctx) return reject(new Error("Failed to get canvas context"));
         
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(elem.toDataURL('image/jpeg', 0.7));
+        resolve(elem.toDataURL('image/jpeg', 0.85));
       };
       img.onerror = () => { clearTimeout(timeout); reject(new Error("Failed to load image")); };
       img.src = event.target?.result as string;
@@ -85,39 +85,76 @@ const uploadImageToBlob = async (file: File) => {
     return await processImageFile(file);
 };
 
-// --- Overlays ---
+// --- Polished Overlays ---
 const ImageZoomOverlay = ({ src, onClose }: { src: string, onClose: () => void }) => {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const startPos = useRef({ x: 0, y: 0 });
+  const lastPointerPos = useRef({ x: 0, y: 0 });
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setScale(prev => Math.min(Math.max(prev * delta, 1), 5));
+    const delta = e.deltaY > 0 ? 0.8 : 1.25;
+    const newScale = Math.min(Math.max(scale * delta, 1), 8);
+    setScale(newScale);
+    if (newScale === 1) setPosition({ x: 0, y: 0 });
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
     if (scale <= 1) return;
     setIsDragging(true);
-    startPos.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+    lastPointerPos.current = { x: e.clientX, y: e.clientY };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging) return;
-    setPosition({ x: e.clientX - startPos.current.x, y: e.clientY - startPos.current.y });
+    const deltaX = e.clientX - lastPointerPos.current.x;
+    const deltaY = e.clientY - lastPointerPos.current.y;
+    setPosition(prev => ({ x: prev.x + deltaX, y: prev.y + deltaY }));
+    lastPointerPos.current = { x: e.clientX, y: e.clientY };
   };
 
-  const handleMouseUp = () => setIsDragging(false);
+  const handlePointerUp = (e: React.PointerEvent) => {
+    setIsDragging(false);
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+  };
 
   return (
-    <MotionDiv variants={BACKDROP_VARIANTS} initial="initial" animate="animate" exit="exit" className="fixed inset-0 z-[350] bg-black/90 flex items-center justify-center p-8 backdrop-blur-sm" onClick={onClose}>
-        <div className="absolute top-8 right-8 z-[360] flex gap-2">
-            <button onClick={onClose} className="p-2 text-white/50 hover:text-white bg-white/10 rounded-full transition-colors backdrop-blur-md"><X size={20} /></button>
+    <MotionDiv 
+      variants={BACKDROP_VARIANTS} 
+      initial="initial" 
+      animate="animate" 
+      exit="exit" 
+      className="fixed inset-0 z-[350] bg-black/98 flex items-center justify-center p-2 md:p-6 backdrop-blur-2xl" 
+      onClick={onClose}
+    >
+        <div className="absolute top-6 right-6 z-[360] flex gap-3">
+            <div className="bg-white/5 px-5 py-2 rounded-full text-[10px] font-black text-white/40 uppercase tracking-[0.2em] border border-white/5 backdrop-blur-xl hidden md:block">
+              Scroll to zoom • Drag to pan
+            </div>
+            <button onClick={onClose} className="p-3 text-white/40 hover:text-white bg-white/5 rounded-full transition-all border border-white/5 hover:border-white/10 active:scale-90">
+              <X size={24} />
+            </button>
         </div>
-        <div onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} className={`relative max-w-[85vw] max-h-[85vh] overflow-hidden rounded-2xl shadow-2xl cursor-${isDragging ? 'grabbing' : scale > 1 ? 'grab' : 'zoom-in'}`} onClick={(e) => e.stopPropagation()}>
-            <motion.img src={src} alt="Zoomed" className="w-full h-full object-contain pointer-events-none select-none" animate={{ scale, x: position.x, y: position.y }} transition={isDragging ? { type: 'tween', duration: 0 } : { type: 'spring', stiffness: 300, damping: 30 }} />
+        <div 
+          onWheel={handleWheel} 
+          onPointerDown={handlePointerDown} 
+          onPointerMove={handlePointerMove} 
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          className="relative w-full h-full overflow-hidden flex items-center justify-center rounded-[2rem] touch-none"
+          onClick={(e) => e.stopPropagation()}
+        >
+            <motion.img 
+              src={src} 
+              alt="Trade analysis" 
+              draggable="false"
+              className="max-w-full max-h-full object-contain pointer-events-none select-none shadow-[0_0_100px_rgba(0,0,0,0.5)]" 
+              animate={{ scale, x: position.x, y: position.y }} 
+              transition={isDragging ? { type: 'tween', duration: 0 } : { type: 'spring', stiffness: 400, damping: 40 }} 
+            />
         </div>
     </MotionDiv>
   );
@@ -138,7 +175,7 @@ const CustomDatePicker = ({ selectedDate, onChange }: { selectedDate: string, on
     const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
     const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    const dayCells = Array(firstDay).fill(null).concat(Array.from({ length: daysInMonth }, (_, i) => i + 1));
+    const dayCells = Array(firstDay === 0 ? 6 : firstDay - 1).fill(null).concat(Array.from({ length: daysInMonth }, (_, i) => i + 1));
 
     return (
         <div className="bg-[#1A1A1A] rounded-2xl p-4 w-full shadow-2xl border border-white/10 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
@@ -148,7 +185,7 @@ const CustomDatePicker = ({ selectedDate, onChange }: { selectedDate: string, on
                 <button type="button" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))} className="p-1.5 hover:bg-white/10 rounded-full text-[#888] hover:text-white transition-colors"><ChevronRight size={16} /></button>
             </div>
             <div className="grid grid-cols-7 gap-1 mb-2">
-                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <div key={d} className="text-center text-[10px] text-[#666] font-bold uppercase">{d}</div>)}
+                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => <div key={i} className="text-center text-[10px] text-[#666] font-bold uppercase">{d}</div>)}
             </div>
             <div className="grid grid-cols-7 gap-1">
                 {dayCells.map((day, i) => day ? (
@@ -159,69 +196,104 @@ const CustomDatePicker = ({ selectedDate, onChange }: { selectedDate: string, on
     );
 };
 
-// --- Manual Time Input (Polished UX) ---
+// --- Manual Time Input (FIXED: Zero clobbering, free entry, auto 24h conversion) ---
 const ManualTimeInput = ({ value, onChange, label, type }: { value: string, onChange: (val: string) => void, label: string, type: 'IN' | 'OUT' }) => {
+    // We use local state to maintain exactly what the user types.
+    // Sync from parent only on mount.
+    const [h, setH] = useState('');
+    const [m, setM] = useState('');
+    const [s, setS] = useState('');
+    const [ampm, setAmpm] = useState('AM');
+
     const hRef = useRef<HTMLInputElement>(null);
     const mRef = useRef<HTMLInputElement>(null);
     const sRef = useRef<HTMLInputElement>(null);
 
-    const [h24, m24, s24] = useMemo(() => {
-        const parts = (value || '00:00:00').split(':');
-        return [parseInt(parts[0]) || 0, parts[1] || '00', parts[2] || '00'];
-    }, [value]);
-
-    const ampm = h24 >= 12 ? 'PM' : 'AM';
-    let h12 = h24 % 12;
-    if (h12 === 0) h12 = 12;
-
-    const updateTime = (h: string, m: string, s: string, p: string) => {
-        let hourNum = parseInt(h);
-        if (isNaN(hourNum)) hourNum = 12;
+    useEffect(() => {
+        if (!value) return;
+        const parts = value.split(':');
+        const h24 = parseInt(parts[0]);
+        if (isNaN(h24)) return;
         
-        // Clamp logic
-        if (hourNum > 12) hourNum = 12;
-        if (hourNum < 1) hourNum = 1;
+        const period = h24 >= 12 ? 'PM' : 'AM';
+        let h12 = h24 % 12;
+        if (h12 === 0) h12 = 12;
 
-        let finalH24 = hourNum;
-        if (p === 'PM' && hourNum < 12) finalH24 += 12;
-        if (p === 'AM' && hourNum === 12) finalH24 = 0;
+        setH(String(h12).padStart(2, '0'));
+        setM(parts[1] || '00');
+        setS(parts[2] || '00');
+        setAmpm(period);
+    }, []); // Only on mount
 
-        const paddedH = String(finalH24).padStart(2, '0');
-        const paddedM = String(m).padStart(2, '0').slice(0, 2);
-        const paddedS = String(s).padStart(2, '0').slice(0, 2);
-        
-        onChange(`${paddedH}:${paddedM}:${paddedS}`);
+    const sync = (currH: string, currM: string, currS: string, currP: string) => {
+        let hour = parseInt(currH) || 12;
+        if (currP === 'PM' && hour < 12) hour += 12;
+        if (currP === 'AM' && hour === 12) hour = 0;
+
+        const finalH = String(hour).padStart(2, '0');
+        const finalM = (currM || '00').padStart(2, '0');
+        const finalS = (currS || '00').padStart(2, '0');
+        onChange(`${finalH}:${finalM}:${finalS}`);
     };
 
-    const handleInput = (part: 'h'|'m'|'s', val: string) => {
-        // Fix: Changed 'const clean' to 'let clean' to allow clamping reassignment below.
-        let clean = val.replace(/\D/g, '');
+    const handleH = (val: string) => {
+        const clean = val.replace(/\D/g, '').slice(0, 2);
+        setH(clean);
         
-        if (part === 'h') {
-            updateTime(clean, String(m24), String(s24), ampm);
-            if (clean.length >= 2) mRef.current?.focus();
-        } else if (part === 'm') {
-            let mVal = parseInt(clean);
-            if (mVal > 59) clean = '59';
-            updateTime(String(h12), clean, String(s24), ampm);
-            if (clean.length >= 2) sRef.current?.focus();
-        } else if (part === 's') {
-            let sVal = parseInt(clean);
-            if (sVal > 59) clean = '59';
-            updateTime(String(h12), String(m24), clean, ampm);
+        if (clean.length === 2) {
+            let num = parseInt(clean);
+            let p = ampm;
+            let dispH = num;
+
+            // 24h to 12h Logic
+            if (num > 24) num = 23;
+            if (num === 0 || num === 24) { dispH = 12; p = 'AM'; }
+            else if (num >= 12) { dispH = num > 12 ? num - 12 : 12; p = 'PM'; }
+            else { dispH = num; p = 'AM'; }
+
+            const hStr = String(dispH).padStart(2, '0');
+            setH(hStr);
+            setAmpm(p);
+            sync(hStr, m, s, p);
+            mRef.current?.focus();
+        } else {
+            sync(clean, m, s, ampm);
         }
     };
 
-    const handleKeyDown = (part: 'h'|'m'|'s', e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Backspace' && (e.target as HTMLInputElement).value === '') {
-            if (part === 'm') hRef.current?.focus();
-            if (part === 's') mRef.current?.focus();
+    const handleM = (val: string) => {
+        const clean = val.replace(/\D/g, '').slice(0, 2);
+        setM(clean);
+        if (clean.length === 2) {
+            let num = parseInt(clean);
+            if (num > 59) num = 59;
+            const mStr = String(num).padStart(2, '0');
+            setM(mStr);
+            sync(h, mStr, s, ampm);
+            sRef.current?.focus();
+        } else {
+            sync(h, clean, s, ampm);
         }
     };
 
-    const toggleAMPM = () => {
+    const handleS = (val: string) => {
+        const clean = val.replace(/\D/g, '').slice(0, 2);
+        setS(clean);
+        if (clean.length === 2) {
+            let num = parseInt(clean);
+            if (num > 59) num = 59;
+            const sStr = String(num).padStart(2, '0');
+            setS(sStr);
+            sync(h, m, sStr, ampm);
+        } else {
+            sync(h, m, clean, ampm);
+        }
+    };
+
+    const toggleP = () => {
         const next = ampm === 'AM' ? 'PM' : 'AM';
-        updateTime(String(h12), String(m24), String(s24), next);
+        setAmpm(next);
+        sync(h, m, s, next);
     };
 
     return (
@@ -230,48 +302,31 @@ const ManualTimeInput = ({ value, onChange, label, type }: { value: string, onCh
                  <div className={`p-0.5 rounded ${type === 'IN' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
                     <Clock size={10} className={type === 'IN' ? 'text-green-500' : 'text-red-500'} />
                  </div>
-                 <span className="text-[9px] font-bold text-[#666] uppercase tracking-widest">{label}</span>
+                 <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">{label}</span>
             </div>
-            <div className="flex items-center bg-[#141414] rounded-xl p-1 h-[38px] border border-white/5 focus-within:border-white/20 transition-all shadow-inner">
+            <div className="flex items-center bg-black/40 rounded-xl px-2 h-[38px] border border-white/5 focus-within:border-white/20 transition-all shadow-inner">
                 <input 
-                    ref={hRef}
-                    type="text" 
-                    inputMode="numeric"
-                    className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder-white/5" 
-                    value={String(h12).padStart(2, '0')} 
-                    onChange={(e) => handleInput('h', e.target.value)}
-                    onKeyDown={(e) => handleKeyDown('h', e)}
-                    maxLength={2}
-                    onFocus={(e) => e.target.select()}
+                    ref={hRef} type="text" inputMode="numeric" placeholder="HH"
+                    className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10"
+                    value={h} onChange={e => handleH(e.target.value)} onFocus={e => e.target.select()}
                 />
-                <span className="text-[10px] text-[#333] font-mono">:</span>
+                <span className="text-[10px] text-white/10 font-mono">:</span>
                 <input 
-                    ref={mRef}
-                    type="text" 
-                    inputMode="numeric"
-                    className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder-white/5" 
-                    value={String(m24).padStart(2, '0')} 
-                    onChange={(e) => handleInput('m', e.target.value)}
-                    onKeyDown={(e) => handleKeyDown('m', e)}
-                    maxLength={2}
-                    onFocus={(e) => e.target.select()}
+                    ref={mRef} type="text" inputMode="numeric" placeholder="MM"
+                    className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10"
+                    value={m} onChange={e => handleM(e.target.value)} onFocus={e => e.target.select()}
+                    onKeyDown={e => e.key === 'Backspace' && !m && hRef.current?.focus()}
                 />
-                <span className="text-[10px] text-[#333] font-mono">:</span>
+                <span className="text-[10px] text-white/10 font-mono">:</span>
                 <input 
-                    ref={sRef}
-                    type="text" 
-                    inputMode="numeric"
-                    className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder-white/5" 
-                    value={String(s24).padStart(2, '0')} 
-                    onChange={(e) => handleInput('s', e.target.value)}
-                    onKeyDown={(e) => handleKeyDown('s', e)}
-                    maxLength={2}
-                    onFocus={(e) => e.target.select()}
+                    ref={sRef} type="text" inputMode="numeric" placeholder="SS"
+                    className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10"
+                    value={s} onChange={e => handleS(e.target.value)} onFocus={e => e.target.select()}
+                    onKeyDown={e => e.key === 'Backspace' && !s && mRef.current?.focus()}
                 />
                 <button 
-                    type="button"
-                    onClick={toggleAMPM}
-                    className="shrink-0 px-2 h-full text-[9px] font-bold text-xgiha-accent hover:bg-white/5 active:scale-90 rounded-lg transition-all ml-1 border border-white/5"
+                    type="button" onClick={toggleP}
+                    className="shrink-0 px-2 h-6 text-[9px] font-black text-xgiha-accent hover:bg-white/5 active:scale-90 rounded-lg transition-all ml-1 border border-white/5"
                 >
                     {ampm}
                 </button>
@@ -298,7 +353,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
 
   const [formData, setFormData] = useState({
     symbol: '', news: '', size: '', date: '', 
-    timeIn: '09:30:00', timeOut: '10:00:00',
+    timeIn: '', timeOut: '',
     priceIn: '', priceOut: '', fees: '',
     direction: 'Long', pnl: '', strategy: '',
     images: [] as string[], notes: '',
@@ -319,7 +374,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       setIsNewsTrade(!!initialData.newsEvent);
       setFormData({
           symbol: initialData.pair, news: initialData.newsEvent || '', size: initialData.size || '',
-          date: initialData.date, timeIn: initialData.entryTime, timeOut: initialData.exitTime || '00:00:00',
+          date: initialData.date, timeIn: initialData.entryTime || '', timeOut: initialData.exitTime || '',
           priceIn: initialData.entryPrice?.toString() || '', priceOut: initialData.exitPrice?.toString() || '',
           fees: formatNumber(initialData.fee), direction: initialData.type,
           pnl: formatNumber(initialData.pnl), strategy: initialData.strategy || '',
@@ -329,7 +384,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       setIsNewsTrade(false);
       setFormData({
           symbol: '', news: '', size: '', date: date || new Date().toISOString().split('T')[0],
-          timeIn: '09:30:00', timeOut: '10:00:00', priceIn: '', priceOut: '', fees: '',
+          timeIn: '', timeOut: '', priceIn: '', priceOut: '', fees: '',
           direction: 'Long', pnl: '', strategy: '', images: [], notes: '',
       });
     }
@@ -365,7 +420,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (formData.images.length >= 5) return;
+      if (formData.images.length >= 8) return;
       const file = e.target.files?.[0];
       if (file) {
           try {
@@ -395,98 +450,98 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
   return (
     <MotionDiv className="fixed inset-0 z-[210] flex items-center justify-center p-4" initial="initial" animate="animate" exit="exit">
       <MotionDiv variants={BACKDROP_VARIANTS} transition={{ duration: 0.3 }} className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={onClose} />
-      <MotionDiv variants={MODAL_VARIANTS} transition={MODAL_SPRING} className="relative w-[95%] md:max-w-[420px] bg-[#141414] rounded-[2rem] shadow-[0_0_80px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col border border-white/5">
-        <div className="p-5 pb-32 relative overflow-visible">
-          <div className="flex items-center justify-between mb-4 px-1">
+      <MotionDiv variants={MODAL_VARIANTS} transition={MODAL_SPRING} className="relative w-[95%] md:max-w-[420px] bg-[#141414] rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col border border-white/5">
+        <div className="p-6 pb-32 relative overflow-visible">
+          <div className="flex items-center justify-between mb-5 px-1">
              <div className="flex items-center gap-2">
                 <div className={`p-1.5 rounded-lg ${isHistorical ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500'}`}><CalendarIcon size={12} /></div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">{isHistorical ? 'Historical Entry' : 'Live Entry'}</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">{isHistorical ? 'Historical Entry' : 'Live Session'}</span>
              </div>
              {formData.pnl && (
-                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border transition-colors ${calculatedNet >= 0 ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/20' : 'bg-red-500/5 text-red-400 border-red-500/20'}`}>
+                <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${calculatedNet >= 0 ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/20' : 'bg-red-500/5 text-red-400 border-red-500/20'}`}>
                     <span>Net Est:</span><span className="font-mono">${calculatedNet.toFixed(2)}</span>
                 </div>
              )}
           </div>
 
-          <form id="entry-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 relative">
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
-                 <label htmlFor="symbol" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><Type size={10} /> Symbol</label>
+          <form id="entry-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-3.5 relative">
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3.5 flex flex-col gap-1.5 h-[76px]">
+                 <label htmlFor="symbol" className="text-[9px] text-[#888] font-bold uppercase tracking-widest flex items-center gap-2"><Type size={10} /> Symbol</label>
                  <input type="text" required className="w-full bg-transparent text-lg text-white font-mono placeholder-white/10 focus:outline-none" placeholder="BTCUSD" id="symbol" value={formData.symbol} onChange={e => setFormData({...formData, symbol: e.target.value})} />
             </div>
-             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
-                 <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><DollarSign size={10} /> Gross P&L</label>
-                 <div className="flex items-center gap-1 h-full">
-                     <span className={`text-lg font-mono font-light ${(parseFloat(unformatNumber(formData.pnl || '0'))) > 0 ? 'text-green-500' : (parseFloat(unformatNumber(formData.pnl || '0'))) < 0 ? 'text-red-500' : 'text-[#666]'}`}>$</span>
+             <div className="relative bg-[#1E1E1E] rounded-2xl p-3.5 flex flex-col gap-1.5 h-[76px]">
+                 <label className="text-[9px] text-[#888] font-bold uppercase tracking-widest flex items-center gap-2"><DollarSign size={10} /> Gross P&L</label>
+                 <div className="flex items-center gap-1.5 h-full">
+                     <span className={`text-lg font-mono font-light ${(parseFloat(unformatNumber(formData.pnl || '0'))) > 0 ? 'text-green-500' : (parseFloat(unformatNumber(formData.pnl || '0'))) < 0 ? 'text-red-500' : 'text-[#444]'}`}>$</span>
                      <input type="text" className={`w-full bg-transparent text-lg font-mono font-medium focus:outline-none text-right ${(parseFloat(unformatNumber(formData.pnl || '0'))) > 0 ? 'text-green-500' : (parseFloat(unformatNumber(formData.pnl || '0'))) < 0 ? 'text-red-500' : 'text-white'}`} placeholder="0.00" value={formData.pnl} onChange={(e) => handleNumberInput('pnl', e.target.value)} />
                  </div>
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-1 flex relative isolate h-[56px]">
-                <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] -z-10 shadow-lg ${formData.direction === 'Long' ? 'left-1 bg-[#153422]' : 'left-[50%] bg-[#381515]'}`}></div>
-                <button type="button" onClick={() => setFormData({...formData, direction: 'Long'})} className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors duration-200 z-10 ${formData.direction === 'Long' ? 'text-green-400' : 'text-[#666]'}`}><ArrowUpRight size={14} /><span className="text-[10px] font-bold uppercase tracking-wider">Long</span></button>
-                <button type="button" onClick={() => setFormData({...formData, direction: 'Short'})} className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors duration-200 z-10 ${formData.direction === 'Short' ? 'text-red-400' : 'text-[#666]'}`}><ArrowDownRight size={14} /><span className="text-[10px] font-bold uppercase tracking-wider">Short</span></button>
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-1.5 flex relative isolate h-[60px]">
+                <div className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-xl transition-all duration-400 ease-[cubic-bezier(0.23,1,0.32,1)] -z-10 shadow-lg ${formData.direction === 'Long' ? 'left-1.5 bg-emerald-500/10' : 'left-[50%] bg-red-500/10'}`}></div>
+                <button type="button" onClick={() => setFormData({...formData, direction: 'Long'})} className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors duration-200 z-10 ${formData.direction === 'Long' ? 'text-emerald-400' : 'text-white/20'}`}><ArrowUpRight size={16} /><span className="text-[10px] font-bold uppercase tracking-widest">Long</span></button>
+                <button type="button" onClick={() => setFormData({...formData, direction: 'Short'})} className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-xl transition-colors duration-200 z-10 ${formData.direction === 'Short' ? 'text-red-400' : 'text-white/20'}`}><ArrowDownRight size={16} /><span className="text-[10px] font-bold uppercase tracking-widest">Short</span></button>
             </div>
-            <div className="col-span-2 relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
-                 <label htmlFor="strategy" className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><Target size={10} /> Strategy</label>
-                 <input type="text" className="w-full bg-transparent text-sm text-white font-medium focus:outline-none" placeholder="e.g., VWAP Rejection" id="strategy" value={formData.strategy} onChange={e => setFormData({...formData, strategy: e.target.value})} />
+            <div className="col-span-2 relative bg-[#1E1E1E] rounded-2xl p-3.5 flex flex-col gap-1.5 h-[76px]">
+                 <label htmlFor="strategy" className="text-[9px] text-[#888] font-bold uppercase tracking-widest flex items-center gap-2"><Target size={10} /> Strategy</label>
+                 <input type="text" className="w-full bg-transparent text-sm text-white font-medium focus:outline-none placeholder-white/5" placeholder="e.g., VWAP Rejection" id="strategy" value={formData.strategy} onChange={e => setFormData({...formData, strategy: e.target.value})} />
             </div>
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
-                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><Hash size={10} /> Lots</label>
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3.5 flex flex-col gap-1.5 h-[76px]">
+                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-widest flex items-center gap-2"><Hash size={10} /> Lots</label>
                   <input type="text" className="w-full bg-transparent text-lg text-white font-mono focus:outline-none text-right" placeholder="Qty" value={formData.size} onChange={e => handleNumberInput('size', e.target.value)} />
             </div>
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
-                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><DollarSign size={10} /> Fees</label>
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3.5 flex flex-col gap-1.5 h-[76px]">
+                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-widest flex items-center gap-2"><DollarSign size={10} /> Fees</label>
                   <input type="text" className="w-full bg-transparent text-lg text-white font-mono focus:outline-none text-right" placeholder="0.00" value={formData.fees} onChange={e => handleNumberInput('fees', e.target.value)} />
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col md:flex-row items-start gap-4 z-40 relative h-auto md:h-[84px]" ref={dateContainerRef}>
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3.5 flex flex-col md:flex-row items-start gap-4 z-40 relative h-auto md:h-[88px]" ref={dateContainerRef}>
                  <div className="w-full md:flex-1 relative group h-full">
                       <div className="cursor-pointer h-full" onClick={() => setShowCalendar(!showCalendar)}>
-                          <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5 pointer-events-none mb-1.5"><CalendarIcon size={10} /> Date</label>
+                          <label className="text-[9px] text-[#888] font-bold uppercase tracking-widest flex items-center gap-2 pointer-events-none mb-1.5"><CalendarIcon size={10} /> Date</label>
                           <div className={`text-sm font-mono truncate h-[38px] flex items-center ${formData.date ? 'text-white' : 'text-white/30'}`}>{formData.date || 'Select'}</div>
                       </div>
                       {showCalendar && <div className="absolute top-full left-0 z-50 mt-2 w-full md:w-[280px]"><CustomDatePicker selectedDate={formData.date || ''} onChange={(date) => { setFormData({...formData, date}); setShowCalendar(false); }} /></div>}
                  </div>
-                 <div className="w-full md:w-[65%] flex gap-2">
+                 <div className="w-full md:w-[68%] flex gap-2">
                      <ManualTimeInput label="Entry" type="IN" value={formData.timeIn} onChange={(val) => setFormData({...formData, timeIn: val})} />
                      <ManualTimeInput label="Exit" type="OUT" value={formData.timeOut} onChange={(val) => setFormData({...formData, timeOut: val})} />
                  </div>
             </div>
-             <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
-                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider">Entry Price</label>
+             <div className="relative bg-[#1E1E1E] rounded-2xl p-3.5 flex flex-col gap-1.5 h-[76px]">
+                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-widest">Entry Price</label>
                   <input type="text" className="w-full bg-transparent text-lg text-white font-mono focus:outline-none text-right" placeholder="0.00" value={formData.priceIn} onChange={e => handleNumberInput('priceIn', e.target.value)} />
             </div>
-            <div className="relative bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
-                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider">Exit Price</label>
+            <div className="relative bg-[#1E1E1E] rounded-2xl p-3.5 flex flex-col gap-1.5 h-[76px]">
+                  <label className="text-[9px] text-[#888] font-bold uppercase tracking-widest">Exit Price</label>
                   <input type="text" className="w-full bg-transparent text-lg text-white font-mono focus:outline-none text-right" placeholder="0.00" value={formData.priceOut} onChange={e => handleNumberInput('priceOut', e.target.value)} />
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 h-[64px]">
-                <div onClick={() => setIsNewsTrade(!isNewsTrade)} className={`cursor-pointer h-full px-4 rounded-xl flex items-center gap-2 transition-all shrink-0 ${isNewsTrade ? 'bg-yellow-500/10 text-yellow-500' : 'bg-white/5 text-[#666]'}`}>
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2.5 flex items-center gap-3 h-[68px]">
+                <div onClick={() => setIsNewsTrade(!isNewsTrade)} className={`cursor-pointer h-full px-4 rounded-xl flex items-center gap-2.5 transition-all shrink-0 ${isNewsTrade ? 'bg-yellow-500/10 text-yellow-500' : 'bg-white/5 text-white/20'}`}>
                     <Zap size={14} fill={isNewsTrade ? "currentColor" : "none"} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">News Event</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">News Event</span>
                 </div>
                 <div className="flex-1 h-full relative flex flex-col justify-center">
                     <input type="text" className={`w-full bg-transparent text-sm text-white font-medium focus:outline-none placeholder-white/20 ${isNewsTrade ? 'opacity-100' : 'opacity-30 pointer-events-none'}`} placeholder={isNewsTrade ? "Event name..." : "Enable news event"} value={formData.news} onChange={e => setFormData({...formData, news: e.target.value})} disabled={!isNewsTrade} />
                 </div>
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3 flex flex-col gap-1 h-[72px]">
-                <label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5"><FileText size={10} /> Notes</label>
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-3.5 flex flex-col gap-1.5 h-[80px]">
+                <label className="text-[9px] text-[#888] font-bold uppercase tracking-widest flex items-center gap-2"><FileText size={10} /> Notes</label>
                 <textarea className="w-full h-full bg-transparent text-sm text-white placeholder-white/10 focus:outline-none resize-none custom-scrollbar leading-relaxed" placeholder="Add trading notes..." value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} />
             </div>
-            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2 flex items-center gap-3 h-[72px]">
-                 <div className="pl-2 pr-3 h-full flex items-center"><label className="text-[9px] text-[#888] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0"><ImageIcon size={12} /> Attachments</label></div>
-                 <div className="flex-1 flex gap-2 overflow-x-auto custom-scrollbar items-center">
+            <div className="col-span-2 bg-[#1E1E1E] rounded-2xl p-2.5 flex items-center gap-3 h-[76px]">
+                 <div className="pl-2 pr-3 h-full flex items-center"><label className="text-[9px] text-[#888] font-bold uppercase tracking-widest flex items-center gap-2 shrink-0"><ImageIcon size={12} /> Gallery</label></div>
+                 <div className="flex-1 flex gap-2.5 overflow-x-auto no-scrollbar items-center">
                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
                      <div 
-                        onClick={() => !isUploading && formData.images.length < 5 && fileInputRef.current?.click()} 
-                        className={`w-10 h-10 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center transition-colors shrink-0 bg-white/[0.02] ${isUploading || formData.images.length >= 5 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-white hover:border-white text-[#666]'}`} 
+                        onClick={() => !isUploading && formData.images.length < 8 && fileInputRef.current?.click()} 
+                        className={`w-11 h-11 rounded-xl border border-dashed border-white/20 flex flex-col items-center justify-center transition-all shrink-0 bg-white/[0.02] ${isUploading || formData.images.length >= 8 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-white/5 hover:border-white/40 text-white/20'}`} 
                      >
-                        {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                        {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={18} />}
                      </div>
                      {formData.images.map((img, idx) => (
-                         <div key={idx} className="w-10 h-10 rounded-lg relative shrink-0 group overflow-hidden bg-black/40">
+                         <div key={idx} className="w-11 h-11 rounded-xl relative shrink-0 group overflow-hidden bg-black/40">
                              <img src={img} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                 <button type="button" onClick={() => removeImage(idx)} className="text-red-500 hover:text-red-400"><Trash2 size={12} /></button>
+                                 <button type="button" onClick={() => removeImage(idx)} className="text-red-500 hover:text-red-400 active:scale-90"><Trash2 size={14} /></button>
                              </div>
                          </div>
                      ))}
@@ -494,13 +549,13 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
             </div>
           </form>
         </div>
-        <div className="absolute bottom-6 left-0 right-0 flex justify-center z-20 pointer-events-none">
-          <button type="submit" form="entry-form" disabled={isUploading} className="pointer-events-auto relative px-[141px] py-[27.5px] rounded-full text-black bg-white hover:bg-zinc-100 active:scale-95 transition-all duration-300 shadow-xl font-bold text-[13px] uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed">
-            {isUploading ? 'Uploading...' : 'Save Trade'}
+        <div className="absolute bottom-7 left-0 right-0 flex justify-center z-20 pointer-events-none">
+          <button type="submit" form="entry-form" disabled={isUploading} className="pointer-events-auto relative px-[136px] py-[28px] rounded-full text-black bg-white hover:bg-zinc-100 active:scale-95 transition-all duration-300 shadow-2xl font-black text-[13px] uppercase tracking-[0.25em] disabled:opacity-50 disabled:cursor-not-allowed">
+            {isUploading ? 'Finalizing...' : 'Save Entry'}
           </button>
         </div>
       </MotionDiv>
-    </MotionDiv>
+    </div>
   );
 };
 
@@ -601,7 +656,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
                                         {((trade.images && trade.images.length > 0) || trade.image) && (
                                             <div className="flex gap-3 overflow-x-auto no-scrollbar pt-1">
                                               {(trade.images || (trade.image ? [trade.image] : [])).map((img, idx) => (
-                                                <div key={idx} className="relative h-20 w-32 shrink-0 rounded-xl overflow-hidden cursor-zoom-in group/img border border-white/5 bg-black" onClick={() => setZoomedImage(img)}>
+                                                <div key={idx} className="relative h-20 w-32 shrink-0 rounded-xl overflow-hidden group/img border border-white/5 bg-black" onClick={() => setZoomedImage(img)}>
                                                     <img src={img} alt="Trade capture" className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110 opacity-60 group-hover/img:opacity-100" />
                                                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity bg-black/20">
                                                         <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center"><ImageIcon size={14} className="text-white" /></div>
