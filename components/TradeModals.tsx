@@ -127,7 +127,7 @@ const ImageZoomOverlay = ({ src, onClose }: { src: string, onClose: () => void }
       initial="initial" 
       animate="animate" 
       exit="exit" 
-      className="fixed inset-0 z-[350] bg-black/98 flex items-center justify-center p-2 md:p-6 backdrop-blur-2xl" 
+      className="fixed inset-0 z-[350] bg-black/98 flex items-center justify-center p-20 md:p-48 backdrop-blur-2xl" 
       onClick={onClose}
     >
         <div className="absolute top-6 right-6 z-[360] flex gap-3">
@@ -196,10 +196,8 @@ const CustomDatePicker = ({ selectedDate, onChange }: { selectedDate: string, on
     );
 };
 
-// --- Manual Time Input (FIXED: Zero clobbering, free entry, auto 24h conversion) ---
+// --- Manual Time Input (FIXED: Zero clobbering, free entry) ---
 const ManualTimeInput = ({ value, onChange, label, type }: { value: string, onChange: (val: string) => void, label: string, type: 'IN' | 'OUT' }) => {
-    // We use local state to maintain exactly what the user types.
-    // Sync from parent only on mount.
     const [h, setH] = useState('');
     const [m, setM] = useState('');
     const [s, setS] = useState('');
@@ -223,113 +221,64 @@ const ManualTimeInput = ({ value, onChange, label, type }: { value: string, onCh
         setM(parts[1] || '00');
         setS(parts[2] || '00');
         setAmpm(period);
-    }, []); // Only on mount
+    }, []);
 
-    const sync = (currH: string, currM: string, currS: string, currP: string) => {
+    const commit = (currH: string, currM: string, currS: string, currP: string) => {
         let hour = parseInt(currH) || 12;
         if (currP === 'PM' && hour < 12) hour += 12;
         if (currP === 'AM' && hour === 12) hour = 0;
-
-        const finalH = String(hour).padStart(2, '0');
-        const finalM = (currM || '00').padStart(2, '0');
-        const finalS = (currS || '00').padStart(2, '0');
-        onChange(`${finalH}:${finalM}:${finalS}`);
+        onChange(`${String(hour).padStart(2, '0')}:${(currM || '00').padStart(2, '0')}:${(currS || '00').padStart(2, '0')}`);
     };
 
-    const handleH = (val: string) => {
-        const clean = val.replace(/\D/g, '').slice(0, 2);
-        setH(clean);
-        
-        if (clean.length === 2) {
-            let num = parseInt(clean);
+    const handleH = (v: string) => {
+        const c = v.replace(/\D/g, '').slice(0, 2);
+        setH(c);
+        if (c.length === 2) {
+            let num = parseInt(c);
             let p = ampm;
-            let dispH = num;
-
-            // 24h to 12h Logic
+            let dH = num;
             if (num > 24) num = 23;
-            if (num === 0 || num === 24) { dispH = 12; p = 'AM'; }
-            else if (num >= 12) { dispH = num > 12 ? num - 12 : 12; p = 'PM'; }
-            else { dispH = num; p = 'AM'; }
-
-            const hStr = String(dispH).padStart(2, '0');
-            setH(hStr);
-            setAmpm(p);
-            sync(hStr, m, s, p);
-            mRef.current?.focus();
-        } else {
-            sync(clean, m, s, ampm);
-        }
+            if (num === 0 || num === 24) { dH = 12; p = 'AM'; }
+            else if (num >= 12) { dH = num > 12 ? num - 12 : 12; p = 'PM'; }
+            else { dH = num; p = 'AM'; }
+            const hs = String(dH).padStart(2, '0');
+            setH(hs); setAmpm(p); commit(hs, m, s, p); mRef.current?.focus();
+        } else commit(c, m, s, ampm);
     };
 
-    const handleM = (val: string) => {
-        const clean = val.replace(/\D/g, '').slice(0, 2);
-        setM(clean);
-        if (clean.length === 2) {
-            let num = parseInt(clean);
-            if (num > 59) num = 59;
-            const mStr = String(num).padStart(2, '0');
-            setM(mStr);
-            sync(h, mStr, s, ampm);
-            sRef.current?.focus();
-        } else {
-            sync(h, clean, s, ampm);
-        }
+    const handleM = (v: string) => {
+        const c = v.replace(/\D/g, '').slice(0, 2);
+        setM(c);
+        if (c.length === 2) {
+            let num = Math.min(parseInt(c), 59);
+            const ms = String(num).padStart(2, '0');
+            setM(ms); commit(h, ms, s, ampm); sRef.current?.focus();
+        } else commit(h, c, s, ampm);
     };
 
-    const handleS = (val: string) => {
-        const clean = val.replace(/\D/g, '').slice(0, 2);
-        setS(clean);
-        if (clean.length === 2) {
-            let num = parseInt(clean);
-            if (num > 59) num = 59;
-            const sStr = String(num).padStart(2, '0');
-            setS(sStr);
-            sync(h, m, sStr, ampm);
-        } else {
-            sync(h, m, clean, ampm);
-        }
-    };
-
-    const toggleP = () => {
-        const next = ampm === 'AM' ? 'PM' : 'AM';
-        setAmpm(next);
-        sync(h, m, s, next);
+    const handleS = (v: string) => {
+        const c = v.replace(/\D/g, '').slice(0, 2);
+        setS(c);
+        if (c.length === 2) {
+            let num = Math.min(parseInt(c), 59);
+            const ss = String(num).padStart(2, '0');
+            setS(ss); commit(h, m, ss, ampm);
+        } else commit(h, m, c, ampm);
     };
 
     return (
         <div className="flex-1 flex flex-col gap-1.5 relative">
             <div className="flex items-center gap-1.5">
-                 <div className={`p-0.5 rounded ${type === 'IN' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-                    <Clock size={10} className={type === 'IN' ? 'text-green-500' : 'text-red-500'} />
-                 </div>
+                 <div className={`p-0.5 rounded ${type === 'IN' ? 'bg-green-500/10' : 'bg-red-500/10'}`}><Clock size={10} className={type === 'IN' ? 'text-green-500' : 'text-red-500'} /></div>
                  <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">{label}</span>
             </div>
             <div className="flex items-center bg-black/40 rounded-xl px-2 h-[38px] border border-white/5 focus-within:border-white/20 transition-all shadow-inner">
-                <input 
-                    ref={hRef} type="text" inputMode="numeric" placeholder="HH"
-                    className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10"
-                    value={h} onChange={e => handleH(e.target.value)} onFocus={e => e.target.select()}
-                />
+                <input ref={hRef} type="text" inputMode="numeric" placeholder="HH" className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10" value={h} onChange={e => handleH(e.target.value)} onFocus={e => e.target.select()} />
                 <span className="text-[10px] text-white/10 font-mono">:</span>
-                <input 
-                    ref={mRef} type="text" inputMode="numeric" placeholder="MM"
-                    className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10"
-                    value={m} onChange={e => handleM(e.target.value)} onFocus={e => e.target.select()}
-                    onKeyDown={e => e.key === 'Backspace' && !m && hRef.current?.focus()}
-                />
+                <input ref={mRef} type="text" inputMode="numeric" placeholder="MM" className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10" value={m} onChange={e => handleM(e.target.value)} onFocus={e => e.target.select()} onKeyDown={e => e.key === 'Backspace' && !m && hRef.current?.focus()} />
                 <span className="text-[10px] text-white/10 font-mono">:</span>
-                <input 
-                    ref={sRef} type="text" inputMode="numeric" placeholder="SS"
-                    className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10"
-                    value={s} onChange={e => handleS(e.target.value)} onFocus={e => e.target.select()}
-                    onKeyDown={e => e.key === 'Backspace' && !s && mRef.current?.focus()}
-                />
-                <button 
-                    type="button" onClick={toggleP}
-                    className="shrink-0 px-2 h-6 text-[9px] font-black text-xgiha-accent hover:bg-white/5 active:scale-90 rounded-lg transition-all ml-1 border border-white/5"
-                >
-                    {ampm}
-                </button>
+                <input ref={sRef} type="text" inputMode="numeric" placeholder="SS" className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10" value={s} onChange={e => handleS(e.target.value)} onFocus={e => e.target.select()} onKeyDown={e => e.key === 'Backspace' && !s && mRef.current?.focus()} />
+                <button type="button" onClick={() => { const n = ampm === 'AM' ? 'PM' : 'AM'; setAmpm(n); commit(h, m, s, n); }} className="shrink-0 px-2 h-6 text-[9px] font-black text-xgiha-accent hover:bg-white/5 active:scale-90 rounded-lg transition-all ml-1 border border-white/5">{ampm}</button>
             </div>
         </div>
     );
@@ -555,7 +504,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           </button>
         </div>
       </MotionDiv>
-    </div>
+    </MotionDiv>
   );
 };
 
@@ -656,7 +605,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
                                         {((trade.images && trade.images.length > 0) || trade.image) && (
                                             <div className="flex gap-3 overflow-x-auto no-scrollbar pt-1">
                                               {(trade.images || (trade.image ? [trade.image] : [])).map((img, idx) => (
-                                                <div key={idx} className="relative h-20 w-32 shrink-0 rounded-xl overflow-hidden group/img border border-white/5 bg-black" onClick={() => setZoomedImage(img)}>
+                                                <div key={idx} className="relative h-20 w-32 shrink-0 rounded-xl overflow-hidden group/img border border-white/5 bg-black cursor-pointer" onClick={() => setZoomedImage(img)}>
                                                     <img src={img} alt="Trade capture" className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110 opacity-60 group-hover/img:opacity-100" />
                                                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity bg-black/20">
                                                         <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center"><ImageIcon size={14} className="text-white" /></div>
