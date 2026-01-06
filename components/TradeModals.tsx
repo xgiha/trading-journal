@@ -409,7 +409,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
         </div>
 
         {/* Dense Form Content */}
-        <div className="flex-1 overflow-y-auto no-scrollbar px-6 pb-24">
+        <div className="flex-1 overflow-y-auto no-scrollbar px-6 pb-28">
           <form id="entry-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-2 relative">
             <div className="relative bg-[#1E1E1E] rounded-2xl p-2.5 flex flex-col gap-1 h-[64px]">
                  <label htmlFor="symbol" className="text-[9px] text-[#888] font-bold uppercase tracking-widest flex items-center gap-2"><Type size={10} /> Symbol</label>
@@ -496,8 +496,8 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           </form>
         </div>
 
-        {/* Tall Floating Button (Tighter Spacing) */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 pt-6 bg-gradient-to-t from-[#141414] via-[#141414] to-transparent pointer-events-none flex justify-center z-[100]">
+        {/* Tall Floating Button (Optimized Spacing) */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 pt-8 bg-gradient-to-t from-[#141414] via-[#141414] to-transparent pointer-events-none flex justify-center z-[100]">
           <button type="submit" form="entry-form" disabled={isUploading} className="pointer-events-auto w-full py-8 rounded-full text-black bg-white hover:bg-zinc-100 active:scale-95 transition-all duration-300 shadow-2xl font-black text-[13px] uppercase tracking-[0.25em] disabled:opacity-50 disabled:cursor-not-allowed">
             {isUploading ? 'Syncing...' : initialData ? 'Update Record' : 'Save Entry'}
           </button>
