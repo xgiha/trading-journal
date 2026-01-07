@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Trade } from '../types';
-import { TrendingUp, TrendingDown, Target, Zap, Clock, Timer, Award } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, Zap, Clock, Timer, Award, History, Maximize2, Minimize2, DollarSign, Percent } from 'lucide-react';
 import { Skeleton } from './Skeleton';
 
 interface TimeAnalysisProps {
@@ -16,7 +16,7 @@ const StatCard: React.FC<{ title: string; children?: React.ReactNode; className?
     className
   )}>
     <div className="relative z-30 flex flex-col h-full">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-2">
         {loading ? <Skeleton className="w-1.5 h-1.5 rounded-full" /> : <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.5)]" />}
         <span className="text-[10px] font-bold text-xgiha-muted tracking-[0.2em] uppercase">{loading ? 'Loading...' : title}</span>
       </div>
@@ -57,14 +57,18 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
       leastProfitableDay: null as [string, number] | null,
       mostUsedStrategy: null as [string, number] | null,
       mostProfitableStrategy: null as [string, number] | null,
-      avgWinDuration: 0, avgLossDuration: 0
+      avgWinDuration: 0, avgLossDuration: 0,
+      longestDuration: 0, shortestDuration: Infinity, avgDuration: 0
     };
 
-    if (trades.length === 0) return emptyStats;
+    if (trades.length === 0) return { ...emptyStats, shortestDuration: 0 };
 
     let winSum = 0, winCount = 0, lossSum = 0, lossCount = 0;
     let winDurationSum = 0, winDurationCount = 0;
     let lossDurationSum = 0, lossDurationCount = 0;
+    let totalDurationSum = 0, totalDurationCount = 0;
+    let maxDur = 0;
+    let minDur = Infinity;
 
     const dayMap = new Map<string, number>();
     const strategyCountMap = new Map<string, number>();
@@ -88,6 +92,11 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
         let duration = end - start;
         if (duration < 0) duration += 86400; 
 
+        if (duration > maxDur) maxDur = duration;
+        if (duration < minDur && duration > 0) minDur = duration;
+        totalDurationSum += duration;
+        totalDurationCount++;
+
         if (netPnl > 0) { winDurationSum += duration; winDurationCount++; }
         else if (netPnl < 0) { lossDurationSum += duration; lossDurationCount++; }
       }
@@ -106,95 +115,105 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
       mostUsedStrategy: strategyEntries.length > 0 ? strategyEntries.sort((a,b) => b[1] - a[1])[0] : null,
       mostProfitableStrategy: strategyPnlEntries.length > 0 ? strategyPnlEntries.sort((a,b) => b[1] - a[1])[0] : null,
       avgWinDuration: winDurationCount > 0 ? winDurationSum / winDurationCount : 0,
-      avgLossDuration: lossDurationCount > 0 ? lossDurationSum / lossDurationCount : 0
+      avgLossDuration: lossDurationCount > 0 ? lossDurationSum / lossDurationCount : 0,
+      longestDuration: maxDur,
+      shortestDuration: minDur === Infinity ? 0 : minDur,
+      avgDuration: totalDurationCount > 0 ? totalDurationSum / totalDurationCount : 0
     };
   }, [trades]);
 
   return (
     <div className="flex flex-col gap-4 h-full">
       <StatCard title="Net Performance" loading={loading}>
-        <div className="flex-1 flex flex-col justify-center gap-5">
-           <div className="flex justify-between items-end border-b border-white/5 pb-4">
+        <div className="flex-1 flex flex-col justify-center gap-2">
+           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><TrendingUp size={14} /></div>
               <div className="flex flex-col">
-                <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">Avg Win</span>
-                <span className="text-xl font-mono font-bold text-emerald-400">+${stats.avgWin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-              </div>
-              <div className="flex flex-col items-end">
-                <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">Avg Loss</span>
-                <span className="text-xl font-mono font-bold text-red-400">-${Math.abs(stats.avgLoss).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Avg Win</span>
+                <span className="text-[11px] font-bold text-emerald-400 font-mono">+${stats.avgWin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
               </div>
            </div>
-           <div className="flex justify-between items-center px-1">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-white/5 text-white/40"><Award size={14} /></div>
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Profit Factor</span>
+           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
+              <div className="p-2 rounded-xl bg-red-500/10 text-red-500"><TrendingDown size={14} /></div>
+              <div className="flex flex-col">
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Avg Loss</span>
+                <span className="text-[11px] font-bold text-red-400 font-mono">-${Math.abs(stats.avgLoss).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
               </div>
-              <span className="text-lg font-mono font-bold text-white">{stats.profitFactor.toFixed(2)}</span>
+           </div>
+           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
+              <div className="p-2 rounded-xl bg-white/10 text-white/60"><Award size={14} /></div>
+              <div className="flex flex-col">
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Profit Factor</span>
+                <span className="text-[11px] font-bold text-white font-mono">{stats.profitFactor.toFixed(2)}</span>
+              </div>
            </div>
         </div>
       </StatCard>
 
       <StatCard title="Best & Worst" loading={loading}>
-        <div className="flex-1 flex flex-col justify-center gap-4">
-          <div className="bg-black/20 rounded-2xl p-3 flex items-center justify-between border border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><TrendingUp size={16} /></div>
-              <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Best Day</span>
-            </div>
-            <span className="text-sm font-mono font-bold text-emerald-400">
-              {stats.mostProfitableDay ? `+$${stats.mostProfitableDay[1].toLocaleString()}` : '---'}
-            </span>
-          </div>
-          <div className="bg-black/20 rounded-2xl p-3 flex items-center justify-between border border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-red-500/10 text-red-500"><TrendingDown size={16} /></div>
-              <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Worst Day</span>
-            </div>
-            <span className="text-sm font-mono font-bold text-red-400">
-              {stats.leastProfitableDay ? `-$${Math.abs(stats.leastProfitableDay[1]).toLocaleString()}` : '---'}
-            </span>
-          </div>
+        <div className="flex-1 flex flex-col justify-center gap-5">
+          <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><TrendingUp size={14} /></div>
+              <div className="flex flex-col">
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Best Day</span>
+                <span className="text-[11px] font-bold text-emerald-400 font-mono">
+                  {stats.mostProfitableDay ? `+$${stats.mostProfitableDay[1].toLocaleString()}` : '---'}
+                </span>
+              </div>
+           </div>
+           <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+              <div className="p-2 rounded-xl bg-red-500/10 text-red-500"><TrendingDown size={14} /></div>
+              <div className="flex flex-col">
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Worst Day</span>
+                <span className="text-[11px] font-bold text-red-400 font-mono">
+                  {stats.leastProfitableDay ? `-$${Math.abs(stats.leastProfitableDay[1]).toLocaleString()}` : '---'}
+                </span>
+              </div>
+           </div>
         </div>
       </StatCard>
 
       <StatCard title="Trade Durations" loading={loading}>
-        <div className="flex-1 flex flex-col justify-center gap-4">
-           <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between items-center text-[9px] font-bold text-white/20 uppercase tracking-widest">
-                <span>Hold Time (Wins)</span>
-                <span className="text-emerald-400/50 font-mono">{formatDuration(stats.avgWinDuration)}</span>
-              </div>
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: stats.avgWinDuration > 0 ? '70%' : '0%' }} />
+        <div className="flex-1 flex flex-col justify-center gap-2">
+           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400"><Maximize2 size={14} /></div>
+              <div className="flex flex-col">
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Longest</span>
+                <span className="text-[11px] font-bold text-white uppercase font-mono">{formatDuration(stats.longestDuration)}</span>
               </div>
            </div>
-           <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between items-center text-[9px] font-bold text-white/20 uppercase tracking-widest">
-                <span>Hold Time (Loss)</span>
-                <span className="text-red-400/50 font-mono">{formatDuration(stats.avgLossDuration)}</span>
+           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
+              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400"><Minimize2 size={14} /></div>
+              <div className="flex flex-col">
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Shortest</span>
+                <span className="text-[11px] font-bold text-white uppercase font-mono">{formatDuration(stats.shortestDuration)}</span>
               </div>
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" style={{ width: stats.avgLossDuration > 0 ? '45%' : '0%' }} />
+           </div>
+           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
+              <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400"><History size={14} /></div>
+              <div className="flex flex-col">
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Average</span>
+                <span className="text-[11px] font-bold text-white uppercase font-mono">{formatDuration(stats.avgDuration)}</span>
               </div>
            </div>
         </div>
       </StatCard>
 
       <StatCard title="Strategy" loading={loading}>
-        <div className="flex-1 flex flex-col justify-center gap-4">
+        <div className="flex-1 flex flex-col justify-center gap-5">
            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><Zap size={16} /></div>
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><Zap size={14} /></div>
               <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Most Profitable</span>
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Most Profitable</span>
                 <span className="text-[11px] font-bold text-white uppercase truncate max-w-[120px]">
                   {stats.mostProfitableStrategy ? stats.mostProfitableStrategy[0] : 'None'}
                 </span>
               </div>
            </div>
            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-white/10 text-white/60"><Target size={16} /></div>
+              <div className="p-2 rounded-xl bg-white/10 text-white/60"><Target size={14} /></div>
               <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Most Used</span>
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Most Used</span>
                 <span className="text-[11px] font-bold text-white uppercase truncate max-w-[120px]">
                   {stats.mostUsedStrategy ? stats.mostUsedStrategy[0] : 'None'}
                 </span>

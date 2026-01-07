@@ -79,9 +79,24 @@ const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className, l
                     <stop offset="95%" stopColor="white" stopOpacity={0}/>
                 </linearGradient>
                 </defs>
-                <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />
-                <XAxis dataKey="name" axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} tickLine={{ stroke: 'white', strokeOpacity: 1 }} tick={{ fill: 'white', fontSize: 10, fontWeight: 800 }} dy={10} interval="preserveStart" minTickGap={20} />
-                <YAxis axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} tickLine={{ stroke: 'white', strokeOpacity: 1 }} tick={{ fill: 'white', fontSize: 10, fontWeight: 800 }} tickFormatter={(val) => `$${val}`} domain={['auto', 'auto']} width={45} />
+                <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1.5 }} 
+                  tickLine={{ stroke: 'rgba(255,255,255,0.1)' }} 
+                  tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }} 
+                  dy={10} 
+                  interval="preserveStart" 
+                  minTickGap={20} 
+                />
+                <YAxis 
+                  axisLine={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1.5 }} 
+                  tickLine={{ stroke: 'rgba(255,255,255,0.1)' }} 
+                  tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }} 
+                  tickFormatter={(val) => `$${val}`} 
+                  domain={['auto', 'auto']} 
+                  width={45} 
+                />
                 <Tooltip contentStyle={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px' }} itemStyle={{ fontSize: '10px', color: '#fff' }} labelStyle={{ fontSize: '9px', color: '#666' }} formatter={(val: number) => [`$${val.toLocaleString()}`, 'Equity']} />
                 <Area type="monotone" dataKey="pnl" stroke="white" strokeWidth={3} fill="url(#equityGradient)" dot={false} activeDot={{ r: 4, fill: '#fff', strokeWidth: 0 }} animationDuration={800} isAnimationActive={true} />
             </AreaChart>

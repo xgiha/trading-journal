@@ -550,9 +550,22 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={chartData} margin={{ top: 10, right: 40, left: 10, bottom: 20 }}>
                                     <defs><linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="white" stopOpacity={0.4}/><stop offset="95%" stopColor="white" stopOpacity={0}/></linearGradient></defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                                    <XAxis dataKey="time" axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} tickLine={{ stroke: 'white', strokeOpacity: 1 }} tick={{ fill: 'white', fontSize: 11, fontWeight: 800 }} dy={10} />
-                                    <YAxis axisLine={{ stroke: 'white', strokeOpacity: 1, strokeWidth: 1.5 }} tickLine={{ stroke: 'white', strokeOpacity: 1 }} tick={{ fill: 'white', fontSize: 11, fontWeight: 800 }} tickFormatter={(val) => `$${val.toLocaleString()}`} domain={['auto', 'auto']} dx={-5} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                                    <XAxis 
+                                      dataKey="time" 
+                                      axisLine={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1.5 }} 
+                                      tickLine={{ stroke: 'rgba(255,255,255,0.1)' }} 
+                                      tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700 }} 
+                                      dy={10} 
+                                    />
+                                    <YAxis 
+                                      axisLine={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1.5 }} 
+                                      tickLine={{ stroke: 'rgba(255,255,255,0.1)' }} 
+                                      tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700 }} 
+                                      tickFormatter={(val) => `$${val.toLocaleString()}`} 
+                                      domain={['auto', 'auto']} 
+                                      dx={-5} 
+                                    />
                                     <Tooltip cursor={{ stroke: 'rgba(255,255,255,0.6)', strokeWidth: 2 }} contentStyle={{ backgroundColor: '#000', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '12px', fontSize: '12px' }} itemStyle={{ color: '#fff', fontWeight: 'bold' }} formatter={(val: number) => [`$${val.toFixed(2)}`, 'Equity']} />
                                     <Area type="monotone" dataKey="pnl" stroke="white" strokeWidth={4} fill="url(#pnlGradient)" animationDuration={1000} />
                                 </AreaChart>

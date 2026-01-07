@@ -95,7 +95,7 @@ const WeeklyChart: React.FC<WeeklyChartProps> = ({ trades, stats, className, loa
                 return (
                     <div key={`${item.label}-${index}`} className="relative flex-1 flex flex-col items-center justify-end h-full" onMouseEnter={() => setHoveredIndex(index)}>
                     <div
-                        className={cn("w-full rounded-full cursor-pointer transition-all duration-300 origin-bottom flex items-center justify-center overflow-hidden", isHovered ? "bg-white shadow-[0_0_20px_white]" : "bg-white/10")}
+                        className={cn("w-full rounded-full cursor-pointer transition-all duration-300 origin-bottom flex items-center justify-center overflow-hidden", isHovered ? "bg-white shadow-[0_0_15px_white]" : "bg-white/10")}
                         style={{ height: `${heightPct}%`, transform: isHovered ? "scaleX(1.1)" : "scaleX(1)" }}
                     >
                         {isHovered && Math.abs(item.value) > 0 && <span className="text-black font-bold text-[9px] [writing-mode:vertical-rl] rotate-180 py-2">{item.display}</span>}
