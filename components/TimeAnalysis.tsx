@@ -56,6 +56,7 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
       mostProfitableDay: null as [string, number] | null,
       leastProfitableDay: null as [string, number] | null,
       mostUsedStrategy: null as [string, number] | null,
+      mostUsedStrategyCount: 0,
       mostProfitableStrategy: null as [string, number] | null,
       avgWinDuration: 0, avgLossDuration: 0,
       longestDuration: 0, shortestDuration: Infinity, avgDuration: 0
@@ -106,13 +107,16 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
     const strategyEntries = Array.from(strategyCountMap.entries());
     const strategyPnlEntries = Array.from(strategyPnlMap.entries());
 
+    const mostUsed = strategyEntries.length > 0 ? strategyEntries.sort((a,b) => b[1] - a[1])[0] : null;
+
     return {
       avgWin: winCount > 0 ? winSum / winCount : 0,
       avgLoss: lossCount > 0 ? lossSum / lossCount : 0,
       profitFactor: Math.abs(lossSum) > 0 ? winSum / Math.abs(lossSum) : (winSum > 0 ? 3.0 : 0),
       mostProfitableDay: dayEntries.length > 0 ? dayEntries.sort((a,b) => b[1] - a[1])[0] : null,
       leastProfitableDay: dayEntries.length > 0 ? dayEntries.sort((a,b) => a[1] - b[1])[0] : null,
-      mostUsedStrategy: strategyEntries.length > 0 ? strategyEntries.sort((a,b) => b[1] - a[1])[0] : null,
+      mostUsedStrategy: mostUsed,
+      mostUsedStrategyCount: mostUsed ? mostUsed[1] : 0,
       mostProfitableStrategy: strategyPnlEntries.length > 0 ? strategyPnlEntries.sort((a,b) => b[1] - a[1])[0] : null,
       avgWinDuration: winDurationCount > 0 ? winDurationSum / winDurationCount : 0,
       avgLossDuration: lossDurationCount > 0 ? lossDurationSum / lossDurationCount : 0,
@@ -200,23 +204,29 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
       </StatCard>
 
       <StatCard title="Strategy" loading={loading}>
-        <div className="flex-1 flex flex-col justify-center gap-5">
-           <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><Zap size={14} /></div>
-              <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Most Profitable</span>
-                <span className="text-[11px] font-bold text-white uppercase truncate max-w-[120px]">
-                  {stats.mostProfitableStrategy ? stats.mostProfitableStrategy[0] : 'None'}
-                </span>
+        <div className="flex-1 flex flex-col justify-center gap-2">
+           <div className="relative flex items-center justify-start py-5 pl-2 pr-6 bg-white/5 rounded-2xl border border-white/5 overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-emerald-400/80 to-emerald-400/20 shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div>
+              <div className="flex items-center gap-4 pl-4">
+                <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 shrink-0"><Zap size={16} /></div>
+                <div className="flex flex-col justify-center">
+                  <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-1">Most Profitable</span>
+                  <span className="text-[12px] font-bold text-white uppercase truncate max-w-[140px] leading-tight">
+                    {stats.mostProfitableStrategy ? stats.mostProfitableStrategy[0] : 'None'}
+                  </span>
+                </div>
               </div>
            </div>
-           <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-white/10 text-white/60"><Target size={14} /></div>
-              <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Most Used</span>
-                <span className="text-[11px] font-bold text-white uppercase truncate max-w-[120px]">
-                  {stats.mostUsedStrategy ? stats.mostUsedStrategy[0] : 'None'}
-                </span>
+           <div className="relative flex items-center justify-start py-5 pl-2 pr-6 bg-white/5 rounded-2xl border border-white/5 overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-white/30 to-white/5 shadow-[0_0_10px_rgba(255,255,255,0.2)]"></div>
+              <div className="flex items-center gap-4 pl-4">
+                <div className="p-3 rounded-xl bg-white/10 text-white/60 shrink-0"><Target size={16} /></div>
+                <div className="flex flex-col justify-center">
+                  <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-1">Most Used</span>
+                  <span className="text-[12px] font-bold text-white uppercase truncate max-w-[140px] leading-tight">
+                    {stats.mostUsedStrategy ? stats.mostUsedStrategy[0] : 'None'}
+                  </span>
+                </div>
               </div>
            </div>
         </div>
