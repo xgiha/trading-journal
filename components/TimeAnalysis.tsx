@@ -10,11 +10,20 @@ interface TimeAnalysisProps {
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
 
-const StatCard: React.FC<{ title: string; children?: React.ReactNode; className?: string; loading?: boolean }> = ({ title, children, className, loading = false }) => (
-  <div className={cn(
-    "relative w-full overflow-hidden bg-white/[0.03] rounded-[25px] p-5 transition-all duration-500 border border-white/5 flex-1",
-    className
-  )}>
+const StatCard: React.FC<{ 
+  title: string; 
+  children?: React.ReactNode; 
+  className?: string; 
+  style?: React.CSSProperties;
+  loading?: boolean;
+}> = ({ title, children, className, style, loading = false }) => (
+  <div 
+    className={cn(
+      "relative w-full overflow-hidden bg-white/[0.03] rounded-[25px] p-5 transition-all duration-500 border border-white/5",
+      className
+    )}
+    style={style}
+  >
     <div className="relative z-30 flex flex-col h-full">
       <div className="flex items-center gap-2 mb-2">
         {loading ? <Skeleton className="w-1.5 h-1.5 rounded-full" /> : <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.5)]" />}
@@ -128,7 +137,13 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
 
   return (
     <div className="flex flex-col gap-4 h-full">
-      <StatCard title="Net Performance" loading={loading}>
+      {/* Locked height: 25% - 5px */}
+      <StatCard 
+        title="Net Performance" 
+        loading={loading} 
+        className="flex-none"
+        style={{ height: 'calc(25% - 5px)' }}
+      >
         <div className="flex-1 flex flex-col justify-center gap-2">
            <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
               <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><TrendingUp size={14} /></div>
@@ -154,9 +169,15 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
         </div>
       </StatCard>
 
-      <StatCard title="Best & Worst" loading={loading}>
-        <div className="flex-1 flex flex-col justify-center gap-5">
-          <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+      {/* Locked height: 25% - 40px (Requested decrease) */}
+      <StatCard 
+        title="Best & Worst" 
+        loading={loading} 
+        className="flex-none"
+        style={{ height: 'calc(25% - 40px)' }}
+      >
+        <div className="flex-1 flex flex-col justify-center gap-2">
+          <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
               <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><TrendingUp size={14} /></div>
               <div className="flex flex-col">
                 <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Best Day</span>
@@ -165,7 +186,7 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
                 </span>
               </div>
            </div>
-           <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
               <div className="p-2 rounded-xl bg-red-500/10 text-red-500"><TrendingDown size={14} /></div>
               <div className="flex flex-col">
                 <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Worst Day</span>
@@ -177,7 +198,8 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
         </div>
       </StatCard>
 
-      <StatCard title="Trade Durations" loading={loading}>
+      {/* Flexible height card */}
+      <StatCard title="Trade Durations" loading={loading} className="flex-1">
         <div className="flex-1 flex flex-col justify-center gap-2">
            <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400"><Maximize2 size={14} /></div>
@@ -203,9 +225,15 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
         </div>
       </StatCard>
 
-      <StatCard title="Strategy" loading={loading}>
-        <div className="flex-1 flex flex-col justify-center gap-5">
-          <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+      {/* Locked height: matches Best & Worst */}
+      <StatCard 
+        title="Strategy" 
+        loading={loading} 
+        className="flex-none"
+        style={{ height: 'calc(25% - 40px)' }}
+      >
+        <div className="flex-1 flex flex-col justify-center gap-2">
+          <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
               <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><Zap size={14} /></div>
               <div className="flex flex-col min-w-0">
                 <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Most Profitable</span>
@@ -214,7 +242,7 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
                 </span>
               </div>
            </div>
-           <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
               <div className="p-2 rounded-xl bg-white/10 text-white/60"><Target size={14} /></div>
               <div className="flex flex-col min-w-0">
                 <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Most Used</span>
