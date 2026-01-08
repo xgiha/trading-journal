@@ -26,7 +26,11 @@ const StatCard: React.FC<{
   >
     <div className="relative z-30 flex flex-col h-full">
       <div className="flex items-center gap-2 mb-2 shrink-0">
-        <span className="text-[11px] font-bold text-xgiha-muted tracking-[0.2em] uppercase">{loading ? 'Loading...' : title}</span>
+        {loading ? (
+          <Skeleton className="h-3 w-24 rounded-full" />
+        ) : (
+          <span className="text-[11px] font-bold text-xgiha-muted tracking-[0.2em] uppercase">{title}</span>
+        )}
       </div>
       {loading ? (
         <div className="space-y-4">
