@@ -142,7 +142,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             type={type}
             className={cn(
-              `relative z-10 w-full rounded-2xl border-none bg-[#0a0a0a] px-5 py-4 text-sm text-white transition duration-400 focus:outline-none placeholder:text-white/10`,
+              `relative z-10 w-full rounded-2xl border-none bg-[#0a0a0a] px-5 py-4 text-sm text-white transition duration-400 focus:outline-none placeholder:text-white/30`,
               rightElement && "pr-12",
               className,
             )}
@@ -205,27 +205,26 @@ const SignInScreen: React.FC<{ onSignIn: () => void }> = ({ onSignIn }) => {
       animate={{ y: 0 }}
       exit={{ y: "-100%" }}
       transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-      className="fixed inset-0 z-[250] bg-[#050505] flex items-center justify-center p-6"
+      className="fixed inset-0 z-[250] bg-[#0B0B0B] flex items-center justify-center p-6"
     >
-      <div className="w-full max-w-[320px] flex flex-col items-center">
-        <div className="mb-12 flex flex-col items-center gap-3">
+      <div className="w-full max-w-[380px] bg-[#111111] border border-white/5 rounded-[32px] p-8 md:p-10 shadow-[0_0_60px_rgba(0,0,0,0.6)] flex flex-col items-center relative overflow-hidden">
+        <div className="mb-10 flex flex-col items-center gap-3 w-full">
           <div className={cn(
-            "w-12 h-12 rounded-2xl flex items-center justify-center mb-2 border transition-all duration-500",
-            isUnlocked ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/5"
+            "w-14 h-14 rounded-2xl flex items-center justify-center mb-2 border transition-all duration-500 shadow-lg",
+            isUnlocked ? "bg-emerald-500/20 border-emerald-500/50" : "bg-white/5 border-white/10"
           )}>
             {isUnlocked ? (
-              <Unlock size={20} className="text-emerald-400" />
+              <Unlock size={22} className="text-emerald-400" />
             ) : (
-              <Lock size={20} className="text-white/40" />
+              <Lock size={22} className="text-white/50" />
             )}
           </div>
-          <h1 className="text-sm font-bold tracking-[0.4em] uppercase text-white">Access Vault</h1>
-          <p className="text-[10px] text-white/30 uppercase tracking-widest">Journal Authorization Required</p>
+          <h1 className="text-xl font-bold tracking-[0.4em] uppercase text-white">Access Vault</h1>
         </div>
 
-        <form onSubmit={handleLogin} className="w-full flex flex-col gap-6">
+        <form onSubmit={handleLogin} className="w-full flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[9px] font-bold text-white/20 uppercase tracking-widest pl-1">Identity</label>
+            <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest pl-1">Username</label>
             <Input 
               type="text" 
               autoFocus
@@ -237,7 +236,7 @@ const SignInScreen: React.FC<{ onSignIn: () => void }> = ({ onSignIn }) => {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[9px] font-bold text-white/20 uppercase tracking-widest pl-1">Keycode</label>
+            <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest pl-1">Password</label>
             <Input 
               type={showPassword ? "text" : "password"} 
               placeholder="Password"
@@ -262,8 +261,8 @@ const SignInScreen: React.FC<{ onSignIn: () => void }> = ({ onSignIn }) => {
             type="submit"
             disabled={isLoading || isUnlocked}
             className={cn(
-              "mt-4 w-full h-14 rounded-full font-black text-[10px] uppercase tracking-[0.2em] active:scale-[0.98] transition-all flex items-center justify-center disabled:opacity-50 shadow-2xl",
-              isUnlocked ? "bg-emerald-500 text-white" : "bg-white text-black"
+              "mt-4 w-full h-14 rounded-xl font-black text-sm uppercase tracking-[0.2em] active:scale-[0.98] transition-all flex items-center justify-center disabled:opacity-50 shadow-xl",
+              isUnlocked ? "bg-emerald-500 text-white" : "bg-white text-black hover:bg-gray-100"
             )}
           >
             {isUnlocked ? (
