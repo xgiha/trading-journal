@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Trade } from '../types';
-import { TrendingUp, TrendingDown, Target, Zap, Clock, Timer, Award, History, Maximize2, Minimize2, DollarSign, Percent } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, Zap, Award, History, Maximize2, Minimize2 } from 'lucide-react';
 import { Skeleton } from './Skeleton';
 
 interface TimeAnalysisProps {
@@ -204,29 +204,23 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
       </StatCard>
 
       <StatCard title="Strategy" loading={loading}>
-        <div className="flex-1 flex flex-col justify-center gap-2">
-           <div className="relative flex items-center justify-start py-5 pl-2 pr-6 bg-white/5 rounded-2xl border border-white/5 overflow-hidden">
-              <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-emerald-400/80 to-emerald-400/20 shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div>
-              <div className="flex items-center gap-4 pl-4">
-                <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 shrink-0"><Zap size={16} /></div>
-                <div className="flex flex-col justify-center">
-                  <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-1">Most Profitable</span>
-                  <span className="text-[12px] font-bold text-white uppercase truncate max-w-[140px] leading-tight">
-                    {stats.mostProfitableStrategy ? stats.mostProfitableStrategy[0] : 'None'}
-                  </span>
-                </div>
+        <div className="flex-1 flex flex-col justify-center gap-5">
+          <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><Zap size={14} /></div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Most Profitable</span>
+                <span className="text-[11px] font-bold text-emerald-400 uppercase truncate">
+                  {stats.mostProfitableStrategy ? stats.mostProfitableStrategy[0] : 'None'}
+                </span>
               </div>
            </div>
-           <div className="relative flex items-center justify-start py-5 pl-2 pr-6 bg-white/5 rounded-2xl border border-white/5 overflow-hidden">
-              <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-white/30 to-white/5 shadow-[0_0_10px_rgba(255,255,255,0.2)]"></div>
-              <div className="flex items-center gap-4 pl-4">
-                <div className="p-3 rounded-xl bg-white/10 text-white/60 shrink-0"><Target size={16} /></div>
-                <div className="flex flex-col justify-center">
-                  <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-1">Most Used</span>
-                  <span className="text-[12px] font-bold text-white uppercase truncate max-w-[140px] leading-tight">
-                    {stats.mostUsedStrategy ? stats.mostUsedStrategy[0] : 'None'}
-                  </span>
-                </div>
+           <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+              <div className="p-2 rounded-xl bg-white/10 text-white/60"><Target size={14} /></div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Most Used</span>
+                <span className="text-[11px] font-bold text-white uppercase truncate">
+                  {stats.mostUsedStrategy ? stats.mostUsedStrategy[0] : 'None'}
+                </span>
               </div>
            </div>
         </div>
