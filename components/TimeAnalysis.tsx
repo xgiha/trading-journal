@@ -19,15 +19,14 @@ const StatCard: React.FC<{
 }> = ({ title, children, className, style, loading = false }) => (
   <div 
     className={cn(
-      "relative w-full overflow-hidden bg-white/[0.03] rounded-[25px] p-5 transition-all duration-500 border border-white/5",
+      "relative w-full overflow-hidden bg-white/[0.03] rounded-[25px] p-4 transition-all duration-500 border border-white/5 flex flex-col min-h-0",
       className
     )}
     style={style}
   >
     <div className="relative z-30 flex flex-col h-full">
-      <div className="flex items-center gap-2 mb-2">
-        {loading ? <Skeleton className="w-1.5 h-1.5 rounded-full" /> : <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.5)]" />}
-        <span className="text-[10px] font-bold text-xgiha-muted tracking-[0.2em] uppercase">{loading ? 'Loading...' : title}</span>
+      <div className="flex items-center gap-2 mb-2 shrink-0">
+        <span className="text-[11px] font-bold text-xgiha-muted tracking-[0.2em] uppercase">{loading ? 'Loading...' : title}</span>
       </div>
       {loading ? (
         <div className="space-y-4">
@@ -35,6 +34,18 @@ const StatCard: React.FC<{
           <Skeleton className="h-8 w-3/4 rounded-xl" />
         </div>
       ) : children}
+    </div>
+  </div>
+);
+
+const MetricRow: React.FC<{ icon: React.ReactNode, iconColor: string, label: string, value: string, valueColor?: string }> = ({ icon, iconColor, label, value, valueColor = "text-white" }) => (
+  <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5 flex-1 min-h-0">
+    <div className={cn("p-2 rounded-xl shrink-0 flex items-center justify-center", iconColor)}>
+      {React.cloneElement(icon as React.ReactElement, { size: 18 })}
+    </div>
+    <div className="flex flex-col min-w-0 justify-center">
+      <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest leading-none mb-1">{label}</span>
+      <span className={cn("text-[13px] font-bold font-mono truncate leading-none", valueColor)}>{value}</span>
     </div>
   </div>
 );
@@ -137,120 +148,49 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
 
   return (
     <div className="flex flex-col gap-4 h-full">
-      {/* Locked height: 25% - 5px */}
+      {/* Net Performance: flex-3 */}
       <StatCard 
         title="Net Performance" 
         loading={loading} 
-        className="flex-none"
-        style={{ height: 'calc(25% - 5px)' }}
+        className="flex-[3] min-h-0"
       >
         <div className="flex-1 flex flex-col justify-center gap-2">
-           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><TrendingUp size={14} /></div>
-              <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Avg Win</span>
-                <span className="text-[11px] font-bold text-emerald-400 font-mono">+${stats.avgWin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-              </div>
-           </div>
-           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-red-500/10 text-red-500"><TrendingDown size={14} /></div>
-              <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Avg Loss</span>
-                <span className="text-[11px] font-bold text-red-400 font-mono">-${Math.abs(stats.avgLoss).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-              </div>
-           </div>
-           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-white/10 text-white/60"><Award size={14} /></div>
-              <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Profit Factor</span>
-                <span className="text-[11px] font-bold text-white font-mono">{stats.profitFactor.toFixed(2)}</span>
-              </div>
-           </div>
+           <MetricRow icon={<TrendingUp />} iconColor="bg-emerald-500/10 text-emerald-500" label="Avg Win" value={`+$${stats.avgWin.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} valueColor="text-emerald-400" />
+           <MetricRow icon={<TrendingDown />} iconColor="bg-red-500/10 text-red-500" label="Avg Loss" value={`-$${Math.abs(stats.avgLoss).toLocaleString(undefined, { maximumFractionDigits: 0 })}`} valueColor="text-red-400" />
+           <MetricRow icon={<Award />} iconColor="bg-white/10 text-white/60" label="Profit Factor" value={stats.profitFactor.toFixed(2)} />
         </div>
       </StatCard>
 
-      {/* Locked height: 25% - 40px (Requested decrease) */}
+      {/* Best & Worst: flex-2 */}
       <StatCard 
         title="Best & Worst" 
         loading={loading} 
-        className="flex-none"
-        style={{ height: 'calc(25% - 40px)' }}
+        className="flex-[2] min-h-0"
       >
         <div className="flex-1 flex flex-col justify-center gap-2">
-          <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><TrendingUp size={14} /></div>
-              <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Best Day</span>
-                <span className="text-[11px] font-bold text-emerald-400 font-mono">
-                  {stats.mostProfitableDay ? `+$${stats.mostProfitableDay[1].toLocaleString()}` : '---'}
-                </span>
-              </div>
-           </div>
-           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-red-500/10 text-red-500"><TrendingDown size={14} /></div>
-              <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Worst Day</span>
-                <span className="text-[11px] font-bold text-red-400 font-mono">
-                  {stats.leastProfitableDay ? `-$${Math.abs(stats.leastProfitableDay[1]).toLocaleString()}` : '---'}
-                </span>
-              </div>
-           </div>
+           <MetricRow icon={<TrendingUp />} iconColor="bg-emerald-500/10 text-emerald-500" label="Best Day" value={stats.mostProfitableDay ? `+$${stats.mostProfitableDay[1].toLocaleString()}` : '---'} valueColor="text-emerald-400" />
+           <MetricRow icon={<TrendingDown />} iconColor="bg-red-500/10 text-red-500" label="Worst Day" value={stats.leastProfitableDay ? `-$${Math.abs(stats.leastProfitableDay[1]).toLocaleString()}` : '---'} valueColor="text-red-400" />
         </div>
       </StatCard>
 
-      {/* Flexible height card */}
-      <StatCard title="Trade Durations" loading={loading} className="flex-1">
+      {/* Trade Durations: flex-3 */}
+      <StatCard title="Trade Durations" loading={loading} className="flex-[3] min-h-0">
         <div className="flex-1 flex flex-col justify-center gap-2">
-           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400"><Maximize2 size={14} /></div>
-              <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Longest</span>
-                <span className="text-[11px] font-bold text-white uppercase font-mono">{formatDuration(stats.longestDuration)}</span>
-              </div>
-           </div>
-           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400"><Minimize2 size={14} /></div>
-              <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Shortest</span>
-                <span className="text-[11px] font-bold text-white uppercase font-mono">{formatDuration(stats.shortestDuration)}</span>
-              </div>
-           </div>
-           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400"><History size={14} /></div>
-              <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Average</span>
-                <span className="text-[11px] font-bold text-white uppercase font-mono">{formatDuration(stats.avgDuration)}</span>
-              </div>
-           </div>
+           <MetricRow icon={<Maximize2 />} iconColor="bg-blue-500/10 text-blue-400" label="Longest" value={formatDuration(stats.longestDuration)} />
+           <MetricRow icon={<Minimize2 />} iconColor="bg-purple-500/10 text-purple-400" label="Shortest" value={formatDuration(stats.shortestDuration)} />
+           <MetricRow icon={<History />} iconColor="bg-orange-500/10 text-orange-400" label="Average" value={formatDuration(stats.avgDuration)} />
         </div>
       </StatCard>
 
-      {/* Locked height: matches Best & Worst */}
+      {/* Strategy: flex-2 */}
       <StatCard 
         title="Strategy" 
         loading={loading} 
-        className="flex-none"
-        style={{ height: 'calc(25% - 40px)' }}
+        className="flex-[2] min-h-0"
       >
         <div className="flex-1 flex flex-col justify-center gap-2">
-          <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><Zap size={14} /></div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Most Profitable</span>
-                <span className="text-[11px] font-bold text-emerald-400 uppercase truncate">
-                  {stats.mostProfitableStrategy ? stats.mostProfitableStrategy[0] : 'None'}
-                </span>
-              </div>
-           </div>
-           <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-2 rounded-xl bg-white/10 text-white/60"><Target size={14} /></div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-none mb-0.5">Most Used</span>
-                <span className="text-[11px] font-bold text-white uppercase truncate">
-                  {stats.mostUsedStrategy ? stats.mostUsedStrategy[0] : 'None'}
-                </span>
-              </div>
-           </div>
+           <MetricRow icon={<Zap />} iconColor="bg-emerald-500/10 text-emerald-500" label="Most Profitable" value={stats.mostProfitableStrategy ? stats.mostProfitableStrategy[0] : 'None'} valueColor="text-emerald-400" />
+           <MetricRow icon={<Target />} iconColor="bg-white/10 text-white/60" label="Most Used" value={stats.mostUsedStrategy ? stats.mostUsedStrategy[0] : 'None'} />
         </div>
       </StatCard>
     </div>
