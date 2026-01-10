@@ -1,6 +1,14 @@
 import { list, put, del } from '@vercel/blob';
 
 export default async function handler(request: any, response: any) {
+  // Common headers for both GET and POST to prevent cross-device stale data
+  const headers = {
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Content-Type': 'application/json',
+  };
+
   // GET: Retrieve the latest 'trades.json' from Blob Storage
   if (request.method === 'GET') {
     try {
@@ -9,16 +17,18 @@ export default async function handler(request: any, response: any) {
       
       if (sorted.length > 0) {
          const latest = sorted[0];
-         const res = await fetch(latest.url);
+         // Fetch the actual content of the blob with no-cache headers
+         const res = await fetch(latest.url, { cache: 'no-store' });
          const data = await res.json();
-         // If for some reason the data is still a string, return the parsed version
+         
+         // Fix: If data was stored as double-string, unwrap it
          const finalData = typeof data === 'string' ? JSON.parse(data) : data;
-         return response.status(200).json(finalData);
+         return response.status(200).json(finalData, { headers });
       }
       
-      return response.status(200).json([]);
+      return response.status(200).json([], { headers });
     } catch (error) {
-       console.error(error);
+       console.error("GET error:", error);
        return response.status(500).json({ error: 'Failed to fetch trades' });
     }
   }
@@ -28,21 +38,24 @@ export default async function handler(request: any, response: any) {
     try {
       let body = request.body;
       
-      // If Vercel has already parsed it as JSON, stringify it once for storage
-      // If it's already a string, we assume it's valid JSON from the client and store it as-is
+      // Strict serialization check:
+      // Ensure we store a clean JSON string representing the array
       const jsonString = typeof body === 'string' ? body : JSON.stringify(body);
       
+      // Cleanup old files before pushing the new one to prevent clutter and confusion
       const { blobs } = await list({ prefix: 'trades.json', limit: 100 });
       
+      // Use addRandomSuffix to ensure unique URLs (helps with caching)
       await put('trades.json', jsonString, { access: 'public', addRandomSuffix: true });
       
+      // Delete older versions
       if (blobs.length > 0) {
          await Promise.all(blobs.map(b => del(b.url)));
       }
 
-      return response.status(200).json({ success: true });
+      return response.status(200).json({ success: true }, { headers });
     } catch (error) {
-      console.error(error);
+      console.error("POST error:", error);
       return response.status(500).json({ error: 'Failed to save trades' });
     }
   }

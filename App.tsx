@@ -306,7 +306,11 @@ const App: React.FC = () => {
       const saved = localStorage.getItem('xgiha_trades');
       const localTrades: Trade[] = saved ? JSON.parse(saved) : [];
       
-      const response = await fetch('/api/trades');
+      // Add timestamp to prevent browser/CDN caching
+      const response = await fetch(`/api/trades?t=${Date.now()}`, {
+        cache: 'no-store'
+      });
+      
       let cloudTrades: Trade[] = [];
       if (response.ok) {
         let data = await response.json();
@@ -317,19 +321,21 @@ const App: React.FC = () => {
         if (data && Array.isArray(data)) cloudTrades = data;
       }
 
-      // If cloud is empty but local has stuff, we might be in initial setup or lost cloud data
-      // For cross-device sync, Cloud is the Source of Truth if it has any data.
+      // Cross-device sync logic:
+      // If Cloud has data, it is the master. 
+      // If Cloud is empty (fresh project), take Local as the source.
       const finalTrades = (cloudTrades.length === 0 && localTrades.length > 0) ? localTrades : cloudTrades;
       
       setTrades(finalTrades);
       lastSyncedTradesRef.current = JSON.stringify(finalTrades);
       localStorage.setItem('xgiha_trades', lastSyncedTradesRef.current);
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 800));
       setIsInitialLoading(false);
       setSyncStatus('success');
       setTimeout(() => setSyncStatus('idle'), 2000);
     } catch (e) {
+      console.error("Sync fetch error:", e);
       const saved = localStorage.getItem('xgiha_trades');
       if (saved) setTrades(JSON.parse(saved));
       setIsInitialLoading(false);
@@ -354,7 +360,6 @@ const App: React.FC = () => {
         const response = await fetch('/api/trades', { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
-          // FIX: Send raw object, don't stringify twice if server stringifies again
           body: currentTradesJson 
         });
         
@@ -437,8 +442,19 @@ const App: React.FC = () => {
     if (confirm("Import and replace all current trades?")) setTrades(imported);
   }, []);
 
-  const handleSignIn = () => { setIsAuthenticated(true); sessionStorage.setItem('xgiha_auth', 'true'); };
-  const handleLogout = () => { sessionStorage.removeItem('xgiha_auth'); setIsAuthenticated(false); };
+  const handleSignIn = () => { 
+    sessionStorage.setItem('xgiha_auth', 'true');
+    setIsAuthenticated(true); 
+    // Immediately fetch when logging in to ensure device has latest
+    initData();
+  };
+  
+  const handleLogout = () => { 
+    sessionStorage.removeItem('xgiha_auth'); 
+    setIsAuthenticated(false); 
+    setTrades([]); 
+    localStorage.removeItem('xgiha_trades');
+  };
 
   const currentTabs = isMobile ? TABS : TABS.filter(t => !t.mobileOnly);
   const activeIndex = currentTabs.findIndex(t => t.id === activeTab);
