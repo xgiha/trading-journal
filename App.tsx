@@ -288,10 +288,11 @@ const App: React.FC = () => {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [payouts, setPayouts] = useState<number>(0);
   const [isMobile, setIsMobile] = useState(false);
   
   // Track the cloud state as a string to avoid unnecessary re-syncs
-  const lastSyncedTradesRef = useRef<string>("");
+  const lastSyncedStateRef = useRef<string>("");
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -310,27 +311,36 @@ const App: React.FC = () => {
       });
       
       let cloudTrades: Trade[] = [];
+      let cloudPayouts: number = 0;
+
       if (response.ok) {
         let data = await response.json();
         if (typeof data === 'string') {
           try { data = JSON.parse(data); } catch(e) {}
         }
-        if (data && Array.isArray(data)) cloudTrades = data;
+        
+        // Handle migration from array-only storage to object storage
+        if (Array.isArray(data)) {
+          cloudTrades = data;
+        } else if (data && typeof data === 'object') {
+          cloudTrades = data.trades || [];
+          cloudPayouts = data.payouts || 0;
+        }
       }
 
-      const cloudJson = JSON.stringify(cloudTrades);
+      const stateToSync = { trades: cloudTrades, payouts: cloudPayouts };
+      const cloudJson = JSON.stringify(stateToSync);
       
-      // If cloud is different from current memory, update it
-      // Cloud is ALWAYS the master source for cross-device sync
-      if (cloudJson !== lastSyncedTradesRef.current) {
+      if (cloudJson !== lastSyncedStateRef.current) {
         setTrades(cloudTrades);
-        lastSyncedTradesRef.current = cloudJson;
-        localStorage.setItem('xgiha_trades', cloudJson);
+        setPayouts(cloudPayouts);
+        lastSyncedStateRef.current = cloudJson;
+        localStorage.setItem('xgiha_state', cloudJson);
       }
       
       if (!isSilent) setSyncStatus('success');
       setTimeout(() => setSyncStatus('idle'), 2000);
-      return cloudTrades;
+      return stateToSync;
     } catch (e) {
       console.error("Sync Error:", e);
       if (!isSilent) setSyncStatus('error');
@@ -342,11 +352,19 @@ const App: React.FC = () => {
     setIsInitialLoading(true);
     
     // Check local storage first for immediate paint
-    const saved = localStorage.getItem('xgiha_trades');
+    const saved = localStorage.getItem('xgiha_state') || localStorage.getItem('xgiha_trades');
     if (saved) {
-      const localTrades = JSON.parse(saved);
-      setTrades(localTrades);
-      lastSyncedTradesRef.current = saved;
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setTrades(parsed);
+          setPayouts(0);
+        } else {
+          setTrades(parsed.trades || []);
+          setPayouts(parsed.payouts || 0);
+        }
+        lastSyncedStateRef.current = saved;
+      } catch(e) {}
     }
 
     // Then overwrite with fresh cloud data
@@ -376,10 +394,10 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isInitialLoading || !isAuthenticated) return;
     
-    const currentTradesJson = JSON.stringify(trades);
+    const currentState = { trades, payouts };
+    const currentStateJson = JSON.stringify(currentState);
     
-    // Only POST if memory has changed relative to what we last knew was on cloud
-    if (currentTradesJson === lastSyncedTradesRef.current) return;
+    if (currentStateJson === lastSyncedStateRef.current) return;
     
     const timeout = setTimeout(async () => {
       try {
@@ -387,12 +405,12 @@ const App: React.FC = () => {
         const response = await fetch('/api/trades', { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
-          body: currentTradesJson 
+          body: currentStateJson 
         });
         
         if (response.ok) { 
-          lastSyncedTradesRef.current = currentTradesJson; 
-          localStorage.setItem('xgiha_trades', currentTradesJson);
+          lastSyncedStateRef.current = currentStateJson; 
+          localStorage.setItem('xgiha_state', currentStateJson);
           setSyncStatus('success'); 
         } else {
           setSyncStatus('error');
@@ -401,10 +419,10 @@ const App: React.FC = () => {
       } catch (e) { 
         setSyncStatus('error'); 
       }
-    }, 1500); // 1.5s debounce to save on API calls
+    }, 1500);
     
     return () => clearTimeout(timeout);
-  }, [trades, isInitialLoading, isAuthenticated]);
+  }, [trades, payouts, isInitialLoading, isAuthenticated]);
 
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -461,27 +479,35 @@ const App: React.FC = () => {
   }, [selectedDate]);
 
   const handleExportData = useCallback(() => {
-    const blob = new Blob([JSON.stringify(trades, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ trades, payouts }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `backup-${new Date().toISOString()}.json`; a.click();
-  }, [trades]);
+  }, [trades, payouts]);
 
-  const handleImportData = useCallback((imported: Trade[]) => {
-    if (confirm("Import and replace all current trades?")) setTrades(imported);
+  const handleImportData = useCallback((imported: any) => {
+    if (confirm("Import and replace all current trades/payouts?")) {
+      if (Array.isArray(imported)) {
+        setTrades(imported);
+        setPayouts(0);
+      } else {
+        setTrades(imported.trades || []);
+        setPayouts(imported.payouts || 0);
+      }
+    }
   }, []);
 
   const handleSignIn = () => { 
     sessionStorage.setItem('xgiha_auth', 'true');
     setIsAuthenticated(true); 
-    // Data fetching happens automatically via useEffect initData triggered by state change
   };
   
   const handleLogout = () => { 
     sessionStorage.removeItem('xgiha_auth'); 
     setIsAuthenticated(false); 
     setTrades([]); 
-    localStorage.removeItem('xgiha_trades');
-    lastSyncedTradesRef.current = "";
+    setPayouts(0);
+    localStorage.removeItem('xgiha_state');
+    lastSyncedStateRef.current = "";
   };
 
   const currentTabs = isMobile ? TABS : TABS.filter(t => !t.mobileOnly);
@@ -517,7 +543,7 @@ const App: React.FC = () => {
                   <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
                     <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full">
                       <TotalPnlCard loading={isInitialLoading} trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                      <Progress loading={isInitialLoading} trades={trades} />
+                      <Progress loading={isInitialLoading} trades={trades} payouts={payouts} onPayoutUpdate={setPayouts} />
                     </div>
                     <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
                       <TimeAnalysis loading={isInitialLoading} trades={trades} />
@@ -550,7 +576,7 @@ const App: React.FC = () => {
                       {activeTab === 'stats' && (
                         <div className="flex flex-col gap-4 px-1 pb-4">
                           <TotalPnlCard loading={isInitialLoading} trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                          <div className="h-[420px] shrink-0"><Progress loading={isInitialLoading} trades={trades} /></div>
+                          <div className="h-[420px] shrink-0"><Progress loading={isInitialLoading} trades={trades} payouts={payouts} onPayoutUpdate={setPayouts} /></div>
                           <TimeAnalysis loading={isInitialLoading} trades={trades} />
                         </div>
                       )}
