@@ -290,6 +290,7 @@ const App: React.FC = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   
+  // Track the cloud state as a string to avoid unnecessary re-syncs
   const lastSyncedTradesRef = useRef<string>("");
 
   useEffect(() => {
@@ -299,59 +300,85 @@ const App: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const initData = useCallback(async () => {
-    setIsInitialLoading(true);
-    setSyncStatus('syncing');
+  const fetchCloudData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setSyncStatus('syncing');
     try {
-      const saved = localStorage.getItem('xgiha_trades');
-      const localTrades: Trade[] = saved ? JSON.parse(saved) : [];
-      
-      // Add timestamp to prevent browser/CDN caching
+      // 1. Fetch from cloud with absolute cache busting
       const response = await fetch(`/api/trades?t=${Date.now()}`, {
-        cache: 'no-store'
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
       });
       
       let cloudTrades: Trade[] = [];
       if (response.ok) {
         let data = await response.json();
-        // Robust check: if stored as escaped string, parse it again
         if (typeof data === 'string') {
           try { data = JSON.parse(data); } catch(e) {}
         }
         if (data && Array.isArray(data)) cloudTrades = data;
       }
 
-      // Cross-device sync logic:
-      // If Cloud has data, it is the master. 
-      // If Cloud is empty (fresh project), take Local as the source.
-      const finalTrades = (cloudTrades.length === 0 && localTrades.length > 0) ? localTrades : cloudTrades;
+      const cloudJson = JSON.stringify(cloudTrades);
       
-      setTrades(finalTrades);
-      lastSyncedTradesRef.current = JSON.stringify(finalTrades);
-      localStorage.setItem('xgiha_trades', lastSyncedTradesRef.current);
+      // If cloud is different from current memory, update it
+      // Cloud is ALWAYS the master source for cross-device sync
+      if (cloudJson !== lastSyncedTradesRef.current) {
+        setTrades(cloudTrades);
+        lastSyncedTradesRef.current = cloudJson;
+        localStorage.setItem('xgiha_trades', cloudJson);
+      }
       
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setIsInitialLoading(false);
-      setSyncStatus('success');
+      if (!isSilent) setSyncStatus('success');
       setTimeout(() => setSyncStatus('idle'), 2000);
+      return cloudTrades;
     } catch (e) {
-      console.error("Sync fetch error:", e);
-      const saved = localStorage.getItem('xgiha_trades');
-      if (saved) setTrades(JSON.parse(saved));
-      setIsInitialLoading(false);
-      setSyncStatus('error');
+      console.error("Sync Error:", e);
+      if (!isSilent) setSyncStatus('error');
+      return null;
     }
   }, []);
 
-  useEffect(() => { initData(); }, [initData]);
+  const initData = useCallback(async () => {
+    setIsInitialLoading(true);
+    
+    // Check local storage first for immediate paint
+    const saved = localStorage.getItem('xgiha_trades');
+    if (saved) {
+      const localTrades = JSON.parse(saved);
+      setTrades(localTrades);
+      lastSyncedTradesRef.current = saved;
+    }
 
-  // Handle Sync to Cloud
+    // Then overwrite with fresh cloud data
+    if (isAuthenticated) {
+      await fetchCloudData();
+    }
+    
+    setIsInitialLoading(false);
+  }, [isAuthenticated, fetchCloudData]);
+
+  useEffect(() => { 
+    initData(); 
+  }, [initData]);
+
+  // BACKGROUND POLLING: Check for updates every 30 seconds
   useEffect(() => {
-    if (isInitialLoading) return;
+    if (!isAuthenticated || isInitialLoading) return;
+    
+    const interval = setInterval(() => {
+      fetchCloudData(true); // Silent update
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [isAuthenticated, isInitialLoading, fetchCloudData]);
+
+  // Handle LOCAL changes sync to CLOUD
+  useEffect(() => {
+    if (isInitialLoading || !isAuthenticated) return;
     
     const currentTradesJson = JSON.stringify(trades);
-    localStorage.setItem('xgiha_trades', currentTradesJson);
     
+    // Only POST if memory has changed relative to what we last knew was on cloud
     if (currentTradesJson === lastSyncedTradesRef.current) return;
     
     const timeout = setTimeout(async () => {
@@ -365,6 +392,7 @@ const App: React.FC = () => {
         
         if (response.ok) { 
           lastSyncedTradesRef.current = currentTradesJson; 
+          localStorage.setItem('xgiha_trades', currentTradesJson);
           setSyncStatus('success'); 
         } else {
           setSyncStatus('error');
@@ -373,10 +401,10 @@ const App: React.FC = () => {
       } catch (e) { 
         setSyncStatus('error'); 
       }
-    }, 2000);
+    }, 1500); // 1.5s debounce to save on API calls
     
     return () => clearTimeout(timeout);
-  }, [trades, isInitialLoading]);
+  }, [trades, isInitialLoading, isAuthenticated]);
 
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -445,8 +473,7 @@ const App: React.FC = () => {
   const handleSignIn = () => { 
     sessionStorage.setItem('xgiha_auth', 'true');
     setIsAuthenticated(true); 
-    // Immediately fetch when logging in to ensure device has latest
-    initData();
+    // Data fetching happens automatically via useEffect initData triggered by state change
   };
   
   const handleLogout = () => { 
@@ -454,6 +481,7 @@ const App: React.FC = () => {
     setIsAuthenticated(false); 
     setTrades([]); 
     localStorage.removeItem('xgiha_trades');
+    lastSyncedTradesRef.current = "";
   };
 
   const currentTabs = isMobile ? TABS : TABS.filter(t => !t.mobileOnly);
@@ -470,12 +498,12 @@ const App: React.FC = () => {
                 animate={{ y: 0, x: '-50%', opacity: 1 }}
                 exit={{ y: -60, x: '-50%', opacity: 0 }}
                 className="absolute top-6 left-1/2 z-[150] flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl group/sync cursor-pointer"
-                onClick={() => syncStatus !== 'syncing' && initData()}
+                onClick={() => syncStatus !== 'syncing' && fetchCloudData()}
               >
                 {syncStatus === 'syncing' ? <RefreshCw size={11} className="text-xgiha-accent animate-spin" /> : 
                  syncStatus === 'success' ? <Check size={11} className="text-emerald-400" /> : <CloudOff size={11} className="text-red-400" />}
                 <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white">
-                    {syncStatus === 'syncing' ? 'Syncing Journal' : syncStatus === 'error' ? 'Sync Failed' : 'System Synced'}
+                    {syncStatus === 'syncing' ? 'Cloud Synchronization' : syncStatus === 'error' ? 'Sync Communication Failed' : 'Vault Synced'}
                 </span>
                 <span className="hidden group-hover/sync:block text-[8px] font-bold text-white/40 uppercase tracking-widest pl-2 ml-2 border-l border-white/10">Force Refresh</span>
               </MotionDiv>
