@@ -193,7 +193,7 @@ const SignInScreen: React.FC<{ onSignIn: () => void }> = ({ onSignIn }) => {
       await new Promise(resolve => setTimeout(resolve, 400));
       onSignIn();
     } else {
-      setError('Invalid identity or keycode');
+      setError('Invalid username or password');
       setIsLoading(false);
     }
   };
@@ -301,19 +301,31 @@ const App: React.FC = () => {
 
   const initData = useCallback(async () => {
     setIsInitialLoading(true);
+    setSyncStatus('syncing');
     try {
       const saved = localStorage.getItem('xgiha_trades');
       const localTrades: Trade[] = saved ? JSON.parse(saved) : [];
+      
       const response = await fetch('/api/trades');
       let cloudTrades: Trade[] = [];
       if (response.ok) {
-        const data = await response.json();
+        let data = await response.json();
+        // Robust check: if stored as escaped string, parse it again
+        if (typeof data === 'string') {
+          try { data = JSON.parse(data); } catch(e) {}
+        }
         if (data && Array.isArray(data)) cloudTrades = data;
       }
+
+      // If cloud is empty but local has stuff, we might be in initial setup or lost cloud data
+      // For cross-device sync, Cloud is the Source of Truth if it has any data.
       const finalTrades = (cloudTrades.length === 0 && localTrades.length > 0) ? localTrades : cloudTrades;
+      
       setTrades(finalTrades);
       lastSyncedTradesRef.current = JSON.stringify(finalTrades);
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      localStorage.setItem('xgiha_trades', lastSyncedTradesRef.current);
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setIsInitialLoading(false);
       setSyncStatus('success');
       setTimeout(() => setSyncStatus('idle'), 2000);
@@ -327,19 +339,37 @@ const App: React.FC = () => {
 
   useEffect(() => { initData(); }, [initData]);
 
+  // Handle Sync to Cloud
   useEffect(() => {
     if (isInitialLoading) return;
+    
     const currentTradesJson = JSON.stringify(trades);
     localStorage.setItem('xgiha_trades', currentTradesJson);
+    
     if (currentTradesJson === lastSyncedTradesRef.current) return;
+    
     const timeout = setTimeout(async () => {
       try {
         setSyncStatus('syncing');
-        const response = await fetch('/api/trades', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: currentTradesJson });
-        if (response.ok) { lastSyncedTradesRef.current = currentTradesJson; setSyncStatus('success'); }
+        const response = await fetch('/api/trades', { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          // FIX: Send raw object, don't stringify twice if server stringifies again
+          body: currentTradesJson 
+        });
+        
+        if (response.ok) { 
+          lastSyncedTradesRef.current = currentTradesJson; 
+          setSyncStatus('success'); 
+        } else {
+          setSyncStatus('error');
+        }
         setTimeout(() => setSyncStatus('idle'), 2000);
-      } catch (e) { setSyncStatus('error'); }
-    }, 1500);
+      } catch (e) { 
+        setSyncStatus('error'); 
+      }
+    }, 2000);
+    
     return () => clearTimeout(timeout);
   }, [trades, isInitialLoading]);
 
@@ -423,13 +453,15 @@ const App: React.FC = () => {
                 initial={{ y: -60, x: '-50%', opacity: 0 }}
                 animate={{ y: 0, x: '-50%', opacity: 1 }}
                 exit={{ y: -60, x: '-50%', opacity: 0 }}
-                className="absolute top-6 left-1/2 z-[150] flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl"
+                className="absolute top-6 left-1/2 z-[150] flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl group/sync cursor-pointer"
+                onClick={() => syncStatus !== 'syncing' && initData()}
               >
                 {syncStatus === 'syncing' ? <RefreshCw size={11} className="text-xgiha-accent animate-spin" /> : 
                  syncStatus === 'success' ? <Check size={11} className="text-emerald-400" /> : <CloudOff size={11} className="text-red-400" />}
                 <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white">
                     {syncStatus === 'syncing' ? 'Syncing Journal' : syncStatus === 'error' ? 'Sync Failed' : 'System Synced'}
                 </span>
+                <span className="hidden group-hover/sync:block text-[8px] font-bold text-white/40 uppercase tracking-widest pl-2 ml-2 border-l border-white/10">Force Refresh</span>
               </MotionDiv>
             )}
           </AnimatePresence>
