@@ -14,7 +14,7 @@ import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
 import TotalPnlCard from './components/TotalPnlCard';
 import TimeAnalysis from './components/TimeAnalysis';
 import Progress from './components/Progress';
-import { Trade } from './types';
+import { Trade, PayoutRecord } from './types';
 import { Skeleton } from './components/Skeleton';
 
 const MotionDiv = motion.div as any;
@@ -288,10 +288,9 @@ const App: React.FC = () => {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [trades, setTrades] = useState<Trade[]>([]);
-  const [payouts, setPayouts] = useState<number>(0);
+  const [payouts, setPayouts] = useState<PayoutRecord[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   
-  // Track the cloud state as a string to avoid unnecessary re-syncs
   const lastSyncedStateRef = useRef<string>("");
 
   useEffect(() => {
@@ -304,14 +303,13 @@ const App: React.FC = () => {
   const fetchCloudData = useCallback(async (isSilent = false) => {
     if (!isSilent) setSyncStatus('syncing');
     try {
-      // 1. Fetch from cloud with absolute cache busting
       const response = await fetch(`/api/trades?t=${Date.now()}`, {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
       });
       
       let cloudTrades: Trade[] = [];
-      let cloudPayouts: number = 0;
+      let cloudPayouts: PayoutRecord[] = [];
 
       if (response.ok) {
         let data = await response.json();
@@ -319,12 +317,16 @@ const App: React.FC = () => {
           try { data = JSON.parse(data); } catch(e) {}
         }
         
-        // Handle migration from array-only storage to object storage
         if (Array.isArray(data)) {
           cloudTrades = data;
         } else if (data && typeof data === 'object') {
           cloudTrades = data.trades || [];
-          cloudPayouts = data.payouts || 0;
+          // Migration from number to PayoutRecord[]
+          if (typeof data.payouts === 'number') {
+            cloudPayouts = data.payouts > 0 ? [{ id: 'migrated', amount: data.payouts, date: new Date().toISOString() }] : [];
+          } else {
+            cloudPayouts = data.payouts || [];
+          }
         }
       }
 
@@ -351,23 +353,25 @@ const App: React.FC = () => {
   const initData = useCallback(async () => {
     setIsInitialLoading(true);
     
-    // Check local storage first for immediate paint
     const saved = localStorage.getItem('xgiha_state') || localStorage.getItem('xgiha_trades');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
           setTrades(parsed);
-          setPayouts(0);
+          setPayouts([]);
         } else {
           setTrades(parsed.trades || []);
-          setPayouts(parsed.payouts || 0);
+          if (typeof parsed.payouts === 'number') {
+             setPayouts(parsed.payouts > 0 ? [{ id: 'migrated', amount: parsed.payouts, date: new Date().toISOString() }] : []);
+          } else {
+             setPayouts(parsed.payouts || []);
+          }
         }
         lastSyncedStateRef.current = saved;
       } catch(e) {}
     }
 
-    // Then overwrite with fresh cloud data
     if (isAuthenticated) {
       await fetchCloudData();
     }
@@ -379,18 +383,14 @@ const App: React.FC = () => {
     initData(); 
   }, [initData]);
 
-  // BACKGROUND POLLING: Check for updates every 30 seconds
   useEffect(() => {
     if (!isAuthenticated || isInitialLoading) return;
-    
     const interval = setInterval(() => {
-      fetchCloudData(true); // Silent update
+      fetchCloudData(true);
     }, 30000);
-    
     return () => clearInterval(interval);
   }, [isAuthenticated, isInitialLoading, fetchCloudData]);
 
-  // Handle LOCAL changes sync to CLOUD
   useEffect(() => {
     if (isInitialLoading || !isAuthenticated) return;
     
@@ -488,10 +488,10 @@ const App: React.FC = () => {
     if (confirm("Import and replace all current trades/payouts?")) {
       if (Array.isArray(imported)) {
         setTrades(imported);
-        setPayouts(0);
+        setPayouts([]);
       } else {
         setTrades(imported.trades || []);
-        setPayouts(imported.payouts || 0);
+        setPayouts(imported.payouts || []);
       }
     }
   }, []);
@@ -505,7 +505,7 @@ const App: React.FC = () => {
     sessionStorage.removeItem('xgiha_auth'); 
     setIsAuthenticated(false); 
     setTrades([]); 
-    setPayouts(0);
+    setPayouts([]);
     localStorage.removeItem('xgiha_state');
     lastSyncedStateRef.current = "";
   };

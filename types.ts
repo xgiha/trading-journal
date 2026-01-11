@@ -25,3 +25,9 @@ export interface Trade {
   
   notes?: string; // Free text notes
 }
+
+export interface PayoutRecord {
+  id: string;
+  amount: number;
+  date: string;
+}
