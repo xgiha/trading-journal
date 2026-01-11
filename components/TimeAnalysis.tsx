@@ -45,7 +45,8 @@ const StatCard: React.FC<{
 const MetricRow: React.FC<{ icon: React.ReactNode, iconColor: string, label: string, value: string, valueColor?: string }> = ({ icon, iconColor, label, value, valueColor = "text-white" }) => (
   <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5 flex-1 min-h-0">
     <div className={cn("p-2 rounded-xl shrink-0 flex items-center justify-center", iconColor)}>
-      {React.cloneElement(icon as React.ReactElement, { size: 18 })}
+      {/* Fix: Cast icon as React.ReactElement<any> to resolve 'size' property type error in cloneElement */}
+      {React.cloneElement(icon as React.ReactElement<any>, { size: 18 })}
     </div>
     <div className="flex flex-col min-w-0 justify-center">
       <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest leading-none mb-1">{label}</span>

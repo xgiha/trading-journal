@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check, PieChart, BarChart3, Lock, Unlock, Loader2, LogOut, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -363,6 +364,7 @@ const App: React.FC = () => {
         } else {
           setTrades(parsed.trades || []);
           if (typeof parsed.payouts === 'number') {
+             // Fixed: Changed 'data.payouts' to 'parsed.payouts' as 'data' was undefined here.
              setPayouts(parsed.payouts > 0 ? [{ id: 'migrated', amount: parsed.payouts, date: new Date().toISOString() }] : []);
           } else {
              setPayouts(parsed.payouts || []);
@@ -541,9 +543,11 @@ const App: React.FC = () => {
               {!isMobile ? (
                 <div className="flex-1 min-h-0 flex flex-row gap-4 lg:gap-6 z-10 items-stretch h-full w-full">
                   <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
-                    <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full">
+                    <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full overflow-hidden">
                       <TotalPnlCard loading={isInitialLoading} trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                      <Progress loading={isInitialLoading} trades={trades} payouts={payouts} onPayoutUpdate={setPayouts} />
+                      <div className="flex-1 min-h-0">
+                        <Progress loading={isInitialLoading} trades={trades} payouts={payouts} onPayoutUpdate={setPayouts} />
+                      </div>
                     </div>
                     <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
                       <TimeAnalysis loading={isInitialLoading} trades={trades} />

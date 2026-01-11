@@ -7,6 +7,8 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 const MotionDiv = motion.div as any;
 
+const cn = (...classes: any[]) => classes.filter(Boolean).join(' ');
+
 // --- Radix Tooltip Components ---
 const TooltipProvider = TooltipPrimitive.Provider;
 const Tooltip = TooltipPrimitive.Root;
@@ -41,7 +43,7 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
   const [activeTab, setActiveTab] = useState<'withdraw' | 'history'>('withdraw');
   const [tempAmount, setTempAmount] = useState('');
 
-  // 1. Calculations based on user's new logic
+  // 1. Calculations
   const totalNetPnl = useMemo(() => {
     return trades.reduce((sum, trade) => sum + (trade.pnl - (trade.fee || 0)), 0);
   }, [trades]);
@@ -50,7 +52,6 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
     return payouts.reduce((sum, p) => sum + p.amount, 0);
   }, [payouts]);
 
-  // Current balance remaining in the vault
   const currentBalance = useMemo(() => {
     return Math.max(0, totalNetPnl - totalPaidOut);
   }, [totalNetPnl, totalPaidOut]);
@@ -61,6 +62,12 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
     const halfBalance = currentBalance * 0.5;
     return Math.min(halfBalance, 5000);
   }, [currentBalance]);
+
+  // Validation
+  const isOverLimit = useMemo(() => {
+    const val = parseFloat(tempAmount) || 0;
+    return val > allowedLimit + 0.001; // float precision delta
+  }, [tempAmount, allowedLimit]);
 
   // Visual Progress Bar Logic
   const maxDisplayVal = useMemo(() => {
@@ -98,12 +105,10 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
 
   const handlePayoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isOverLimit) return;
+    
     const amount = parseFloat(tempAmount.replace(/[^0-9.]/g, ''));
     if (!isNaN(amount) && amount > 0) {
-      if (amount > allowedLimit + 0.01) { // delta for float precision
-        alert(`Maximum allowed payout is $${allowedLimit.toLocaleString()}`);
-        return;
-      }
       const newPayout: PayoutRecord = {
         id: `P-${Date.now()}`,
         amount,
@@ -121,8 +126,12 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
     }
   };
 
+  const formatCurrency = (val: number) => {
+    return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
   return (
-    <div className="group relative w-full h-full bg-white/[0.03] rounded-[25px] border border-white/5 shadow-xl transition-all duration-500 p-8 flex flex-col overflow-hidden">
+    <div className="group relative w-full h-full bg-white/[0.03] rounded-[25px] border border-white/5 shadow-xl transition-all duration-500 p-8 flex flex-col overflow-hidden isolate">
       
       {loading ? (
         <div className="relative h-full w-full flex flex-col justify-between py-2">
@@ -138,7 +147,6 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
         </div>
       ) : (
         <>
-          {/* Progress Section - Flex-1 to ensure button is never overlapped */}
           <div className="relative flex-1 w-full flex items-stretch mt-4 z-10 min-h-0">
             {/* The Progress Bar Track */}
             <div className="relative h-full w-20 bg-white/5 rounded-[25px] border border-white/10 overflow-hidden shrink-0 shadow-inner z-10">
@@ -161,8 +169,8 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
               </MotionDiv>
             </div>
 
-            {/* Labels & Markers - Fixed overlap by keeping pointer-events-none strictly on this layer */}
-            <div className="relative h-full ml-6 flex-1 z-10 pointer-events-none select-none">
+            {/* Labels & Markers */}
+            <div className="relative flex-1 ml-6 z-10 pointer-events-none select-none">
               {milestones.map((m, index) => {
                 const posPct = ((index + 1) / TOTAL_SEGMENTS) * 100;
                 const isHit = currentBalance >= m.value;
@@ -195,23 +203,22 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
             </div>
           </div>
 
-          {/* Solid Payout Button - Matches Sign In style */}
-          <div className="mt-8 flex items-center justify-center border-t border-white/5 pt-6 z-30 shrink-0">
+          <div className="mt-8 flex items-center justify-center border-t border-white/5 pt-6 z-[60] shrink-0 relative">
             <button 
                 onClick={(e) => {
                   e.stopPropagation();
                   setTempAmount('');
                   setIsPayoutModalOpen(true);
                 }}
-                className={`group/btn relative w-full h-14 rounded-xl font-black text-sm uppercase tracking-[0.2em] active:scale-[0.98] transition-all flex items-center justify-center shadow-xl cursor-pointer ${
+                className={cn(
+                  "relative w-full h-14 rounded-xl font-black text-sm uppercase tracking-[0.2em] active:scale-[0.98] transition-all flex items-center justify-center shadow-xl cursor-pointer pointer-events-auto z-[70] isolate",
                   currentBalance >= BUFFER_VAL 
                     ? 'bg-white text-black hover:bg-zinc-100' 
                     : 'bg-white/5 border border-white/10 text-white/30 hover:bg-white/10'
-                }`}
+                )}
             >
                 <DollarSign size={16} strokeWidth={3} className={currentBalance >= BUFFER_VAL ? 'text-black' : 'text-white/20'} />
                 <span>Payout</span>
-                
                 {payouts.length > 0 && (
                     <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-xgiha-accent rounded-full animate-pulse" />
                 )}
@@ -235,7 +242,6 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
                 exit={{ scale: 0.98, opacity: 0 }}
                 className="relative w-full h-full flex flex-col overflow-hidden rounded-[25px] bg-[#0c0c0c]"
             >
-                {/* Header */}
                 <div className="px-8 pt-10 pb-4 shrink-0 border-b border-white/5 flex flex-col gap-6">
                     <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Payouts</span>
@@ -245,40 +251,53 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
                     </div>
 
                     <div className="flex bg-white/5 p-1 rounded-2xl w-full">
-                        <button 
-                            onClick={() => setActiveTab('withdraw')}
-                            className={`flex-1 py-3 rounded-xl transition-all flex items-center justify-center ${activeTab === 'withdraw' ? 'bg-white text-black shadow-lg' : 'text-white/20 hover:text-white/40'}`}
-                        >
+                        <button onClick={() => setActiveTab('withdraw')} className={`flex-1 py-3 rounded-xl transition-all flex items-center justify-center ${activeTab === 'withdraw' ? 'bg-white text-black shadow-lg' : 'text-white/20 hover:text-white/40'}`}>
                             <SendHorizontal size={18} />
                         </button>
-                        <button 
-                            onClick={() => setActiveTab('history')}
-                            className={`flex-1 py-3 rounded-xl transition-all flex items-center justify-center ${activeTab === 'history' ? 'bg-white text-black shadow-lg' : 'text-white/20 hover:text-white/40'}`}
-                        >
+                        <button onClick={() => setActiveTab('history')} className={`flex-1 py-3 rounded-xl transition-all flex items-center justify-center ${activeTab === 'history' ? 'bg-white text-black shadow-lg' : 'text-white/20 hover:text-white/40'}`}>
                             <History size={18} />
                         </button>
                     </div>
                 </div>
 
-                {/* Content Area */}
                 <div className="flex-1 overflow-y-auto no-scrollbar p-8 min-h-0 flex flex-col">
                     <AnimatePresence mode="wait">
                         {activeTab === 'withdraw' ? (
-                            <MotionDiv key="withdraw" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="flex flex-col gap-6 h-full justify-center">
-                                <div className="relative">
-                                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10 font-mono text-3xl">$</span>
+                            <MotionDiv key="withdraw" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="flex flex-col gap-4 h-full justify-center">
+                                
+                                {isOverLimit && (
+                                  <motion.div 
+                                    initial={{ opacity: 0, y: 10 }} 
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="text-red-500 text-[10px] font-black uppercase tracking-[0.2em] text-center mb-1"
+                                  >
+                                    Maximum allowed payout is ${formatCurrency(allowedLimit)}
+                                  </motion.div>
+                                )}
+
+                                <div className={cn(
+                                  "relative rounded-[2rem] border transition-all duration-300 overflow-hidden",
+                                  isOverLimit ? "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]" : "border-white/5 focus-within:border-white/20"
+                                )}>
+                                    <span className={cn(
+                                      "absolute left-6 top-1/2 -translate-y-1/2 font-mono text-3xl transition-colors",
+                                      isOverLimit ? "text-red-500/30" : "text-white/10"
+                                    )}>$</span>
                                     <input 
                                         type="text" autoFocus value={tempAmount}
                                         onChange={(e) => setTempAmount(e.target.value.replace(/[^0-9.]/g, ''))}
-                                        className="w-full bg-white/[0.02] border border-white/5 rounded-[2rem] py-8 pl-14 pr-8 text-3xl font-mono text-white focus:outline-none focus:border-white/20 transition-all text-right"
+                                        className="w-full bg-white/[0.02] py-8 pl-14 pr-8 text-3xl font-mono text-white focus:outline-none transition-all text-right"
                                         placeholder="0.00"
                                     />
                                 </div>
 
                                 <button 
                                     onClick={handlePayoutSubmit}
-                                    className="w-full py-8 bg-white text-black rounded-[2rem] flex items-center justify-center gap-3 font-black text-xs uppercase tracking-[0.3em] active:scale-[0.98] transition-all shadow-2xl disabled:opacity-20 cursor-pointer"
-                                    disabled={!tempAmount || parseFloat(tempAmount) <= 0}
+                                    className={cn(
+                                      "w-full py-8 rounded-[2rem] flex items-center justify-center gap-3 font-black text-xs uppercase tracking-[0.3em] active:scale-[0.98] transition-all shadow-2xl disabled:opacity-20 cursor-pointer",
+                                      isOverLimit ? "bg-white/5 text-white/20 border border-white/5" : "bg-white text-black"
+                                    )}
+                                    disabled={!tempAmount || parseFloat(tempAmount) <= 0 || isOverLimit}
                                 >
                                     <Check size={18} strokeWidth={4} />
                                     Confirm
@@ -316,12 +335,11 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
                     </AnimatePresence>
                 </div>
 
-                {/* Footer Section - New Calculation Layout */}
                 <div className="px-8 pb-10 pt-6 border-t border-white/5 bg-white/[0.01] shrink-0">
                     <div className="grid grid-cols-2 gap-8">
                         <div className="flex flex-col gap-1">
                             <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Gross Earnings</span>
-                            <span className="text-sm font-bold text-white font-mono">${Math.round(totalNetPnl).toLocaleString()}</span>
+                            <span className="text-sm font-bold text-white font-mono">${formatCurrency(totalNetPnl)}</span>
                         </div>
                         <div className="flex flex-col gap-1 items-end">
                             <div className="flex items-center gap-2">
@@ -341,7 +359,7 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], onPayoutUpdat
                                   </TooltipProvider>
                                 )}
                             </div>
-                            <span className="text-sm font-bold text-emerald-400 font-mono">${Math.round(allowedLimit).toLocaleString()}</span>
+                            <span className="text-sm font-bold text-emerald-400 font-mono">${formatCurrency(allowedLimit)}</span>
                         </div>
                     </div>
                 </div>
