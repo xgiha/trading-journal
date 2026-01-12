@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check, PieChart, BarChart3, Lock, Unlock, Loader2, LogOut, Eye, EyeOff } from 'lucide-react';
+import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check, PieChart, BarChart3, Lock, Unlock, Loader2, LogOut, Eye, EyeOff, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
@@ -163,7 +162,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = 'Input';
 
 const TABS = [
-  { id: 'dashboard', icon: LayoutGrid, label: 'Dashboard' },
+  { id: 'dashboard', icon: LayoutGrid, label: 'Calendar' },
   { id: 'journal', icon: BookOpen, label: 'Journal' },
   { id: 'stats', icon: PieChart, label: 'Stats', mobileOnly: true },
   { id: 'analytics', icon: BarChart3, label: 'Charts', mobileOnly: true },
@@ -295,10 +294,11 @@ const App: React.FC = () => {
   const lastSyncedStateRef = useRef<string>("");
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const checkMobile = () => window.innerWidth < 1024;
+    setIsMobile(checkMobile());
+    const handleResize = () => setIsMobile(checkMobile());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const fetchCloudData = useCallback(async (isSilent = false) => {
@@ -364,7 +364,6 @@ const App: React.FC = () => {
         } else {
           setTrades(parsed.trades || []);
           if (typeof parsed.payouts === 'number') {
-             // Fixed: Changed 'data.payouts' to 'parsed.payouts' as 'data' was undefined here.
              setPayouts(parsed.payouts > 0 ? [{ id: 'migrated', amount: parsed.payouts, date: new Date().toISOString() }] : []);
           } else {
              setPayouts(parsed.payouts || []);

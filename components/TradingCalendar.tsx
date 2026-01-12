@@ -104,7 +104,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
               <div className="flex justify-between items-start">
                 <span className={`text-[10px] md:text-xs font-semibold ${dayTradeCount > 0 ? 'text-xgiha-muted' : 'text-xgiha-muted/40'}`}>{dayNum}</span>
                 {dayTradeCount > 0 && (
-                  <span className="text-[8px] font-bold bg-white/5 text-xgiha-muted/60 px-1.5 py-0.5 rounded-md min-w-[16px] text-center border border-white/5 group-hover:text-white transition-colors">
+                  <span className="text-[8px] font-black bg-xgiha-accent/20 text-xgiha-accent px-1.5 py-0.5 rounded-md min-w-[16px] text-center border border-xgiha-accent/30 shadow-[0_0_10px_rgba(255,166,0,0.1)] group-hover:bg-xgiha-accent group-hover:text-black transition-all duration-300">
                     {dayTradeCount}
                   </span>
                 )}
