@@ -18,21 +18,18 @@ const TotalPnlCardComponent: React.FC<TotalPnlCardProps> = ({ totalPnl, growthPc
 
   const getFontSize = (val: number) => {
     const len = formatCurrency(val).length;
-    // Base scale on character length to ensure fit
-    if (len <= 7) return "text-[3.2rem]"; 
-    if (len <= 9) return "text-[2.8rem]"; 
-    if (len <= 11) return "text-[2.3rem]"; 
-    return "text-[1.8rem]";
-  };
-
-  const formatCurrencyInteger = (val: number) => {
-    return Math.floor(Math.abs(val)).toLocaleString();
+    // Adjusted thresholds to fit within ~200px width container with the dollar sign
+    if (len <= 6) return "text-[2.5rem]"; // e.g., 999.00
+    if (len <= 8) return "text-[2rem]";   // e.g., 1,000.00
+    if (len <= 10) return "text-[1.6rem]"; // e.g., 10,000.00 to 100,000.00
+    if (len <= 13) return "text-[1.3rem]"; // e.g., 1,000,000.00
+    return "text-[1rem]";
   };
 
   return (
     <div className="relative w-full aspect-square group">
       <div
-        className="absolute inset-0 bg-white/[0.03] rounded-[25px] flex flex-col items-center justify-center overflow-hidden transition-all duration-500 border border-white/5 shadow-xl"
+        className="absolute inset-0 bg-white/[0.03] rounded-[25px] flex flex-col items-center justify-center overflow-hidden transition-all duration-500 border border-white/5 shadow-xl p-4"
       >
         {loading ? (
           <div className="flex flex-col items-center gap-6 w-full px-8">
@@ -47,13 +44,13 @@ const TotalPnlCardComponent: React.FC<TotalPnlCardProps> = ({ totalPnl, growthPc
           </div>
         ) : (
           <>
-            <div className="flex flex-col items-center z-10 w-full px-2">
-              <div className="flex items-start justify-center gap-1 w-full">
-                <span className="font-pixel text-2xl text-white/20 mt-3">$</span>
+            <div className="flex flex-col items-center z-10 w-full">
+              <div className="flex items-baseline justify-center gap-1 w-full flex-wrap">
+                <span className={`font-pixel text-white/20 ${totalPnl.toString().length > 7 ? 'text-lg' : 'text-2xl'}`}>$</span>
                 <h2
                   className={`font-pixel ${getFontSize(
                     totalPnl
-                  )} text-white tracking-tighter leading-none text-center transition-all duration-300`}
+                  )} text-white tracking-tighter leading-none text-center transition-all duration-300 break-words max-w-full`}
                 >
                   {totalPnl < 0 ? "-" : ""}
                   {formatCurrency(totalPnl)}
