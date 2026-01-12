@@ -68,7 +68,6 @@ const WeeklyChart: React.FC<WeeklyChartProps> = ({ trades, stats, className, loa
     >
       <div className="flex items-center justify-between z-30 shrink-0 mb-4">
         <div className="flex items-center gap-2">
-          {loading ? <Skeleton className="h-1.5 w-1.5 rounded-full" /> : <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white] animate-pulse" />}
           {loading ? <Skeleton className="h-3 w-20 rounded-full" /> : <span className="text-[11px] font-bold text-xgiha-muted tracking-[0.2em] uppercase">Weekly Performance</span>}
         </div>
         {!loading && (

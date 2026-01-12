@@ -509,18 +509,28 @@ interface DayDetailsModalProps {
 export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClose, date, trades, onAddTrade, onEdit, onDelete, readOnly = false }) => {
    const totalPnl = trades.reduce((acc, t) => acc + (t.pnl - (t.fee || 0)), 0);
    const winRate = trades.length > 0 ? (trades.filter(t => (t.pnl - (t.fee || 0)) > 0).length / trades.length) * 100 : 0;
-   const sortedTrades = [...trades].sort((a, b) => a.entryTime.localeCompare(b.entryTime));
+   
+   // Sort chronologically for chart (Oldest -> Newest)
+   const chronologicalTrades = useMemo(() => {
+     return [...trades].sort((a, b) => a.entryTime.localeCompare(b.entryTime));
+   }, [trades]);
+
+   // Sort reverse chronologically for display list (Newest -> Oldest)
+   const displayedTrades = useMemo(() => {
+     return [...trades].sort((a, b) => b.entryTime.localeCompare(a.entryTime));
+   }, [trades]);
+
    const [zoomedImage, setZoomedImage] = useState<string | null>(null);
    const [zoomedNote, setZoomedNote] = useState<string | null>(null);
 
    const chartData = useMemo(() => {
      let runningPnl = 0;
-     const firstEntryTime = sortedTrades.length > 0 ? sortedTrades[0].entryTime : 'Start';
-     return [{ time: firstEntryTime, pnl: 0 }, ...sortedTrades.map(t => {
+     const firstEntryTime = chronologicalTrades.length > 0 ? chronologicalTrades[0].entryTime : 'Start';
+     return [{ time: firstEntryTime, pnl: 0 }, ...chronologicalTrades.map(t => {
        runningPnl += (t.pnl - (t.fee || 0));
        return { time: t.exitTime || t.entryTime, pnl: runningPnl };
      })];
-   }, [sortedTrades]);
+   }, [chronologicalTrades]);
 
    return (
      <MotionDiv className="fixed inset-0 z-[100] flex items-center justify-center p-2 lg:p-4" initial="initial" animate="animate" exit="exit">
@@ -545,7 +555,7 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
              <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
                 <div className="w-full lg:w-[45%] flex flex-col p-8 lg:p-12 overflow-hidden border-r border-white/5">
                     <div className="flex items-center justify-between mb-8"><div className="flex items-center gap-3"><div className="w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_15px_rgba(255,255,255,0.8)]"></div><span className="text-[11px] uppercase text-white font-black tracking-[0.25em]">Equity Growth</span></div></div>
-                    {sortedTrades.length > 0 ? (
+                    {chronologicalTrades.length > 0 ? (
                         <div className="flex-1 w-full min-h-[350px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={chartData} margin={{ top: 10, right: 40, left: 10, bottom: 20 }}>
@@ -577,9 +587,9 @@ export const DayDetailsModal: React.FC<DayDetailsModalProps> = ({ isOpen, onClos
                 <div className="flex-1 border-t lg:border-t-0 flex flex-col min-h-0 bg-white/[0.01]">
                     <div className="px-8 pt-8 lg:px-12 lg:pt-12 shrink-0"><span className="text-[10px] uppercase text-white font-black tracking-[0.25em] mb-6 block">All trades of the day</span></div>
                     <div className="flex-1 overflow-y-auto custom-scrollbar px-8 pb-12 lg:px-12 flex flex-col gap-6 pt-2">
-                        {sortedTrades.length === 0 ? (
+                        {displayedTrades.length === 0 ? (
                             <div className="py-20 text-center flex flex-col items-center gap-4"><div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-[#333]"><FileText size={24} /></div><span className="text-[10px] uppercase text-[#333] font-bold tracking-widest">No trades recorded for this session</span></div>
-                        ) : sortedTrades.map(trade => {
+                        ) : displayedTrades.map(trade => {
                                 const netTradePnl = trade.pnl - (trade.fee || 0);
                                 return (
                                     <div key={trade.id} className="bg-[#141414] rounded-3xl p-7 border border-white/5 flex flex-col gap-8 group hover:bg-[#181818] hover:border-white/10 transition-all duration-300">
