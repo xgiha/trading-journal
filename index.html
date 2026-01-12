@@ -81,6 +81,13 @@
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
       }
+
+      /* Fix for Recharts focus rings (white boxes on click) */
+      .recharts-surface, .recharts-surface:focus, .recharts-surface:active {
+        outline: none !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
     </style>
   <script type="importmap">
 {

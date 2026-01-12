@@ -71,23 +71,24 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], loading = fal
       {loading ? (
         <div className="relative h-full w-full flex flex-col justify-between py-2">
             <div className="flex gap-4 flex-1">
-                <Skeleton className="h-full w-20 rounded-[25px]" />
+                <Skeleton className="h-full w-[90px] rounded-[25px]" />
                 <div className="flex-1 flex flex-col justify-between py-4">
-                    {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-3 w-20 rounded-md" />)}
+                    {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-4 w-24 rounded-md" />)}
                 </div>
             </div>
         </div>
       ) : (
         <div className="relative flex-1 w-full flex items-stretch z-10 min-h-0">
           {/* The Progress Bar Track */}
-          <div className="relative h-full w-16 bg-white/5 rounded-[20px] border border-white/10 overflow-hidden shrink-0 shadow-inner z-10">
+          <div className="relative h-full w-[90px] bg-white/5 rounded-[20px] border border-white/10 overflow-hidden shrink-0 shadow-inner z-10">
+            {/* Progress Fill */}
             <MotionDiv
               initial={{ height: 0 }}
               animate={{ height: `${visualHeight}%` }}
               transition={{ type: 'spring', stiffness: 80, damping: 15, mass: 1 }}
-              className="absolute bottom-0 left-0 right-0 overflow-hidden rounded-b-[20px] origin-bottom transform-gpu"
+              className="absolute bottom-0 left-0 right-0 overflow-hidden rounded-b-[20px] origin-bottom transform-gpu z-10"
             >
-              <div className="absolute inset-0 z-10">
+              <div className="absolute inset-0">
                   <div 
                     className={`w-full h-full transition-colors duration-1000 ${
                       currentBalance >= BUFFER_VAL 
@@ -96,12 +97,31 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], loading = fal
                     }`}
                   />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 pointer-events-none z-40" />
             </MotionDiv>
+
+            {/* Internal Milestone Marks (The lines inside the bar) */}
+            <div className="absolute inset-0 pointer-events-none z-20">
+              {milestones.map((m, index) => {
+                const posPct = ((index + 1) / TOTAL_SEGMENTS) * 100;
+                const isHit = currentBalance >= m.value;
+                return (
+                  <div 
+                    key={`line-${index}`}
+                    className={`absolute left-0 w-full h-[1px] transition-all duration-500 ${
+                      isHit ? 'bg-emerald-400/40 shadow-[0_0_8px_rgba(52,211,153,0.3)]' : 'bg-white/10'
+                    }`}
+                    style={{ bottom: `${posPct}%` }}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Glossy overlay */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-white/5 pointer-events-none z-30" />
           </div>
 
-          {/* Labels & Markers */}
-          <div className="relative flex-1 ml-4 z-10 pointer-events-none select-none h-full">
+          {/* Labels - Increased font size (12px) */}
+          <div className="relative flex-1 ml-5 z-10 pointer-events-none select-none h-full">
             {milestones.map((m, index) => {
               const posPct = ((index + 1) / TOTAL_SEGMENTS) * 100;
               const isHit = currentBalance >= m.value;
@@ -109,26 +129,15 @@ const Progress: React.FC<ProgressProps> = ({ trades, payouts = [], loading = fal
 
               return (
                 <div 
-                  key={`${m.value}-${index}`}
-                  className="absolute left-0 w-full flex items-center gap-3 transition-all duration-500"
+                  key={`label-${index}`}
+                  className="absolute left-0 w-full flex items-center transition-all duration-500"
                   style={{ bottom: `${posPct}%`, transform: 'translateY(50%)' }}
                 >
-                  {/* Mark Line - Increased visibility */}
-                  <div className={`h-[2px] transition-all duration-700 rounded-full ${
-                    isHit 
-                      ? 'w-8 bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.6)]' 
-                      : isFoundation 
-                        ? 'w-8 bg-xgiha-accent shadow-[0_0_12px_rgba(255,166,0,0.4)]'
-                        : 'w-6 bg-white/20' 
-                  }`} />
-
-                  <div className="flex flex-col -translate-y-[1px]">
-                    <span className={`text-[9px] font-pixel tracking-tighter transition-colors duration-500 leading-none ${
-                      isHit ? 'text-emerald-400' : isFoundation ? 'text-xgiha-accent' : 'text-white/30'
-                    }`}>
-                      {m.label}
-                    </span>
-                  </div>
+                  <span className={`text-[12px] font-pixel tracking-tighter transition-colors duration-500 leading-none truncate ${
+                    isHit ? 'text-emerald-400' : isFoundation ? 'text-xgiha-accent' : 'text-white/30'
+                  }`}>
+                    {m.label}
+                  </span>
                 </div>
               );
             })}

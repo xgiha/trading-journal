@@ -44,7 +44,7 @@ const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className, l
   const currentPnl = chartData[chartData.length - 1]?.pnl || 0;
 
   return (
-    <div className={cn("group relative w-full h-full p-6 rounded-[25px] bg-white/[0.03] transition-all duration-500 flex flex-col justify-between overflow-hidden", className)}>
+    <div className={cn("group relative w-full h-full p-6 rounded-[25px] bg-white/[0.03] transition-all duration-500 flex flex-col justify-between overflow-hidden outline-none focus:outline-none", className)}>
       <div className="flex items-center justify-between z-30 shrink-0 mb-4">
         <div className="flex items-center gap-2">
           {loading ? (
@@ -67,12 +67,17 @@ const GrowthChartComponent: React.FC<GrowthChartProps> = ({ trades, className, l
         )}
       </div>
 
-      <div className="flex-1 w-full relative z-30 min-h-0">
+      <div className="flex-1 w-full relative z-30 min-h-0 outline-none focus:outline-none">
         {loading ? (
             <Skeleton className="w-full h-full rounded-2xl" />
         ) : (
-            <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 25 }}>
+            <ResponsiveContainer width="100%" height="100%" style={{ outline: 'none' }}>
+            <AreaChart 
+              data={chartData} 
+              margin={{ top: 10, right: 10, left: 0, bottom: 25 }} 
+              style={{ outline: 'none' }}
+              tabIndex={-1}
+            >
                 <defs>
                 <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="white" stopOpacity={0.2}/>
