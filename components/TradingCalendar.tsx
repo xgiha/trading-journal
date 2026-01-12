@@ -56,8 +56,17 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
   const formatCurrency = (val: number) => {
     const absVal = Math.abs(val);
     const sign = val < 0 ? '-' : '';
-    if (absVal >= 10000) return `${sign}$${(absVal / 1000).toFixed(1)}k`;
+    // Use 'm' for millions, 'k' only for 100k+, otherwise show full number to allow 1000 and 10000 to be seen
+    if (absVal >= 1000000) return `${sign}$${(absVal / 1000000).toFixed(1)}m`;
+    if (absVal >= 100000) return `${sign}$${(absVal / 1000).toFixed(0)}k`;
     return `${sign}$${absVal.toLocaleString()}`;
+  };
+
+  const getWeeklyFontSize = (val: number) => {
+    const abs = Math.abs(val);
+    if (abs >= 10000) return "text-[10px] md:text-sm lg:text-base";
+    if (abs >= 1000) return "text-[11px] md:text-base lg:text-lg";
+    return "text-xs md:text-lg lg:text-xl";
   };
 
   const renderCalendarDays = () => {
@@ -103,7 +112,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
               
               {dayTradeCount > 0 ? (
                 <div className="flex flex-col items-center justify-center flex-1">
-                  <span className={`text-xs md:text-sm lg:text-base font-bold tracking-tight ${dayNetPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <span className={`text-[10px] md:text-sm lg:text-base font-bold tracking-tight ${dayNetPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {dayNetPnl >= 0 ? '+' : ''}{formatCurrency(dayNetPnl)}
                   </span>
                 </div>
@@ -145,7 +154,7 @@ const TradingCalendarComponent: React.FC<TradingCalendarProps> = ({
                >
                   {weekTradesCount > 0 && (
                     <>
-                      <span className={`text-xs md:text-lg lg:text-xl font-bold tracking-tighter z-10 ${weekNetPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className={`${getWeeklyFontSize(weekNetPnl)} font-bold tracking-tighter z-10 ${weekNetPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                            {weekNetPnl >= 0 ? '+' : ''}{formatCurrency(weekNetPnl)}
                       </span>
                       <div className="absolute top-1.5 right-1.5">

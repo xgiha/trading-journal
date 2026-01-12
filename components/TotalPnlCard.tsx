@@ -11,12 +11,18 @@ interface TotalPnlCardProps {
 }
 
 const TotalPnlCardComponent: React.FC<TotalPnlCardProps> = ({ totalPnl, growthPct, loading = false }) => {
+  
+  const formatCurrency = (val: number) => {
+    return Math.abs(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
   const getFontSize = (val: number) => {
-    const length = Math.floor(Math.abs(val)).toString().length;
-    if (length <= 4) return "text-[3.4rem]";
-    if (length === 5) return "text-[2.8rem]";
-    if (length === 6) return "text-[2.5rem]";
-    return "text-[2.2rem]";
+    const len = formatCurrency(val).length;
+    // Base scale on character length to ensure fit
+    if (len <= 7) return "text-[3.2rem]"; 
+    if (len <= 9) return "text-[2.8rem]"; 
+    if (len <= 11) return "text-[2.3rem]"; 
+    return "text-[1.8rem]";
   };
 
   const formatCurrencyInteger = (val: number) => {
@@ -41,16 +47,16 @@ const TotalPnlCardComponent: React.FC<TotalPnlCardProps> = ({ totalPnl, growthPc
           </div>
         ) : (
           <>
-            <div className="flex flex-col items-center z-10">
-              <div className="flex items-start gap-1">
+            <div className="flex flex-col items-center z-10 w-full px-2">
+              <div className="flex items-start justify-center gap-1 w-full">
                 <span className="font-pixel text-2xl text-white/20 mt-3">$</span>
                 <h2
                   className={`font-pixel ${getFontSize(
                     totalPnl
-                  )} text-white tracking-tighter leading-none`}
+                  )} text-white tracking-tighter leading-none text-center transition-all duration-300`}
                 >
                   {totalPnl < 0 ? "-" : ""}
-                  {formatCurrencyInteger(totalPnl)}
+                  {formatCurrency(totalPnl)}
                 </h2>
               </div>
 
