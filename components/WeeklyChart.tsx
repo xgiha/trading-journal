@@ -73,7 +73,7 @@ const WeeklyChart: React.FC<WeeklyChartProps> = ({ trades, stats, className, loa
         </div>
         {!loading && (
             <div className="relative h-7 flex items-baseline">
-                <span className={cn("text-2xl font-bold tabular-nums transition-all duration-300 ease-out text-white")}>
+                <span className={cn("font-pixel text-xl tracking-tighter tabular-nums transition-all duration-300 ease-out text-white")}>
                     {headerValue < 0 ? '-' : ''}${Math.abs(headerValue).toLocaleString()}
                 </span>
             </div>
