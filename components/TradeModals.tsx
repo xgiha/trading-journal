@@ -28,7 +28,7 @@ const MODAL_VARIANTS = {
 
 // --- Helper: Number Formatter ---
 const formatNumber = (value: any) => {
-  if (value === null || value === undefined) return '';
+  if (value === null || value === undefined || value === '') return '';
   const str = String(value);
   const raw = str.replace(/,/g, '');
   if (isNaN(Number(raw))) return str;
@@ -199,13 +199,23 @@ const ManualTimeInput = ({ value, onChange, label, type }: { value: string, onCh
     const [m, setM] = useState('');
     const [s, setS] = useState('');
     const [ampm, setAmpm] = useState('AM');
+    
+    // Track focus to prevent parent updates from clobbering partial input
+    const isFocused = useRef(false);
 
     const hRef = useRef<HTMLInputElement>(null);
     const mRef = useRef<HTMLInputElement>(null);
     const sRef = useRef<HTMLInputElement>(null);
 
+    // Sync from parent (Auto-fill or Reset)
     useEffect(() => {
-        if (!value) return;
+        // If user is currently typing, DO NOT overwrite their input with parent value
+        if (isFocused.current) return;
+
+        if (!value) {
+            setH(''); setM(''); setS('');
+            return;
+        }
         const parts = value.split(':');
         const h24 = parseInt(parts[0]);
         if (isNaN(h24)) return;
@@ -218,7 +228,7 @@ const ManualTimeInput = ({ value, onChange, label, type }: { value: string, onCh
         setM(parts[1] || '00');
         setS(parts[2] || '00');
         setAmpm(period);
-    }, []);
+    }, [value]);
 
     const commit = (currH: string, currM: string, currS: string, currP: string) => {
         let hour = parseInt(currH) || 12;
@@ -227,40 +237,72 @@ const ManualTimeInput = ({ value, onChange, label, type }: { value: string, onCh
         onChange(`${String(hour).padStart(2, '0')}:${(currM || '00').padStart(2, '0')}:${(currS || '00').padStart(2, '0')}`);
     };
 
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        isFocused.current = true;
+        e.target.select();
+    };
+
+    const handleBlur = () => {
+        // Short delay to check if focus moved to another input within this component
+        setTimeout(() => {
+            const active = document.activeElement;
+            if (active !== hRef.current && active !== mRef.current && active !== sRef.current) {
+                isFocused.current = false;
+                commit(h, m, s, ampm);
+            }
+        }, 50);
+    };
+
     const handleH = (v: string) => {
         const c = v.replace(/\D/g, '').slice(0, 2);
-        setH(c);
+        setH(c); // Update local state immediately
+        
         if (c.length === 2) {
             let num = parseInt(c);
             let p = ampm;
             let dH = num;
+            // Smart 24h conversion
             if (num > 24) num = 23;
             if (num === 0 || num === 24) { dH = 12; p = 'AM'; }
             else if (num >= 12) { dH = num > 12 ? num - 12 : 12; p = 'PM'; }
             else { dH = num; p = 'AM'; }
+
             const hs = String(dH).padStart(2, '0');
-            setH(hs); setAmpm(p); commit(hs, m, s, p); mRef.current?.focus();
-        } else commit(c, m, s, ampm);
+            // Update local state to formatted value
+            setH(hs); 
+            setAmpm(p);
+            
+            // Commit to parent
+            commit(hs, m, s, p);
+            
+            // Auto-advance
+            mRef.current?.focus();
+        }
     };
 
     const handleM = (v: string) => {
         const c = v.replace(/\D/g, '').slice(0, 2);
         setM(c);
+        
         if (c.length === 2) {
             let num = Math.min(parseInt(c), 59);
             const ms = String(num).padStart(2, '0');
-            setM(ms); commit(h, ms, s, ampm); sRef.current?.focus();
-        } else commit(h, c, s, ampm);
+            setM(ms);
+            commit(h, ms, s, ampm);
+            sRef.current?.focus();
+        }
     };
 
     const handleS = (v: string) => {
         const c = v.replace(/\D/g, '').slice(0, 2);
         setS(c);
+        
         if (c.length === 2) {
             let num = Math.min(parseInt(c), 59);
             const ss = String(num).padStart(2, '0');
-            setS(ss); commit(h, m, ss, ampm);
-        } else commit(h, m, c, ampm);
+            setS(ss);
+            commit(h, m, ss, ampm);
+        }
     };
 
     return (
@@ -269,13 +311,25 @@ const ManualTimeInput = ({ value, onChange, label, type }: { value: string, onCh
                  <div className={`p-0.5 rounded ${type === 'IN' ? 'bg-green-500/10' : 'bg-red-500/10'}`}><Clock size={10} className={type === 'IN' ? 'text-green-500' : 'text-red-500'} /></div>
                  <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">{label}</span>
             </div>
-            <div className="flex items-center bg-black/40 rounded-xl px-2 h-[32px] border border-white/5 focus-within:border-white/20 transition-all shadow-inner">
-                <input ref={hRef} type="text" inputMode="numeric" placeholder="HH" className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10" value={h} onChange={e => handleH(e.target.value)} onFocus={e => e.target.select()} />
-                <span className="text-[10px] text-white/10 font-mono">:</span>
-                <input ref={mRef} type="text" inputMode="numeric" placeholder="MM" className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10" value={m} onChange={e => handleM(e.target.value)} onFocus={e => e.target.select()} onKeyDown={e => e.key === 'Backspace' && !m && hRef.current?.focus()} />
-                <span className="text-[10px] text-white/10 font-mono">:</span>
-                <input ref={sRef} type="text" inputMode="numeric" placeholder="SS" className="w-full bg-transparent text-center text-xs font-mono text-white focus:outline-none placeholder:text-white/10" value={s} onChange={e => handleS(e.target.value)} onFocus={e => e.target.select()} onKeyDown={e => e.key === 'Backspace' && !s && mRef.current?.focus()} />
-                <button type="button" onClick={() => { const n = ampm === 'AM' ? 'PM' : 'AM'; setAmpm(n); commit(h, m, s, n); }} className="shrink-0 px-2 h-4 text-[7px] font-black text-xgiha-accent hover:bg-white/5 active:scale-90 rounded-lg transition-all ml-1 border border-white/5">{ampm}</button>
+            <div className="flex items-center bg-black/40 rounded-xl px-3 h-[42px] border border-white/5 focus-within:border-white/20 transition-all shadow-inner">
+                <input 
+                    ref={hRef} type="text" inputMode="numeric" placeholder="HH" 
+                    className="w-full bg-transparent text-center text-sm font-bold font-mono text-white focus:outline-none placeholder:text-white/10" 
+                    value={h} onChange={e => handleH(e.target.value)} onBlur={handleBlur} onFocus={handleFocus} 
+                />
+                <span className="text-xs text-white/20 font-mono mx-0.5">:</span>
+                <input 
+                    ref={mRef} type="text" inputMode="numeric" placeholder="MM" 
+                    className="w-full bg-transparent text-center text-sm font-bold font-mono text-white focus:outline-none placeholder:text-white/10" 
+                    value={m} onChange={e => handleM(e.target.value)} onBlur={handleBlur} onFocus={handleFocus} onKeyDown={e => e.key === 'Backspace' && !m && hRef.current?.focus()} 
+                />
+                <span className="text-xs text-white/20 font-mono mx-0.5">:</span>
+                <input 
+                    ref={sRef} type="text" inputMode="numeric" placeholder="SS" 
+                    className="w-full bg-transparent text-center text-sm font-bold font-mono text-white focus:outline-none placeholder:text-white/10" 
+                    value={s} onChange={e => handleS(e.target.value)} onBlur={handleBlur} onFocus={handleFocus} onKeyDown={e => e.key === 'Backspace' && !s && mRef.current?.focus()} 
+                />
+                <button type="button" onClick={() => { const n = ampm === 'AM' ? 'PM' : 'AM'; setAmpm(n); commit(h, m, s, n); }} className="shrink-0 px-2 h-6 text-[9px] font-black text-xgiha-accent hover:bg-white/5 active:scale-90 rounded-lg transition-all ml-1 border border-white/5">{ampm}</button>
             </div>
         </div>
     );
@@ -321,7 +375,11 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       setFormData({
           symbol: initialData.pair, news: initialData.newsEvent || '', size: initialData.size || '',
           date: initialData.date, timeIn: initialData.entryTime || '', timeOut: initialData.exitTime || '',
-          priceIn: initialData.entryPrice?.toString() || '', priceOut: initialData.exitPrice?.toString() || '',
+          
+          // Robustly handle price formatting from number to string
+          priceIn: formatNumber(initialData.entryPrice), 
+          priceOut: formatNumber(initialData.exitPrice),
+          
           fees: formatNumber(initialData.fee), direction: initialData.type,
           pnl: formatNumber(initialData.pnl), strategy: initialData.strategy || '',
           images: initialData.images || (initialData.image ? [initialData.image] : []), notes: initialData.notes || '',
