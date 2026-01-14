@@ -200,7 +200,7 @@ const ManualTimeInput = ({ value, onChange, label, type }: { value: string, onCh
     const [s, setS] = useState('');
     const [ampm, setAmpm] = useState('AM');
     
-    // Track focus to prevent parent updates from clobbering partial input
+    // Track focus to prevent parent updates from clobbering partial input while typing
     const isFocused = useRef(false);
 
     const hRef = useRef<HTMLInputElement>(null);
@@ -248,34 +248,36 @@ const ManualTimeInput = ({ value, onChange, label, type }: { value: string, onCh
             const active = document.activeElement;
             if (active !== hRef.current && active !== mRef.current && active !== sRef.current) {
                 isFocused.current = false;
-                commit(h, m, s, ampm);
+                // Format single digits to 0X on blur (e.g. "1" -> "01")
+                const formattedH = h ? h.padStart(2, '0') : '12';
+                const formattedM = m ? m.padStart(2, '0') : '00';
+                const formattedS = s ? s.padStart(2, '0') : '00';
+                setH(formattedH);
+                setM(formattedM);
+                setS(formattedS);
+                commit(formattedH, formattedM, formattedS, ampm);
             }
         }, 50);
     };
 
     const handleH = (v: string) => {
         const c = v.replace(/\D/g, '').slice(0, 2);
-        setH(c); // Update local state immediately
+        setH(c); // Update local state immediately without padding to allow typing "1" then "2"
         
         if (c.length === 2) {
             let num = parseInt(c);
             let p = ampm;
             let dH = num;
-            // Smart 24h conversion
+            // Smart 24h conversion logic
             if (num > 24) num = 23;
             if (num === 0 || num === 24) { dH = 12; p = 'AM'; }
             else if (num >= 12) { dH = num > 12 ? num - 12 : 12; p = 'PM'; }
             else { dH = num; p = 'AM'; }
 
             const hs = String(dH).padStart(2, '0');
-            // Update local state to formatted value
             setH(hs); 
             setAmpm(p);
-            
-            // Commit to parent
             commit(hs, m, s, p);
-            
-            // Auto-advance
             mRef.current?.focus();
         }
     };
@@ -311,24 +313,23 @@ const ManualTimeInput = ({ value, onChange, label, type }: { value: string, onCh
                  <div className={`p-0.5 rounded ${type === 'IN' ? 'bg-green-500/10' : 'bg-red-500/10'}`}><Clock size={10} className={type === 'IN' ? 'text-green-500' : 'text-red-500'} /></div>
                  <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">{label}</span>
             </div>
-            {/* Optimized spacing: px-1.5 to maximize space for inputs */}
+            {/* Wider px-1 to maximize available width for mono font */}
             <div className="flex items-center bg-black/40 rounded-xl px-1.5 h-[42px] border border-white/5 focus-within:border-white/20 transition-all shadow-inner">
                 <input 
                     ref={hRef} type="text" inputMode="numeric" placeholder="HH" 
-                    className="w-full min-w-[20px] bg-transparent text-center text-sm font-bold font-mono text-white focus:outline-none placeholder:text-white/10" 
+                    className="w-full min-w-[22px] bg-transparent text-center text-sm font-bold font-mono text-white focus:outline-none placeholder:text-white/10" 
                     value={h} onChange={e => handleH(e.target.value)} onBlur={handleBlur} onFocus={handleFocus} 
                 />
-                {/* Reduced margins to save space */}
                 <span className="text-xs text-white/20 font-mono mx-0">:</span>
                 <input 
                     ref={mRef} type="text" inputMode="numeric" placeholder="MM" 
-                    className="w-full min-w-[20px] bg-transparent text-center text-sm font-bold font-mono text-white focus:outline-none placeholder:text-white/10" 
+                    className="w-full min-w-[22px] bg-transparent text-center text-sm font-bold font-mono text-white focus:outline-none placeholder:text-white/10" 
                     value={m} onChange={e => handleM(e.target.value)} onBlur={handleBlur} onFocus={handleFocus} onKeyDown={e => e.key === 'Backspace' && !m && hRef.current?.focus()} 
                 />
                 <span className="text-xs text-white/20 font-mono mx-0">:</span>
                 <input 
                     ref={sRef} type="text" inputMode="numeric" placeholder="SS" 
-                    className="w-full min-w-[20px] bg-transparent text-center text-sm font-bold font-mono text-white focus:outline-none placeholder:text-white/10" 
+                    className="w-full min-w-[22px] bg-transparent text-center text-sm font-bold font-mono text-white focus:outline-none placeholder:text-white/10" 
                     value={s} onChange={e => handleS(e.target.value)} onBlur={handleBlur} onFocus={handleFocus} onKeyDown={e => e.key === 'Backspace' && !s && mRef.current?.focus()} 
                 />
                 <button type="button" onClick={() => { const n = ampm === 'AM' ? 'PM' : 'AM'; setAmpm(n); commit(h, m, s, n); }} className="shrink-0 px-1.5 h-6 text-[9px] font-black text-xgiha-accent hover:bg-white/5 active:scale-90 rounded-lg transition-all ml-1 border border-white/5">{ampm}</button>
@@ -377,11 +378,8 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       setFormData({
           symbol: initialData.pair, news: initialData.newsEvent || '', size: initialData.size || '',
           date: initialData.date, timeIn: initialData.entryTime || '', timeOut: initialData.exitTime || '',
-          
-          // Robustly handle price formatting from number to string
           priceIn: formatNumber(initialData.entryPrice), 
           priceOut: formatNumber(initialData.exitPrice),
-          
           fees: formatNumber(initialData.fee), direction: initialData.type,
           pnl: formatNumber(initialData.pnl), strategy: initialData.strategy || '',
           images: initialData.images || (initialData.image ? [initialData.image] : []), notes: initialData.notes || '',
@@ -437,6 +435,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
               console.error("Upload failed", error);
           } finally {
               setIsUploading(false);
+              if (fileInputRef.current) fileInputRef.current.value = '';
           }
       }
   };
@@ -450,12 +449,10 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       <MotionDiv variants={BACKDROP_VARIANTS} transition={{ duration: 0.3 }} className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={onClose} />
       <MotionDiv variants={MODAL_VARIANTS} transition={MODAL_SPRING} className="relative w-[95%] md:max-w-[420px] max-h-[92vh] bg-[#141414] rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col border border-white/5">
         
-        {/* Header - Cleaned up feedback as requested */}
         <div className="shrink-0 flex items-center justify-end px-6 pt-6 pb-2">
-             {/* Feedback section removed */}
+             {/* Header UI */}
         </div>
 
-        {/* Dense Form Content */}
         <div className="flex-1 overflow-y-auto no-scrollbar px-6 pb-28">
           <form id="entry-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-2 relative">
             <div className="relative bg-[#1E1E1E] rounded-2xl p-2.5 flex flex-col gap-1 h-[64px]">
@@ -494,8 +491,8 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
                       </div>
                       {showCalendar && <div className="absolute top-full left-0 z-50 mt-1 w-full md:w-[280px]"><CustomDatePicker selectedDate={formData.date || ''} onChange={(date) => { setFormData({...formData, date}); setShowCalendar(false); }} /></div>}
                  </div>
-                 {/* Increased width from 68% to 76% to prevent cut-off */}
-                 <div className="w-full md:w-[76%] flex gap-2">
+                 {/* Increased width percentage to md:w-[78%] for extra breathing room */}
+                 <div className="w-full md:w-[78%] flex gap-2">
                      <ManualTimeInput label="Entry" type="IN" value={formData.timeIn} onChange={(val) => setFormData({...formData, timeIn: val})} />
                      <ManualTimeInput label="Exit" type="OUT" value={formData.timeOut} onChange={(val) => setFormData({...formData, timeOut: val})} />
                  </div>
@@ -544,7 +541,6 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
           </form>
         </div>
 
-        {/* Tall Floating Button (Optimized Spacing) */}
         <div className="absolute bottom-0 left-0 right-0 p-6 pt-8 bg-gradient-to-t from-[#141414] via-[#141414] to-transparent pointer-events-none flex justify-center z-[100]">
           <button type="submit" form="entry-form" disabled={isUploading} className="pointer-events-auto w-full py-8 rounded-full text-black bg-white hover:bg-zinc-100 active:scale-95 transition-all duration-300 shadow-2xl font-black text-[13px] uppercase tracking-[0.25em] disabled:opacity-50 disabled:cursor-not-allowed">
             {isUploading ? 'Syncing...' : initialData ? 'Update Record' : 'Save Entry'}
