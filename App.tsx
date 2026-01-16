@@ -100,15 +100,15 @@ function SmoothProfileButton({ src, name, children }: { src: string, name: strin
       <AnimatePresence>
         {isHovered && (
           <MotionDiv
-            initial={{ y: 10, opacity: 0, filter: "blur(4px)", scale: 0.95 }}
-            animate={{ y: -12, opacity: 1, filter: "blur(0px)", scale: 1 }}
-            exit={{ y: 10, opacity: 0, filter: "blur(4px)", scale: 0.95 }}
+            initial={{ opacity: 0, y: 10, x: "-50%", scale: 0.95, filter: "blur(4px)" }}
+            animate={{ opacity: 1, y: -12, x: "-50%", scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: 10, x: "-50%", scale: 0.95, filter: "blur(4px)" }}
             transition={{
               type: "spring",
               stiffness: 300,
               damping: 25,
             }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20"
+            className="absolute bottom-full left-1/2 mb-2 z-20"
           >
              <div className="rounded-2xl border border-white/10 bg-[#141414] px-1 py-1 text-sm text-white shadow-2xl overflow-hidden min-w-[140px]">
                {children}
