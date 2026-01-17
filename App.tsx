@@ -59,67 +59,6 @@ const TooltipContent = React.forwardRef<
 ));
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
-// --- Avatar Primitives (Local Implementation) ---
-const Avatar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full", className)} {...props} />
-));
-Avatar.displayName = "Avatar";
-
-const AvatarImage = React.forwardRef<HTMLImageElement, React.ImgHTMLAttributes<HTMLImageElement>>(({ className, ...props }, ref) => (
-  <img ref={ref} className={cn("aspect-square h-full w-full object-cover", className)} {...props} />
-));
-AvatarImage.displayName = "AvatarImage";
-
-const AvatarFallback = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("flex h-full w-full items-center justify-center rounded-full bg-white/10 text-white/50", className)} {...props} />
-));
-AvatarFallback.displayName = "AvatarFallback";
-
-// --- Smooth Profile Button ---
-function SmoothProfileButton({ src, name, children }: { src: string, name: string, children?: React.ReactNode }) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <div
-      className="relative inline-flex items-center justify-center"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <MotionDiv
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        className="relative z-10"
-      >
-        <Avatar className="h-12 w-12 cursor-pointer ring-2 ring-white/5 shadow-xl">
-          <AvatarImage src={src} alt={name} />
-          <AvatarFallback>{name.substring(0, 2).toUpperCase()}</AvatarFallback>
-        </Avatar>
-      </MotionDiv>
-
-      <AnimatePresence>
-        {isHovered && (
-          <MotionDiv
-            initial={{ opacity: 0, y: 10, x: "-50%", scale: 0.95, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: -12, x: "-50%", scale: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: 10, x: "-50%", scale: 0.95, filter: "blur(4px)" }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 25,
-            }}
-            className="absolute bottom-full left-1/2 mb-2 z-20"
-          >
-             <div className="rounded-2xl border border-white/10 bg-[#141414] px-1 py-1 text-sm text-white shadow-2xl overflow-hidden min-w-[140px]">
-               {children}
-             </div>
-          </MotionDiv>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
 const QuickUserOptions = ({ onLogout }: { onLogout: () => void }) => {
   return (
     <div className="flex flex-col min-w-[140px]">
@@ -657,9 +596,14 @@ const App: React.FC = () => {
               <div style={{ bottom: 'calc(1.5rem + var(--sab))' }} className="fixed lg:absolute left-0 right-0 z-[100] flex justify-center items-center pointer-events-none px-4">
                 <div className="flex items-center gap-3 lg:gap-4 pointer-events-auto w-full max-w-2xl lg:max-w-none justify-center">
                   {isInitialLoading ? <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" /> : (
-                     <SmoothProfileButton src="https://i.imgur.com/kCkmBR9.png" name="XG">
-                         <QuickUserOptions onLogout={handleLogout} />
-                     </SmoothProfileButton>
+                    <TooltipProvider delayDuration={0.1}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                              <button className="bg-white w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 overflow-hidden"><img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" /></button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="center"><QuickUserOptions onLogout={handleLogout} /></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
                   <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md flex-1 lg:flex-none lg:w-[240px] h-14 shadow-2xl border border-white/5 overflow-hidden">
                       {isInitialLoading ? <div className="flex-1 h-full px-6 flex items-center justify-between gap-4"><Skeleton className="h-4 flex-1 rounded-full" /><Skeleton className="h-4 flex-1 rounded-full" /><Skeleton className="h-4 flex-1 rounded-full" /></div> : (
