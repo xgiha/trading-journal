@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Trash2, Loader2, Edit2, FileText, Target, Maximize2 } from 'lucide-react';
+import { X, ArrowUpRight, ArrowDownRight, Calendar as CalendarIcon, Clock, Type, Hash, DollarSign, ChevronLeft, ChevronRight, Zap, Plus, Image as ImageIcon, Trash2, Loader2, Edit2, FileText, Target, Maximize2, UploadCloud, Check } from 'lucide-react';
 import { Trade } from '../types';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -83,6 +83,65 @@ const processImageFile = (file: File): Promise<string> => {
 
 const uploadImageToBlob = async (file: File) => {
     return await processImageFile(file);
+};
+
+// --- Topstep CSV Parser ---
+const parseTopstepCSV = (csvText: string): Partial<Trade>[] => {
+  const lines = csvText.split(/\r?\n/).filter(line => line.trim().length > 0);
+  if (lines.length < 2) return [];
+
+  // Remove potential BOM and split headers
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^[\uFEFF]/, ''));
+  const trades: Partial<Trade>[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',').map(v => v.trim());
+    const row: any = {};
+    headers.forEach((h, idx) => { row[h] = values[idx]; });
+
+    // Required fields check (EnteredAt and ContractName are essential)
+    if (!row['EnteredAt'] || !row['ContractName']) continue;
+
+    // Parsing Logic
+    // Topstep Format: 01/15/2026 13:47:18 +05:30
+    const parseDateTime = (dtStr: string) => {
+        if (!dtStr) return { date: '', time: '' };
+        
+        const parts = dtStr.split(' ');
+        if (parts.length < 2) return { date: '', time: '' };
+        
+        const dateParts = parts[0].split('/'); // MM, DD, YYYY
+        if (dateParts.length < 3) return { date: '', time: '' };
+        
+        const yyyy = dateParts[2];
+        const mm = dateParts[0].padStart(2, '0');
+        const dd = dateParts[1].padStart(2, '0');
+        
+        return {
+            date: `${yyyy}-${mm}-${dd}`,
+            time: parts[1] // HH:mm:ss
+        };
+    };
+
+    const entry = parseDateTime(row['EnteredAt']);
+    const exit = parseDateTime(row['ExitedAt']);
+
+    const trade: Partial<Trade> = {
+        pair: row['ContractName'],
+        type: row['Type'] as 'Long' | 'Short',
+        date: entry.date,
+        entryTime: entry.time,
+        exitTime: exit.time,
+        entryPrice: parseFloat(row['EntryPrice'] || '0'),
+        exitPrice: parseFloat(row['ExitPrice'] || '0'),
+        fee: parseFloat(row['Fees'] || '0'),
+        pnl: parseFloat(row['PnL'] || '0'),
+        size: row['Size'],
+        notes: row['TradeDuration'] ? `Duration: ${row['TradeDuration']}` : ''
+    };
+    trades.push(trade);
+  }
+  return trades;
 };
 
 // --- Polished Overlays ---
@@ -351,7 +410,13 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
   const [showCalendar, setShowCalendar] = useState(false);
   const [isNewsTrade, setIsNewsTrade] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // CSV Import State
+  const [csvTrades, setCsvTrades] = useState<Partial<Trade>[]>([]);
+  const [selectedCsvIndices, setSelectedCsvIndices] = useState<Set<number>>(new Set());
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
   const dateContainerRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
@@ -394,8 +459,8 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
     }
   }, [date, initialData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (isUploading) return; 
 
     const pnlValue = parseFloat(unformatNumber(formData.pnl));
@@ -415,6 +480,38 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       image: formData.images[0], notes: formData.notes
     };
     onAdd(newTrade);
+    onClose();
+  };
+
+  const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target?.result as string;
+        const parsed = parseTopstepCSV(text);
+        if (parsed.length > 0) {
+          setCsvTrades(parsed);
+          setSelectedCsvIndices(new Set(parsed.map((_, i) => i))); // Default select all
+        }
+      };
+      reader.readAsText(file);
+    }
+    if (csvInputRef.current) csvInputRef.current.value = '';
+  };
+
+  const confirmCsvImport = () => {
+    selectedCsvIndices.forEach(idx => {
+      const t = csvTrades[idx];
+      // Generate a unique ID for each CSV trade
+      onAdd({
+        ...t,
+        id: `T-CSV-${Date.now()}-${idx}`,
+        // Ensure image/images are initialized if missing
+        images: t.images || [],
+        notes: t.notes || ''
+      } as Trade);
+    });
     onClose();
   };
 
@@ -449,8 +546,69 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       <MotionDiv variants={BACKDROP_VARIANTS} transition={{ duration: 0.3 }} className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={onClose} />
       <MotionDiv variants={MODAL_VARIANTS} transition={MODAL_SPRING} className="relative w-[95%] md:max-w-[420px] max-h-[92vh] bg-[#141414] rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col border border-white/5">
         
-        <div className="shrink-0 flex items-center justify-end px-6 pt-6 pb-2">
-             {/* Header UI */}
+        {/* CSV Picker Overlay */}
+        <AnimatePresence>
+          {csvTrades.length > 0 && (
+            <MotionDiv 
+              initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+              className="absolute inset-0 z-[200] bg-[#141414] p-6 flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-2">
+                    <UploadCloud size={16} className="text-xgiha-accent" />
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-white">Import Selection</h3>
+                </div>
+                <button onClick={() => setCsvTrades([])} className="p-2 text-white/40 hover:text-white rounded-full hover:bg-white/5 transition-colors">
+                    <X size={20} />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto no-scrollbar space-y-2 mb-6 pr-1">
+                {csvTrades.map((t, i) => {
+                  const pnl = t.pnl || 0;
+                  const isSelected = selectedCsvIndices.has(i);
+                  return (
+                    <div 
+                        key={i} 
+                        onClick={() => {
+                            const next = new Set(selectedCsvIndices);
+                            if (next.has(i)) next.delete(i); else next.add(i);
+                            setSelectedCsvIndices(next);
+                        }}
+                        className={`rounded-2xl p-4 flex items-center justify-between border cursor-pointer transition-all duration-200 group ${isSelected ? 'bg-white/10 border-white/20' : 'bg-white/5 border-white/5 hover:bg-white/[0.07]'}`}
+                    >
+                        <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center gap-2">
+                                <span className="text-white font-bold font-mono text-lg">{t.pair}</span>
+                                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${t.type === 'Long' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>{t.type}</span>
+                            </div>
+                            <span className="text-[10px] text-white/40 font-mono font-medium">{t.date} &bull; {t.entryTime}</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <span className={`font-mono font-bold text-lg ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}</span>
+                            <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all ${isSelected ? 'bg-xgiha-accent border-xgiha-accent' : 'border-white/20 group-hover:border-white/40'}`}>
+                                {isSelected && <Check size={14} className="text-black" strokeWidth={3} />}
+                            </div>
+                        </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <button onClick={confirmCsvImport} className="w-full py-5 rounded-full bg-white text-black hover:bg-zinc-200 active:scale-95 transition-all font-black uppercase text-xs tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl">
+                <Check size={16} strokeWidth={3} /> Confirm Import ({selectedCsvIndices.size})
+              </button>
+            </MotionDiv>
+          )}
+        </AnimatePresence>
+
+        {/* Existing Form Header with CSV Button added */}
+        <div className="shrink-0 flex items-center justify-between px-8 pt-8 pb-4">
+             <span className="text-[10px] font-black uppercase text-white/30 tracking-widest">Add New Trade</span>
+             <button onClick={() => csvInputRef.current?.click()} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xgiha-muted hover:text-white hover:bg-white/10 transition-all text-[9px] font-bold uppercase tracking-widest">
+                <UploadCloud size={12} /> Import CSV
+                <input ref={csvInputRef} type="file" accept=".csv" className="hidden" onChange={handleCsvFileChange} />
+             </button>
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar px-6 pb-28">
