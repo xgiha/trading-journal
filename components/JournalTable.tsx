@@ -9,14 +9,13 @@ import {
   Download,
   Upload
 } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Trade } from '../types';
 import Pagination from './Pagination';
 import { Skeleton } from './Skeleton';
 
 // Cast motion elements to any to bypass environment-specific type definition issues
 const MotionDiv = motion.div as any;
-const MotionButton = motion.button as any;
 
 interface JournalTableProps {
   trades: Trade[];
@@ -60,35 +59,30 @@ interface SwipeableRowProps {
 }
 
 const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, onViewDay, readOnly }) => {
-    // Use useMotionValue instead of state to prevent re-renders during drag
-    const x = useMotionValue(0);
+    const [offset, setOffset] = useState(0);
     const ref = useRef<HTMLDivElement>(null);
     const startX = useRef(0);
+    const dragStartX = useRef(0);
     const isDragging = useRef(false);
-    
-    // Derived values for animations
-    const editOpacity = useTransform(x, [10, 50], [0, 1]);
-    const editX = useTransform(x, [0, 50], [-10, 0]);
-    const deleteOpacity = useTransform(x, [-10, -50], [0, 1]);
-    const deleteX = useTransform(x, [0, -50], [10, 0]);
-    
     const isNewsTrade = !!trade.newsEvent;
     const hasNotes = !!trade.notes;
+
+    // Use Net P&L
     const netPnl = trade.pnl - (trade.fee || 0);
 
     const onPointerDown = (e: React.PointerEvent) => {
         if (readOnly) return;
         isDragging.current = true;
-        startX.current = e.clientX - x.get();
+        startX.current = e.clientX - offset;
+        dragStartX.current = e.clientX;
         ref.current?.setPointerCapture(e.pointerId);
     };
 
     const onPointerMove = (e: React.PointerEvent) => {
         if (!isDragging.current || readOnly) return;
-        const newX = e.clientX - startX.current;
-        // Clamp between -120 and 120
-        const clamped = Math.max(Math.min(newX, 120), -120);
-        x.set(clamped);
+        const x = e.clientX - startX.current;
+        const newOffset = Math.max(Math.min(x, 120), -120); 
+        setOffset(newOffset);
     };
 
     const onPointerUp = (e: React.PointerEvent) => {
@@ -98,19 +92,14 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
         }
         isDragging.current = false;
         ref.current?.releasePointerCapture(e.pointerId);
-        
-        const currentX = x.get();
-        const moveDist = Math.abs(currentX);
-        
-        // Click detection logic (very small movement)
+        const moveDist = Math.abs(e.clientX - dragStartX.current);
         if (moveDist < 5) {
-             if (currentX !== 0) animate(x, 0, { type: 'spring', stiffness: 400, damping: 30 });
+             if (offset !== 0) setOffset(0);
              else onViewDay(trade.date);
         } else {
-            // Snap logic
-            if (currentX > 60) animate(x, 100, { type: 'spring', stiffness: 400, damping: 30 });
-            else if (currentX < -60) animate(x, -100, { type: 'spring', stiffness: 400, damping: 30 });
-            else animate(x, 0, { type: 'spring', stiffness: 400, damping: 30 });
+            if (offset > 60) setOffset(100);
+            else if (offset < -60) setOffset(-100);
+            else setOffset(0);
         }
     };
 
@@ -118,35 +107,33 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
         <div className="relative h-20 w-full min-w-[600px] mb-2 rounded-[30px] select-none touch-pan-y overflow-hidden shrink-0">
             {!readOnly && (
               <div className="absolute inset-0 flex justify-between items-center px-10 bg-white/5 rounded-[30px] z-0">
-                  <MotionButton 
+                  <button 
                       type="button"
-                      onClick={(e: any) => { e.stopPropagation(); onEdit(trade); animate(x, 0); }}
-                      className="flex items-center gap-2 text-green-500 transition-all active:scale-95"
+                      onClick={(e) => { e.stopPropagation(); onEdit(trade); setOffset(0); }}
+                      className={`flex items-center gap-2 text-green-500 transition-all active:scale-95 ${offset > 0 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}
                       aria-label="Edit trade"
-                      style={{ opacity: editOpacity, x: editX }}
                   >
                       <Edit2 size={22} />
-                  </MotionButton>
-                  <MotionButton 
+                  </button>
+                  <button 
                       type="button"
-                      onClick={(e: any) => { e.stopPropagation(); onDelete(trade.id); animate(x, 0); }}
-                      className="flex items-center gap-2 text-red-500 transition-all active:scale-95"
+                      onClick={(e) => { e.stopPropagation(); onDelete(trade.id); setOffset(0); }}
+                      className={`flex items-center gap-2 text-red-500 transition-all active:scale-95 ${offset < 0 ? 'opacity-100 translate-x-[2px]' : 'opacity-0 translate-x-4 pointer-events-none'}`}
                       aria-label="Delete trade"
-                      style={{ opacity: deleteOpacity, x: deleteX }}
                   >
                       <Trash2 size={22} />
-                  </MotionButton>
+                  </button>
               </div>
             )}
 
-            <MotionDiv 
+            <div 
                 ref={ref}
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
                 onPointerLeave={() => { if(isDragging.current) onPointerUp({ pointerId: 0 } as any) }}
-                className="absolute inset-0 bg-[#0F0F0F] rounded-[30px] flex items-center cursor-pointer hover:bg-[#141414] z-10"
-                style={{ x }}
+                className="absolute inset-0 bg-[#0F0F0F] rounded-[30px] flex items-center transition-transform duration-300 ease-out cursor-pointer hover:bg-[#141414] z-10"
+                style={{ transform: `translateX(${offset}px)` }}
             >
                 <div className="w-16 flex flex-col gap-1 justify-center items-center shrink-0 border-r border-white/5 h-full">
                     {isNewsTrade ? <Zap size={16} className="text-yellow-500 fill-yellow-500" /> : <div className="w-1.5 h-1.5 rounded-full bg-[#333]"></div>}
@@ -186,7 +173,7 @@ const SwipeableRow: React.FC<SwipeableRowProps> = ({ trade, onEdit, onDelete, on
                         </div>
                     </div>
                 </div>
-            </MotionDiv>
+            </div>
         </div>
     );
 };
