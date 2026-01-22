@@ -36,7 +36,7 @@ export default function Pagination({
             <motion.div
               key={i}
               className={`relative cursor-pointer ${
-                isActive ? "bg-primary" : "bg-muted-foreground/30"
+                isActive ? "bg-white" : "bg-muted-foreground/30"
               }`}
               onClick={() => setPage(i)}
               animate={{
@@ -51,7 +51,7 @@ export default function Pagination({
                 <AnimatePresence>
                   <motion.span
                     key="ripple"
-                    className="absolute inset-0 rounded-full bg-primary/30"
+                    className="absolute inset-0 rounded-full bg-white/30"
                     initial={{ scale: 0.8, opacity: 0.6 }}
                     animate={{ scale: 1.6, opacity: 0 }}
                     exit={{ opacity: 0 }}

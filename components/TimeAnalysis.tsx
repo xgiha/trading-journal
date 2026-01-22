@@ -6,6 +6,8 @@ import { Skeleton } from './Skeleton';
 interface TimeAnalysisProps {
   trades: Trade[];
   loading?: boolean;
+  onViewDay: (date: string) => void;
+  onViewTrade: (trade: Trade) => void;
 }
 
 const cn = (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ');
@@ -42,8 +44,21 @@ const StatCard: React.FC<{
   </div>
 );
 
-const MetricRow: React.FC<{ icon: React.ReactNode, iconColor: string, label: string, value: string, valueColor?: string }> = ({ icon, iconColor, label, value, valueColor = "text-white" }) => (
-  <div className="flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5 flex-1 min-h-0">
+const MetricRow: React.FC<{ 
+  icon: React.ReactNode, 
+  iconColor: string, 
+  label: string, 
+  value: string, 
+  valueColor?: string,
+  onClick?: () => void 
+}> = ({ icon, iconColor, label, value, valueColor = "text-white", onClick }) => (
+  <div 
+    onClick={onClick}
+    className={cn(
+      "flex items-center gap-3 p-2 bg-white/5 rounded-2xl border border-white/5 flex-1 min-h-0 transition-all duration-200",
+      onClick ? "cursor-pointer hover:bg-white/10 hover:border-white/20 active:scale-[0.98]" : ""
+    )}
+  >
     <div className={cn("p-2 rounded-xl shrink-0 flex items-center justify-center", iconColor)}>
       {/* Fix: Cast icon as React.ReactElement<any> to resolve 'size' property type error in cloneElement */}
       {React.cloneElement(icon as React.ReactElement<any>, { size: 18 })}
@@ -74,7 +89,7 @@ const formatDuration = (seconds: number) => {
   return `${mins}m ${secs}s`;
 };
 
-const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) => {
+const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false, onViewDay, onViewTrade }) => {
   const stats = useMemo(() => {
     const emptyStats = {
       avgWin: 0, avgLoss: 0, profitFactor: 0,
@@ -84,7 +99,9 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
       mostUsedStrategyCount: 0,
       mostProfitableStrategy: null as [string, number] | null,
       avgWinDuration: 0, avgLossDuration: 0,
-      longestDuration: 0, shortestDuration: Infinity, avgDuration: 0
+      longestDuration: 0, longestDurationTrade: null as Trade | null,
+      shortestDuration: Infinity, shortestDurationTrade: null as Trade | null,
+      avgDuration: 0
     };
 
     if (trades.length === 0) return { ...emptyStats, shortestDuration: 0 };
@@ -95,6 +112,8 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
     let totalDurationSum = 0, totalDurationCount = 0;
     let maxDur = 0;
     let minDur = Infinity;
+    let maxDurTrade: Trade | null = null;
+    let minDurTrade: Trade | null = null;
 
     const dayMap = new Map<string, number>();
     const strategyCountMap = new Map<string, number>();
@@ -118,8 +137,14 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
         let duration = end - start;
         if (duration < 0) duration += 86400; 
 
-        if (duration > maxDur) maxDur = duration;
-        if (duration < minDur && duration > 0) minDur = duration;
+        if (duration > maxDur) {
+            maxDur = duration;
+            maxDurTrade = t;
+        }
+        if (duration < minDur && duration > 0) {
+            minDur = duration;
+            minDurTrade = t;
+        }
         totalDurationSum += duration;
         totalDurationCount++;
 
@@ -146,7 +171,9 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
       avgWinDuration: winDurationCount > 0 ? winDurationSum / winDurationCount : 0,
       avgLossDuration: lossDurationCount > 0 ? lossDurationSum / lossDurationCount : 0,
       longestDuration: maxDur,
+      longestDurationTrade: maxDurTrade,
       shortestDuration: minDur === Infinity ? 0 : minDur,
+      shortestDurationTrade: minDurTrade,
       avgDuration: totalDurationCount > 0 ? totalDurationSum / totalDurationCount : 0
     };
   }, [trades]);
@@ -173,16 +200,42 @@ const TimeAnalysis: React.FC<TimeAnalysisProps> = ({ trades, loading = false }) 
         className="flex-[2] min-h-0"
       >
         <div className="flex-1 flex flex-col justify-center gap-2">
-           <MetricRow icon={<TrendingUp />} iconColor="bg-emerald-500/10 text-emerald-500" label="Best Day" value={stats.mostProfitableDay ? `+$${stats.mostProfitableDay[1].toLocaleString()}` : '---'} valueColor="text-emerald-400" />
-           <MetricRow icon={<TrendingDown />} iconColor="bg-red-500/10 text-red-500" label="Worst Day" value={stats.leastProfitableDay ? `-$${Math.abs(stats.leastProfitableDay[1]).toLocaleString()}` : '---'} valueColor="text-red-400" />
+           <MetricRow 
+             icon={<TrendingUp />} 
+             iconColor="bg-emerald-500/10 text-emerald-500" 
+             label="Best Day" 
+             value={stats.mostProfitableDay ? `+$${stats.mostProfitableDay[1].toLocaleString()}` : '---'} 
+             valueColor="text-emerald-400" 
+             onClick={stats.mostProfitableDay ? () => onViewDay(stats.mostProfitableDay![0]) : undefined}
+           />
+           <MetricRow 
+             icon={<TrendingDown />} 
+             iconColor="bg-red-500/10 text-red-500" 
+             label="Worst Day" 
+             value={stats.leastProfitableDay ? `-$${Math.abs(stats.leastProfitableDay[1]).toLocaleString()}` : '---'} 
+             valueColor="text-red-400" 
+             onClick={stats.leastProfitableDay ? () => onViewDay(stats.leastProfitableDay![0]) : undefined}
+           />
         </div>
       </StatCard>
 
       {/* Trade Durations: flex-3 */}
       <StatCard title="Trade Durations" loading={loading} className="flex-[3] min-h-0">
         <div className="flex-1 flex flex-col justify-center gap-2">
-           <MetricRow icon={<Maximize2 />} iconColor="bg-blue-500/10 text-blue-400" label="Longest" value={formatDuration(stats.longestDuration)} />
-           <MetricRow icon={<Minimize2 />} iconColor="bg-purple-500/10 text-purple-400" label="Shortest" value={formatDuration(stats.shortestDuration)} />
+           <MetricRow 
+             icon={<Maximize2 />} 
+             iconColor="bg-blue-500/10 text-blue-400" 
+             label="Longest" 
+             value={formatDuration(stats.longestDuration)} 
+             onClick={stats.longestDurationTrade ? () => onViewTrade(stats.longestDurationTrade!) : undefined}
+           />
+           <MetricRow 
+             icon={<Minimize2 />} 
+             iconColor="bg-purple-500/10 text-purple-400" 
+             label="Shortest" 
+             value={formatDuration(stats.shortestDuration)} 
+             onClick={stats.shortestDurationTrade ? () => onViewTrade(stats.shortestDurationTrade!) : undefined}
+           />
            <MetricRow icon={<History />} iconColor="bg-orange-500/10 text-orange-400" label="Average" value={formatDuration(stats.avgDuration)} />
         </div>
       </StatCard>

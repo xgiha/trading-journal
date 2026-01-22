@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check, PieChart, BarChart3, Lock, Unlock, Loader2, LogOut, Eye, EyeOff, Calendar } from 'lucide-react';
+import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check, PieChart, BarChart3, Lock, Unlock, Loader2, LogOut, Eye, EyeOff, Calendar, Download, Upload, FileJson, AlertTriangle, Camera, Move, ZoomIn, Save, X, Image as ImageIcon, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
@@ -42,9 +42,9 @@ const TooltipContent = React.forwardRef<
         initial={{ opacity: 0, y: 8, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 8, scale: 0.96 }}
-        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
         className={cn(
-          "rounded-2xl border border-white/10 bg-[#141414] px-1 py-1 text-sm text-white shadow-2xl overflow-hidden",
+          "rounded-2xl border border-white/10 bg-[#141414] px-1 py-1 text-sm text-white shadow-2xl overflow-hidden origin-top",
           className,
         )}
       >
@@ -58,17 +58,346 @@ const TooltipContent = React.forwardRef<
 ));
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
-const QuickUserOptions = ({ onLogout }: { onLogout: () => void }) => {
+// --- Avatar Editor Modal ---
+interface AvatarEditorModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (base64Image: string) => void;
+  currentAvatar: string | null;
+}
+
+const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({ isOpen, onClose, onSave, currentAvatar }) => {
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const startPos = useRef({ x: 0, y: 0 });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setImageSrc(ev.target?.result as string);
+        setScale(1);
+        setPosition({ x: 0, y: 0 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!imageSrc) return;
+    setIsDragging(true);
+    startPos.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - startPos.current.x,
+      y: e.clientY - startPos.current.y
+    });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    setIsDragging(false);
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+  };
+
+  const handleSave = () => {
+    if (!imageSrc || !imgRef.current) return;
+
+    const canvas = document.createElement('canvas');
+    // Use higher resolution for better quality
+    const size = 400; 
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Draw circular mask
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+
+    // Clear background
+    ctx.fillStyle = "#141414";
+    ctx.fillRect(0,0, size, size);
+
+    const img = imgRef.current;
+    
+    // Original image dimensions
+    const naturalWidth = img.naturalWidth;
+    const naturalHeight = img.naturalHeight;
+    
+    // The visual container size in pixels (from CSS w-[240px])
+    const containerSize = 240;
+    
+    // Draw logic:
+    // 1. Center origin
+    ctx.translate(size / 2, size / 2);
+    
+    // 2. Apply user transform (Pan & Zoom)
+    // Scale position offset to match canvas resolution ratio
+    const ratio = size / containerSize;
+    ctx.translate(position.x * ratio, position.y * ratio);
+    ctx.scale(scale, scale);
+    
+    // 3. Draw image centered, mimicking 'object-fit: cover' logic
+    let drawWidth = size;
+    let drawHeight = size;
+    
+    // object-fit: cover logic
+    // If image aspect ratio is 'taller' than canvas (1:1), width matches size, height scales
+    // If image aspect ratio is 'wider' than canvas (1:1), height matches size, width scales
+    if (naturalWidth < naturalHeight) {
+        // Taller image relative to square
+        // Check AR to be sure. (w/h < 1)
+        // Actually, comparison of ratios is safer: (w/h) < (size/size = 1)
+        const imgRatio = naturalWidth / naturalHeight;
+        if (imgRatio < 1) {
+             drawWidth = size;
+             drawHeight = size / imgRatio;
+        } else {
+             // Wider
+             drawHeight = size;
+             drawWidth = size * imgRatio;
+        }
+    } else {
+        // Wider image or square
+        const imgRatio = naturalWidth / naturalHeight;
+        if (imgRatio > 1) {
+            drawHeight = size;
+            drawWidth = size * imgRatio;
+        } else {
+            // Square or Taller (if naturalWidth < naturalHeight failed earlier)
+            drawWidth = size;
+            drawHeight = size / imgRatio;
+        }
+    }
+    
+    // Simplified robust cover logic for 1:1 target:
+    // Scale factor to cover size x size
+    const scaleFactor = Math.max(size / naturalWidth, size / naturalHeight);
+    const renderWidth = naturalWidth * scaleFactor;
+    const renderHeight = naturalHeight * scaleFactor;
+
+    ctx.drawImage(img, -renderWidth / 2, -renderHeight / 2, renderWidth, renderHeight);
+    
+    onSave(canvas.toDataURL('image/jpeg', 0.9));
+    onClose();
+  };
+
   return (
-    <div className="flex flex-col min-w-[140px]">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
+      <MotionDiv
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <MotionDiv
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        className="relative bg-[#141414] w-full max-w-[360px] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col"
+      >
+        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+            <h3 className="text-white font-bold text-sm uppercase tracking-widest">Edit Avatar</h3>
+            <button onClick={onClose} className="text-white/40 hover:text-white transition-colors"><X size={18} /></button>
+        </div>
+        
+        <div className="p-8 flex flex-col items-center gap-6">
+            {/* Preview Area */}
+            <div className="relative w-[240px] h-[240px] rounded-full overflow-hidden border-2 border-dashed border-white/10 bg-black/50 group cursor-move shadow-inner">
+                {imageSrc ? (
+                     <img 
+                        ref={imgRef}
+                        src={imageSrc} 
+                        alt="Preview" 
+                        draggable={false}
+                        onPointerDown={handlePointerDown}
+                        onPointerMove={handlePointerMove}
+                        onPointerUp={handlePointerUp}
+                        onPointerLeave={handlePointerUp}
+                        className="absolute inset-0 w-full h-full object-cover touch-none select-none"
+                        style={{ 
+                            transformOrigin: "center center",
+                            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`
+                        }}
+                     />
+                ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white/20 gap-2 pointer-events-none">
+                        <ImageIcon size={32} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">No Image</span>
+                    </div>
+                )}
+                
+                {/* Overlay Hint */}
+                {imageSrc && <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"><Move size={24} className="text-white/80" /></div>}
+            </div>
+
+            {/* Controls */}
+            {imageSrc ? (
+                <div className="w-full flex flex-col gap-4">
+                     <div className="flex items-center gap-3">
+                        <ZoomIn size={14} className="text-white/40" />
+                        <input 
+                            type="range" 
+                            min="0.5" 
+                            max="3" 
+                            step="0.1" 
+                            value={scale} 
+                            onChange={(e) => setScale(parseFloat(e.target.value))}
+                            className="flex-1 h-1 bg-white/10 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-xgiha-accent cursor-pointer"
+                        />
+                     </div>
+                     <div className="flex gap-2">
+                        <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all">Change</button>
+                        <button onClick={() => { setScale(1); setPosition({x:0,y:0}); }} className="px-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all"><RotateCcw size={14} /></button>
+                     </div>
+                </div>
+            ) : (
+                <button onClick={() => fileInputRef.current?.click()} className="w-full py-4 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all flex items-center justify-center gap-2 group">
+                    <Camera size={16} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Upload Photo</span>
+                </button>
+            )}
+            
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+        </div>
+
+        <div className="p-4 border-t border-white/5 bg-[#0f0f0f]">
+            <button 
+                onClick={handleSave} 
+                disabled={!imageSrc}
+                className="w-full py-4 rounded-xl bg-white text-black hover:bg-zinc-200 active:scale-95 transition-all font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <Save size={14} strokeWidth={3} /> Save Avatar
+            </button>
+        </div>
+      </MotionDiv>
+    </div>
+  );
+};
+
+// --- Import Confirmation Modal ---
+interface ImportModalProps {
+  onConfirm: () => void;
+  onCancel: () => void;
+  dataSummary: { trades: number; payouts: number } | null;
+  error?: string | null;
+}
+
+const ImportModal: React.FC<ImportModalProps> = ({ onConfirm, onCancel, dataSummary, error }) => {
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
+      <MotionDiv
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      <MotionDiv
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="relative bg-[#141414] w-full max-w-[400px] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden p-8 flex flex-col gap-6"
+      >
+         <div className="flex items-center gap-3">
+             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${error ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-xgiha-accent/10 border-xgiha-accent/20 text-xgiha-accent'}`}>
+                 {error ? <AlertTriangle size={24} /> : <FileJson size={24} />}
+             </div>
+             <div>
+                 <h3 className="text-white font-bold text-lg leading-tight">{error ? 'Import Failed' : 'Confirm Import'}</h3>
+                 <span className="text-[11px] text-white/40 font-bold uppercase tracking-widest">{error ? 'Error Detected' : 'Restore Backup'}</span>
+             </div>
+         </div>
+
+         {error ? (
+             <div className="bg-red-500/5 rounded-xl p-4 border border-red-500/10">
+                 <p className="text-red-400 text-sm font-medium leading-relaxed">{error}</p>
+             </div>
+         ) : (
+             <div className="flex flex-col gap-4">
+                 <p className="text-white/60 text-sm leading-relaxed">
+                     This action will <strong>replace</strong> your current journal entries with the data from the backup file. This cannot be undone.
+                 </p>
+                 <div className="flex gap-3">
+                     <div className="flex-1 bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col items-center justify-center gap-1">
+                         <span className="text-2xl font-mono font-bold text-white">{dataSummary?.trades || 0}</span>
+                         <span className="text-[9px] uppercase tracking-widest text-white/30 font-bold">Trades</span>
+                     </div>
+                     <div className="flex-1 bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col items-center justify-center gap-1">
+                         <span className="text-2xl font-mono font-bold text-white">{dataSummary?.payouts || 0}</span>
+                         <span className="text-[9px] uppercase tracking-widest text-white/30 font-bold">Payouts</span>
+                     </div>
+                 </div>
+             </div>
+         )}
+
+         <div className="flex gap-3 mt-2">
+             <button onClick={onCancel} className="flex-1 py-4 rounded-xl font-bold text-xs uppercase tracking-widest bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all">
+                {error ? 'Close' : 'Cancel'}
+             </button>
+             {!error && (
+                 <button onClick={onConfirm} className="flex-1 py-4 rounded-xl font-bold text-xs uppercase tracking-widest bg-white text-black hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95">
+                    <Check size={14} strokeWidth={3} /> Restore
+                 </button>
+             )}
+         </div>
+      </MotionDiv>
+    </div>
+  );
+};
+
+const QuickUserOptions = ({ onLogout, onImport, onExport, onEditAvatar }: { onLogout: () => void, onImport: () => void, onExport: () => void, onEditAvatar: () => void }) => {
+  return (
+    <div className="flex flex-col min-w-[180px] p-1">
+      <div className="px-3 py-2">
+        <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">Settings</span>
+      </div>
+      <button
+        onClick={onEditAvatar}
+        className="relative px-3 py-2.5 group hover:bg-white/5 rounded-lg cursor-pointer flex items-center gap-3 transition-all text-white/60 hover:text-white"
+      >
+        <Camera size={14} className="opacity-70 group-hover:opacity-100" />
+        <span className="text-[10px] font-bold uppercase tracking-wider">Change Avatar</span>
+      </button>
+
+      <div className="h-px bg-white/5 my-1 mx-2" />
+
+      <div className="px-3 py-2">
+        <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">Data</span>
+      </div>
+      <button
+        onClick={onImport}
+        className="relative px-3 py-2.5 group hover:bg-white/5 rounded-lg cursor-pointer flex items-center gap-3 transition-all text-white/60 hover:text-white"
+      >
+        <Download size={14} className="opacity-70 group-hover:opacity-100" />
+        <span className="text-[10px] font-bold uppercase tracking-wider">Import JSON</span>
+      </button>
+      <button
+        onClick={onExport}
+        className="relative px-3 py-2.5 group hover:bg-white/5 rounded-lg cursor-pointer flex items-center gap-3 transition-all text-white/60 hover:text-white"
+      >
+        <Upload size={14} className="opacity-70 group-hover:opacity-100" />
+        <span className="text-[10px] font-bold uppercase tracking-wider">Export JSON</span>
+      </button>
+      
+      <div className="h-px bg-white/5 my-1 mx-2" />
+      
       <button
         onClick={onLogout}
-        className="relative px-4 py-3 group hover:bg-red-500/10 rounded-xl cursor-pointer flex items-center justify-between transition-all text-white/60 hover:text-red-400"
+        className="relative px-3 py-2.5 group hover:bg-red-500/10 rounded-lg cursor-pointer flex items-center gap-3 transition-all text-white/60 hover:text-red-400"
       >
-        <span className="text-[10px] font-black uppercase tracking-widest">
-          Log Out
-        </span>
-        <LogOut size={14} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+        <LogOut size={14} className="opacity-70 group-hover:opacity-100" />
+        <span className="text-[10px] font-bold uppercase tracking-wider">Log Out</span>
       </button>
     </div>
   );
@@ -84,7 +413,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const radius = 100;
     const containerRef = useRef<HTMLDivElement | null>(null);
     const gradientRef = useRef(null);
-    // Use ref instead of state to avoid re-renders on every mouse move
     const mousePosition = useRef({ x: 0, y: 0 });
 
     useGSAP(() => {
@@ -293,9 +621,23 @@ const App: React.FC = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [payouts, setPayouts] = useState<PayoutRecord[]>([]);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   
+  // Tooltip State
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  
   const lastSyncedStateRef = useRef<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Import Modal State
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [pendingImportData, setPendingImportData] = useState<any>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importStats, setImportStats] = useState<{trades: number, payouts: number} | null>(null);
+
+  // Avatar Editor State
+  const [showAvatarEditor, setShowAvatarEditor] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => window.innerWidth < 1024;
@@ -315,6 +657,7 @@ const App: React.FC = () => {
       
       let cloudTrades: Trade[] = [];
       let cloudPayouts: PayoutRecord[] = [];
+      let cloudAvatar: string | null = null;
 
       if (response.ok) {
         let data = await response.json();
@@ -332,15 +675,19 @@ const App: React.FC = () => {
           } else {
             cloudPayouts = data.payouts || [];
           }
+          if (data.userProfile && data.userProfile.avatar) {
+             cloudAvatar = data.userProfile.avatar;
+          }
         }
       }
 
-      const stateToSync = { trades: cloudTrades, payouts: cloudPayouts };
+      const stateToSync = { trades: cloudTrades, payouts: cloudPayouts, userProfile: { avatar: cloudAvatar } };
       const cloudJson = JSON.stringify(stateToSync);
       
       if (cloudJson !== lastSyncedStateRef.current) {
         setTrades(cloudTrades);
         setPayouts(cloudPayouts);
+        setUserAvatar(cloudAvatar);
         lastSyncedStateRef.current = cloudJson;
         localStorage.setItem('xgiha_state', cloudJson);
       }
@@ -372,6 +719,9 @@ const App: React.FC = () => {
           } else {
              setPayouts(parsed.payouts || []);
           }
+          if (parsed.userProfile && parsed.userProfile.avatar) {
+             setUserAvatar(parsed.userProfile.avatar);
+          }
         }
         lastSyncedStateRef.current = saved;
       } catch(e) {}
@@ -399,7 +749,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isInitialLoading || !isAuthenticated) return;
     
-    const currentState = { trades, payouts };
+    const currentState = { trades, payouts, userProfile: { avatar: userAvatar } };
     const currentStateJson = JSON.stringify(currentState);
     
     if (currentStateJson === lastSyncedStateRef.current) return;
@@ -427,7 +777,7 @@ const App: React.FC = () => {
     }, 1500);
     
     return () => clearTimeout(timeout);
-  }, [trades, payouts, isInitialLoading, isAuthenticated]);
+  }, [trades, payouts, userAvatar, isInitialLoading, isAuthenticated]);
 
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -456,6 +806,12 @@ const App: React.FC = () => {
     setSelectedDate(trade.date); setEditingTrade(trade); setIsAddModalOpen(true); 
   }, []);
   
+  const handleViewTradeStats = useCallback((trade: Trade) => {
+    setSelectedDate(trade.date);
+    setSelectedTrades([trade]);
+    setIsDetailModalOpen(true);
+  }, []);
+
   const handleDeleteTrade = useCallback((tradeId: string) => { 
     setTrades(prev => prev.filter(t => t.id !== tradeId));
     setSelectedTrades(prev => prev.filter(t => t.id !== tradeId));
@@ -484,22 +840,77 @@ const App: React.FC = () => {
   }, [selectedDate]);
 
   const handleExportData = useCallback(() => {
-    const blob = new Blob([JSON.stringify({ trades, payouts }, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ trades, payouts, userProfile: { avatar: userAvatar } }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `backup-${new Date().toISOString()}.json`; a.click();
-  }, [trades, payouts]);
+  }, [trades, payouts, userAvatar]);
 
-  const handleImportData = useCallback((imported: any) => {
-    if (confirm("Import and replace all current trades/payouts?")) {
-      if (Array.isArray(imported)) {
-        setTrades(imported);
-        setPayouts([]);
-      } else {
-        setTrades(imported.trades || []);
-        setPayouts(imported.payouts || []);
-      }
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const content = event.target?.result as string;
+          const data = JSON.parse(content);
+          
+          let isValid = false;
+          let stats = { trades: 0, payouts: 0 };
+
+          if (Array.isArray(data)) {
+            // Legacy Array format
+            isValid = true;
+            stats.trades = data.length;
+          } else if (data && typeof data === 'object' && Array.isArray(data.trades)) {
+            // New Object format (trades + payouts)
+            isValid = true;
+            stats.trades = data.trades.length;
+            stats.payouts = Array.isArray(data.payouts) ? data.payouts.length : 0;
+          }
+
+          if (isValid) {
+            setPendingImportData(data);
+            setImportStats(stats);
+            setImportError(null);
+          } else {
+            setPendingImportData(null);
+            setImportStats(null);
+            setImportError("Invalid data format. Please provide a valid backup JSON file.");
+          }
+          setShowImportModal(true);
+
+        } catch (error) {
+           setPendingImportData(null);
+           setImportStats(null);
+           setImportError("Error parsing file. Ensure it is a valid JSON.");
+           setShowImportModal(true);
+        }
+      };
+      reader.readAsText(file);
     }
-  }, []);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const confirmImport = useCallback(() => {
+      if (pendingImportData) {
+        if (Array.isArray(pendingImportData)) {
+          setTrades(pendingImportData);
+          setPayouts([]);
+        } else {
+          setTrades(pendingImportData.trades || []);
+          setPayouts(pendingImportData.payouts || []);
+          if (pendingImportData.userProfile && pendingImportData.userProfile.avatar) {
+             setUserAvatar(pendingImportData.userProfile.avatar);
+          }
+        }
+        setShowImportModal(false);
+        setPendingImportData(null);
+      }
+  }, [pendingImportData]);
 
   const handleSignIn = () => { 
     sessionStorage.setItem('xgiha_auth', 'true');
@@ -511,6 +922,7 @@ const App: React.FC = () => {
     setIsAuthenticated(false); 
     setTrades([]); 
     setPayouts([]);
+    setUserAvatar(null);
     localStorage.removeItem('xgiha_state');
     lastSyncedStateRef.current = "";
   };
@@ -520,6 +932,26 @@ const App: React.FC = () => {
 
   return (
     <div className="h-[100dvh] w-screen relative flex items-center justify-center overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black bg-[#050505]">
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
+      <AnimatePresence>
+        {showImportModal && (
+            <ImportModal 
+                onConfirm={confirmImport} 
+                onCancel={() => setShowImportModal(false)} 
+                dataSummary={importStats}
+                error={importError}
+            />
+        )}
+        {showAvatarEditor && (
+            <AvatarEditorModal 
+                isOpen={showAvatarEditor} 
+                onClose={() => setShowAvatarEditor(false)} 
+                onSave={(img) => setUserAvatar(img)} 
+                currentAvatar={userAvatar}
+            />
+        )}
+      </AnimatePresence>
+
       <div className="w-full h-full p-2 lg:p-3 relative overflow-hidden flex flex-col">
         <div className="w-full h-full glass-card lg:rounded-[25px] relative overflow-hidden flex flex-col p-4 lg:p-6 shadow-2xl">
           <AnimatePresence>
@@ -553,7 +985,7 @@ const App: React.FC = () => {
                       </div>
                     </div>
                     <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
-                      <TimeAnalysis loading={isInitialLoading} trades={trades} />
+                      <TimeAnalysis loading={isInitialLoading} trades={trades} onViewDay={handleViewDayClick} onViewTrade={handleViewTradeStats} />
                     </div>
                   </div>
                   <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-24">
@@ -563,7 +995,7 @@ const App: React.FC = () => {
                           {activeTab === 'dashboard' ? (
                             <TradingCalendar loading={isInitialLoading} trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />
                           ) : (
-                            <JournalTable loading={isInitialLoading} trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} />
+                            <JournalTable loading={isInitialLoading} trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} />
                           )}
                         </MotionDiv>
                       </AnimatePresence>
@@ -579,12 +1011,12 @@ const App: React.FC = () => {
                   <AnimatePresence mode="wait">
                     <MotionDiv key={activeTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }} className="flex-1 overflow-y-auto no-scrollbar pt-2">
                       {activeTab === 'dashboard' && <TradingCalendar loading={isInitialLoading} trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />}
-                      {activeTab === 'journal' && <JournalTable loading={isInitialLoading} trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} onExport={handleExportData} onImport={handleImportData} />}
+                      {activeTab === 'journal' && <JournalTable loading={isInitialLoading} trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} /> }
                       {activeTab === 'stats' && (
                         <div className="flex flex-col gap-4 px-1 pb-4">
                           <TotalPnlCard loading={isInitialLoading} trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
                           <div className="h-[420px] shrink-0"><Progress loading={isInitialLoading} trades={trades} payouts={payouts} onPayoutUpdate={setPayouts} /></div>
-                          <TimeAnalysis loading={isInitialLoading} trades={trades} />
+                          <TimeAnalysis loading={isInitialLoading} trades={trades} onViewDay={handleViewDayClick} onViewTrade={handleViewTradeStats} />
                         </div>
                       )}
                       {activeTab === 'analytics' && (
@@ -600,12 +1032,26 @@ const App: React.FC = () => {
               <div style={{ bottom: 'calc(1.5rem + var(--sab))' }} className="fixed lg:absolute left-0 right-0 z-[100] flex justify-center items-center pointer-events-none px-4">
                 <div className="flex items-center gap-3 lg:gap-4 pointer-events-auto w-full max-w-2xl lg:max-w-none justify-center">
                   {isInitialLoading ? <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" /> : (
-                    <TooltipProvider delayDuration={0.1}>
-                      <Tooltip>
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip open={isUserMenuOpen} onOpenChange={setIsUserMenuOpen}>
                         <TooltipTrigger asChild>
-                              <button className="bg-white w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 overflow-hidden"><img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" /></button>
+                              <button className="bg-white w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 overflow-hidden border-2 border-white/10 relative group">
+                                {userAvatar ? (
+                                    <img src={userAvatar} alt="User" className="w-full h-full object-cover" />
+                                ) : (
+                                    <img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" />
+                                )}
+                                {/* Optional: Hover overlay indicator */}
+                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </button>
                         </TooltipTrigger>
-                        <TooltipContent side="top" align="center"><QuickUserOptions onLogout={handleLogout} /></TooltipContent>
+                        <AnimatePresence>
+                          {isUserMenuOpen && (
+                            <TooltipContent forceMount side="top" align="center" key="user-tooltip">
+                              <QuickUserOptions onLogout={handleLogout} onImport={handleImportClick} onExport={handleExportData} onEditAvatar={() => setShowAvatarEditor(true)} />
+                            </TooltipContent>
+                          )}
+                        </AnimatePresence>
                       </Tooltip>
                     </TooltipProvider>
                   )}
