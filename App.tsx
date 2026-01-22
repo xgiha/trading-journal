@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
-import { Slot } from "@radix-ui/react-slot";
 
 import WeeklyChart from './components/WeeklyChart';
 import GrowthChart from './components/GrowthChart';
@@ -85,12 +84,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const radius = 100;
     const containerRef = useRef<HTMLDivElement | null>(null);
     const gradientRef = useRef(null);
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    // Use ref instead of state to avoid re-renders on every mouse move
+    const mousePosition = useRef({ x: 0, y: 0 });
 
     useGSAP(() => {
       if (!gradientRef.current) return;
       gsap.set(gradientRef.current, {
-        background: `radial-gradient(0px circle at ${mousePosition.x}px ${mousePosition.y}px, #3b82f6, transparent 80%)`,
+        background: `radial-gradient(0px circle at ${mousePosition.current.x}px ${mousePosition.current.y}px, #3b82f6, transparent 80%)`,
       });
     }, { scope: containerRef });
 
@@ -99,7 +99,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       const { left, top } = containerRef.current.getBoundingClientRect();
       const x = e.clientX - left;
       const y = e.clientY - top;
-      setMousePosition({ x, y });
+      
+      mousePosition.current = { x, y };
+      
       gsap.to(gradientRef.current, {
         background: `radial-gradient(${radius}px circle at ${x}px ${y}px, #3b82f6, transparent 80%)`,
         duration: 0.1,
@@ -111,7 +113,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       const { left, top } = containerRef.current.getBoundingClientRect();
       const x = e.clientX - left;
       const y = e.clientY - top;
-      setMousePosition({ x, y });
+      
+      mousePosition.current = { x, y };
+      
       gsap.set(gradientRef.current, {
         background: `radial-gradient(0px circle at ${x}px ${y}px, #3b82f6, transparent 80%)`,
       });
@@ -124,7 +128,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     function handleMouseLeave() {
       if (!gradientRef.current) return;
       gsap.to(gradientRef.current, {
-        background: `radial-gradient(0px circle at ${mousePosition.x}px ${mousePosition.y}px, #3b82f6, transparent 80%)`,
+        background: `radial-gradient(0px circle at ${mousePosition.current.x}px ${mousePosition.current.y}px, #3b82f6, transparent 80%)`,
         duration: 0.3,
       });
     }
