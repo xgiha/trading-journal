@@ -82,7 +82,41 @@ const processImageFile = (file: File): Promise<string> => {
 };
 
 const uploadImageToBlob = async (file: File) => {
-    return await processImageFile(file);
+    // 1. Compress image locally first to reduce bandwidth
+    const base64 = await processImageFile(file);
+    
+    try {
+        // 2. Convert base64 back to Blob for upload
+        const res = await fetch(base64);
+        const blob = await res.blob();
+
+        // 3. Upload to /api/upload
+        // Add timeout to prevent infinite spinning
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+        const response = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+            method: 'POST',
+            body: blob,
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            // If upload fails (e.g. 404/500), fallback to base64
+            // This ensures it works in local dev or if blob token is missing
+            console.warn("Cloud upload failed, falling back to base64");
+            return base64;
+        }
+
+        const data = await response.json();
+        return data.url; // Returns the cloud URL (short string)
+    } catch (error) {
+        // Fallback to base64 on network error or timeout
+        console.warn("Upload network error, falling back to base64", error);
+        return base64;
+    }
 };
 
 // --- Topstep CSV Parser ---
