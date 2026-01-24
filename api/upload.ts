@@ -1,36 +1,28 @@
 import { put } from '@vercel/blob';
 
-export const config = {
-  runtime: 'edge',
-};
-
-export default async function handler(request: Request) {
+export default async function handler(request: any, response: any) {
   if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    return response.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const url = new URL(request.url);
+    // In Node.js, request.url is relative, so we need a base to parse searchParams
+    const protocol = request.headers['x-forwarded-proto'] || 'http';
+    const host = request.headers.host || 'localhost';
+    const url = new URL(request.url, `${protocol}://${host}`);
     const filename = url.searchParams.get('filename') || 'image.png';
     const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
 
-    if (!request.body) {
-      return new Response('No file provided', { status: 400 });
-    }
-
-    // Upload the file stream directly to Vercel Blob
-    const blob = await put(filename, request.body, {
+    // 'request' in Node.js is a ReadableStream, which @vercel/blob put() accepts directly
+    const blob = await put(filename, request, {
       access: 'public',
       token: BLOB_TOKEN,
       addRandomSuffix: true, // Prevents filename collisions
     });
 
-    return new Response(JSON.stringify({ url: blob.url }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return response.status(200).json({ url: blob.url });
   } catch (error) {
     console.error('Upload error:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+    return response.status(500).json({ error: 'Internal Server Error' });
   }
 }
