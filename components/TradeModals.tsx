@@ -500,6 +500,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
     const pnlValue = parseFloat(unformatNumber(formData.pnl));
     const newTrade: Trade = {
       id: initialData ? initialData.id : `T-${Date.now()}`,
+      accountId: initialData?.accountId || '',
       pair: formData.symbol?.toUpperCase() || 'UNKNOWN',
       newsEvent: isNewsTrade ? (formData.news || 'News Event') : undefined,
       size: formData.size || undefined,
@@ -541,6 +542,7 @@ export const AddTradeModal: React.FC<AddTradeModalProps> = ({ isOpen, onClose, d
       onAdd({
         ...t,
         id: `T-CSV-${Date.now()}-${idx}`,
+        accountId: '',
         // Ensure image/images are initialized if missing
         images: t.images || [],
         notes: t.notes || ''

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check, PieChart, BarChart3, Lock, Unlock, Loader2, LogOut, Eye, EyeOff, Calendar, Download, Upload, FileJson, AlertTriangle, Camera, Move, ZoomIn, Save, X, Image as ImageIcon, RotateCcw } from 'lucide-react';
+import { LayoutGrid, BookOpen, Plus, CloudOff, RefreshCw, Check, PieChart, BarChart3, Lock, Unlock, Loader2, LogOut, Eye, EyeOff, Calendar, Download, Upload, FileJson, AlertTriangle, Camera, Move, ZoomIn, Save, X, Image as ImageIcon, RotateCcw, ChevronDown, Pen, Wallet, Zap, Shield, Circle, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
@@ -13,7 +14,7 @@ import { AddTradeModal, DayDetailsModal } from './components/TradeModals';
 import TotalPnlCard from './components/TotalPnlCard';
 import TimeAnalysis from './components/TimeAnalysis';
 import Progress from './components/Progress';
-import { Trade, PayoutRecord } from './types';
+import { Trade, PayoutRecord, Account, AccountType } from './types';
 import { Skeleton } from './components/Skeleton';
 
 const MotionDiv = motion.div as any;
@@ -57,6 +58,177 @@ const TooltipContent = React.forwardRef<
   </TooltipPrimitive.Portal>
 ));
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
+
+// --- Helper for Account Styles ---
+const getAccountStyle = (type: AccountType) => {
+  switch (type) {
+    case 'EXPRESS':
+      return {
+        icon: Zap,
+        bg: 'bg-emerald-500/10',
+        border: 'border-emerald-500/20',
+        text: 'text-emerald-400',
+        label: 'Express Funded',
+        boxClass: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400',
+        indicator: 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]'
+      };
+    case 'COMBINE':
+    default:
+      return {
+        icon: Shield,
+        bg: 'bg-blue-500/10',
+        border: 'border-blue-500/20',
+        text: 'text-blue-400',
+        label: 'Trading Combine',
+        boxClass: 'bg-blue-500/20 border-blue-500/30 text-blue-400',
+        indicator: 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]'
+      };
+  }
+};
+
+// --- Add Account Modal ---
+interface AddAccountModalProps {
+  onClose: () => void;
+  onAdd: (name: string, type: AccountType) => void;
+}
+
+const AddAccountModal: React.FC<AddAccountModalProps> = ({ onClose, onAdd }) => {
+  const [name, setName] = useState('');
+  const [type, setType] = useState<AccountType>('COMBINE');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    onAdd(name.trim(), type);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
+      <MotionDiv
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <MotionDiv
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        className="relative bg-[#141414] w-full max-w-[400px] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col"
+      >
+         <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+            <h3 className="text-white font-bold text-sm uppercase tracking-widest">New Account</h3>
+            <button onClick={onClose} className="text-white/40 hover:text-white transition-colors"><X size={18} /></button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-8 flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+                <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest pl-1">Account Name</label>
+                <input 
+                  autoFocus
+                  type="text" 
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="e.g. My Challenge"
+                  className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-white/30 transition-colors"
+                />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <label className="text-[9px] font-bold text-white/30 uppercase tracking-widest pl-1">Account Type</label>
+                <div className="grid grid-cols-1 gap-2">
+                    <button 
+                      type="button"
+                      onClick={() => setType('COMBINE')}
+                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${type === 'COMBINE' ? 'bg-blue-500/10 border-blue-500/30' : 'bg-[#0a0a0a] border-white/5 hover:border-white/10'}`}
+                    >
+                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-blue-500/20 text-blue-400`}>
+                           <Shield size={16} />
+                        </div>
+                        <div className="flex flex-col items-start">
+                            <span className="text-sm font-bold text-blue-400">Trading Combine</span>
+                            <span className="text-[10px] text-white/40">Evaluation account</span>
+                        </div>
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={() => setType('EXPRESS')}
+                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${type === 'EXPRESS' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-[#0a0a0a] border-white/5 hover:border-white/10'}`}
+                    >
+                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-500/20 text-emerald-400`}>
+                           <Zap size={16} />
+                        </div>
+                        <div className="flex flex-col items-start">
+                            <span className="text-sm font-bold text-emerald-400">Express Funded</span>
+                            <span className="text-[10px] text-white/40">Live funded account</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <button 
+                type="submit"
+                disabled={!name.trim()}
+                className="mt-2 w-full py-4 rounded-xl bg-white text-black hover:bg-zinc-200 active:scale-95 transition-all font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                Create Account
+            </button>
+        </form>
+      </MotionDiv>
+    </div>
+  );
+};
+
+// --- Delete Confirmation Modal ---
+interface DeleteConfirmModalProps {
+    accountName: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+}
+
+const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({ accountName, onConfirm, onCancel }) => {
+    return (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
+            <MotionDiv
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+                onClick={onCancel}
+            />
+            <MotionDiv
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="relative bg-[#141414] w-full max-w-[400px] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col p-8 gap-6"
+            >
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center shrink-0">
+                        <AlertTriangle size={24} />
+                    </div>
+                    <div>
+                        <h3 className="text-white font-bold text-lg leading-tight">Danger Zone</h3>
+                        <span className="text-[11px] text-red-500 font-black uppercase tracking-widest">This action cannot be undone</span>
+                    </div>
+                </div>
+
+                <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-4">
+                    <p className="text-red-300/80 text-sm leading-relaxed">
+                        Are you sure you want to delete <strong>{accountName}</strong>? All trades and data associated with this account will be permanently lost.
+                    </p>
+                </div>
+
+                <div className="flex gap-3 mt-2">
+                    <button onClick={onCancel} className="flex-1 py-4 rounded-xl font-bold text-xs uppercase tracking-widest bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all">
+                        Cancel
+                    </button>
+                    <button onClick={onConfirm} className="flex-1 py-4 rounded-xl font-bold text-xs uppercase tracking-widest bg-red-500 text-white hover:bg-red-600 transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95">
+                        <Trash2 size={14} strokeWidth={3} /> Delete
+                    </button>
+                </div>
+            </MotionDiv>
+        </div>
+    );
+};
 
 // --- Avatar Editor Modal ---
 interface AvatarEditorModalProps {
@@ -113,77 +285,55 @@ const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({ isOpen, onClose, 
     if (!imageSrc || !imgRef.current) return;
 
     const canvas = document.createElement('canvas');
-    // Use higher resolution for better quality
     const size = 400; 
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Draw circular mask
     ctx.beginPath();
     ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
     ctx.closePath();
     ctx.clip();
 
-    // Clear background
     ctx.fillStyle = "#141414";
     ctx.fillRect(0,0, size, size);
 
     const img = imgRef.current;
     
-    // Original image dimensions
     const naturalWidth = img.naturalWidth;
     const naturalHeight = img.naturalHeight;
-    
-    // The visual container size in pixels (from CSS w-[240px])
     const containerSize = 240;
     
-    // Draw logic:
-    // 1. Center origin
     ctx.translate(size / 2, size / 2);
     
-    // 2. Apply user transform (Pan & Zoom)
-    // Scale position offset to match canvas resolution ratio
     const ratio = size / containerSize;
     ctx.translate(position.x * ratio, position.y * ratio);
     ctx.scale(scale, scale);
     
-    // 3. Draw image centered, mimicking 'object-fit: cover' logic
     let drawWidth = size;
     let drawHeight = size;
     
-    // object-fit: cover logic
-    // If image aspect ratio is 'taller' than canvas (1:1), width matches size, height scales
-    // If image aspect ratio is 'wider' than canvas (1:1), height matches size, width scales
     if (naturalWidth < naturalHeight) {
-        // Taller image relative to square
-        // Check AR to be sure. (w/h < 1)
-        // Actually, comparison of ratios is safer: (w/h) < (size/size = 1)
         const imgRatio = naturalWidth / naturalHeight;
         if (imgRatio < 1) {
              drawWidth = size;
              drawHeight = size / imgRatio;
         } else {
-             // Wider
              drawHeight = size;
              drawWidth = size * imgRatio;
         }
     } else {
-        // Wider image or square
         const imgRatio = naturalWidth / naturalHeight;
         if (imgRatio > 1) {
             drawHeight = size;
             drawWidth = size * imgRatio;
         } else {
-            // Square or Taller (if naturalWidth < naturalHeight failed earlier)
             drawWidth = size;
             drawHeight = size / imgRatio;
         }
     }
     
-    // Simplified robust cover logic for 1:1 target:
-    // Scale factor to cover size x size
     const scaleFactor = Math.max(size / naturalWidth, size / naturalHeight);
     const renderWidth = naturalWidth * scaleFactor;
     const renderHeight = naturalHeight * scaleFactor;
@@ -213,7 +363,6 @@ const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({ isOpen, onClose, 
         </div>
         
         <div className="p-8 flex flex-col items-center gap-6">
-            {/* Preview Area */}
             <div className="relative w-[240px] h-[240px] rounded-full overflow-hidden border-2 border-dashed border-white/10 bg-black/50 group cursor-move shadow-inner">
                 {imageSrc ? (
                      <img 
@@ -237,12 +386,9 @@ const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({ isOpen, onClose, 
                         <span className="text-[10px] font-bold uppercase tracking-widest">No Image</span>
                     </div>
                 )}
-                
-                {/* Overlay Hint */}
                 {imageSrc && <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"><Move size={24} className="text-white/80" /></div>}
             </div>
 
-            {/* Controls */}
             {imageSrc ? (
                 <div className="w-full flex flex-col gap-4">
                      <div className="flex items-center gap-3">
@@ -352,6 +498,167 @@ const ImportModal: React.FC<ImportModalProps> = ({ onConfirm, onCancel, dataSumm
              )}
          </div>
       </MotionDiv>
+    </div>
+  );
+};
+
+// --- Account Selector Component ---
+interface AccountSelectorProps {
+  accounts: Account[];
+  activeAccountId: string;
+  onSelect: (id: string) => void;
+  onRename: (id: string, newName: string) => void;
+  onAdd: () => void;
+  onDelete: (id: string) => void;
+}
+
+const AccountSelector: React.FC<AccountSelectorProps> = ({ accounts, activeAccountId, onSelect, onRename, onAdd, onDelete }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setEditingId(null);
+      }
+    };
+    if (isOpen) {
+        document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  // Automatically focus input when editing starts
+  useEffect(() => {
+    if (editingId && inputRef.current) {
+        inputRef.current.focus();
+        // Slightly delayed select to ensure focus processing
+        setTimeout(() => inputRef.current?.select(), 10);
+    }
+  }, [editingId]);
+
+  const activeAccount = accounts.find(a => a.id === activeAccountId);
+  const activeStyle = activeAccount ? getAccountStyle(activeAccount.type) : getAccountStyle('COMBINE');
+
+  const startEditing = (acc: Account, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingId(acc.id);
+    setEditName(acc.name);
+  };
+
+  const saveEdit = () => {
+    if (editingId && editName.trim()) {
+      onRename(editingId, editName.trim());
+    }
+    setEditingId(null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') saveEdit();
+    if (e.key === 'Escape') setEditingId(null);
+  };
+
+  return (
+    <div ref={containerRef} className="relative z-50">
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className={`group relative h-12 pl-4 pr-3 rounded-full border flex items-center gap-3 transition-all active:scale-95 w-[140px] ${activeStyle.bg} ${activeStyle.border} hover:border-white/20`}
+        >
+            <div className="flex flex-col items-start min-w-0 flex-1">
+                  <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Account</span>
+                  <span className={`text-xs font-bold truncate w-full ${activeStyle.text}`}>
+                      {activeAccount?.name ? (
+                          activeAccount.name.length > 7 ? activeAccount.name.slice(0, 7) + '...' : activeAccount.name
+                      ) : 'Main Account'}
+                  </span>
+            </div>
+            <ChevronDown size={14} className={`text-white/40 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        <AnimatePresence>
+            {isOpen && (
+                <MotionDiv 
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    className="absolute bottom-full left-0 mb-2 w-[260px] rounded-2xl border border-white/10 bg-[#141414] shadow-2xl overflow-hidden origin-bottom-left flex flex-col p-1.5"
+                >
+                      <div className="px-3 py-2 border-b border-white/5 mb-1 flex justify-between items-center">
+                          <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">My Accounts ({accounts.length}/5)</span>
+                      </div>
+                      <div className="flex flex-col gap-1 max-h-[220px] overflow-y-auto custom-scrollbar">
+                          {accounts.map(acc => {
+                              const style = getAccountStyle(acc.type);
+                              const isEditing = editingId === acc.id;
+                              
+                              return (
+                              <div 
+                                key={acc.id} 
+                                onClick={() => { if(!isEditing) { onSelect(acc.id); setIsOpen(false); } }}
+                                className={`group/item flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer border ${activeAccountId === acc.id ? 'bg-white/10 border-white/10' : 'border-transparent hover:bg-white/5'}`}
+                              >
+                                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border border-white/5 bg-white/[0.02]`}>
+                                          <div className={`w-3 h-3 rounded-[2px] ${style.indicator}`} />
+                                      </div>
+                                      <div className="flex flex-col min-w-0 flex-1">
+                                        {isEditing ? (
+                                            <input 
+                                                ref={inputRef}
+                                                value={editName}
+                                                onChange={e => setEditName(e.target.value)}
+                                                onBlur={saveEdit}
+                                                onKeyDown={handleKeyDown}
+                                                onClick={e => e.stopPropagation()}
+                                                className="w-full bg-black/40 text-white text-xs font-bold rounded px-1.5 py-1 focus:outline-none border border-white/20"
+                                            />
+                                        ) : (
+                                            <>
+                                                <span className={`text-xs font-bold truncate ${activeAccountId === acc.id ? 'text-white' : 'text-white/60'}`}>{acc.name}</span>
+                                                <span className={`text-[8px] font-bold uppercase tracking-widest ${style.text} opacity-60`}>{style.label}</span>
+                                            </>
+                                        )}
+                                      </div>
+                                  </div>
+                                  
+                                  {/* Actions */}
+                                  {!isEditing && (
+                                      <div className="flex items-center opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                          <button 
+                                              onClick={(e) => startEditing(acc, e)}
+                                              className="p-1.5 text-white/20 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                          >
+                                              <Pen size={12} />
+                                          </button>
+                                          <button 
+                                              onClick={(e) => { e.stopPropagation(); onDelete(acc.id); }}
+                                              className="p-1.5 text-white/20 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors ml-1"
+                                          >
+                                              <Trash2 size={12} />
+                                          </button>
+                                      </div>
+                                  )}
+                              </div>
+                          )})}
+                      </div>
+                      {accounts.length < 5 && (
+                          <button 
+                            onClick={() => { onAdd(); setIsOpen(false); }}
+                            className="mt-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-white/10 text-white/40 hover:text-white hover:bg-white/5 hover:border-white/20 transition-all"
+                          >
+                              <Plus size={14} />
+                              <span className="text-[10px] font-bold uppercase tracking-widest">Add New Account</span>
+                          </button>
+                      )}
+                </MotionDiv>
+            )}
+        </AnimatePresence>
     </div>
   );
 };
@@ -611,6 +918,8 @@ const SignInScreen: React.FC<{ onSignIn: () => void }> = ({ onSignIn }) => {
   );
 };
 
+const DEFAULT_ACCOUNT_ID = 'acc-default';
+
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return sessionStorage.getItem('xgiha_auth') === 'true';
@@ -619,9 +928,14 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  
+  // Data State
   const [trades, setTrades] = useState<Trade[]>([]);
   const [payouts, setPayouts] = useState<PayoutRecord[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([{ id: DEFAULT_ACCOUNT_ID, name: 'Main Account', type: 'COMBINE', createdAt: Date.now() }]);
+  const [activeAccountId, setActiveAccountId] = useState<string>(DEFAULT_ACCOUNT_ID);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  
   const [isMobile, setIsMobile] = useState(false);
   
   // Tooltip State
@@ -638,6 +952,12 @@ const App: React.FC = () => {
 
   // Avatar Editor State
   const [showAvatarEditor, setShowAvatarEditor] = useState(false);
+
+  // Add Account Modal State
+  const [showAddAccountModal, setShowAddAccountModal] = useState(false);
+  
+  // Delete Account Confirmation
+  const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
 
   useEffect(() => {
     const checkMobile = () => window.innerWidth < 1024;
@@ -657,6 +977,8 @@ const App: React.FC = () => {
       
       let cloudTrades: Trade[] = [];
       let cloudPayouts: PayoutRecord[] = [];
+      let cloudAccounts: Account[] = [];
+      let cloudActiveAccount = DEFAULT_ACCOUNT_ID;
       let cloudAvatar: string | null = null;
 
       if (response.ok) {
@@ -665,28 +987,72 @@ const App: React.FC = () => {
           try { data = JSON.parse(data); } catch(e) {}
         }
         
+        // Migration & Parsing Logic
         if (Array.isArray(data)) {
-          cloudTrades = data;
+            // Legacy Array Format -> Convert to current schema
+            cloudTrades = data.map((t: any) => ({ ...t, accountId: DEFAULT_ACCOUNT_ID }));
+            cloudAccounts = [{ id: DEFAULT_ACCOUNT_ID, name: 'Main Account', type: 'COMBINE', createdAt: Date.now() }];
         } else if (data && typeof data === 'object') {
-          cloudTrades = data.trades || [];
-          // Migration from number to PayoutRecord[]
-          if (typeof data.payouts === 'number') {
-            cloudPayouts = data.payouts > 0 ? [{ id: 'migrated', amount: data.payouts, date: new Date().toISOString() }] : [];
-          } else {
-            cloudPayouts = data.payouts || [];
-          }
-          if (data.userProfile && data.userProfile.avatar) {
-             cloudAvatar = data.userProfile.avatar;
-          }
+             // New Object Format
+             // 1. Accounts
+             if (data.accounts && Array.isArray(data.accounts)) {
+                 // Ensure type exists on migrated accounts and map old types to new defaults
+                 cloudAccounts = data.accounts.map((acc: any) => {
+                    // Default to COMBINE if type is missing or old
+                    let safeType: AccountType = 'COMBINE';
+                    if (acc.type === 'EXPRESS') safeType = 'EXPRESS';
+                    else if (acc.type === 'COMBINE') safeType = 'COMBINE';
+                    // Implicit fallback for 'PERSONAL'/'BLUE' -> 'COMBINE'
+                    
+                    return {
+                        ...acc,
+                        type: safeType
+                    };
+                 });
+                 cloudActiveAccount = data.activeAccountId || (data.accounts[0]?.id || DEFAULT_ACCOUNT_ID);
+             } else {
+                 cloudAccounts = [{ id: DEFAULT_ACCOUNT_ID, name: 'Main Account', type: 'COMBINE', createdAt: Date.now() }];
+             }
+
+             // 2. Trades (Migrate if missing accountId)
+             cloudTrades = (data.trades || []).map((t: any) => ({
+                 ...t,
+                 accountId: t.accountId || DEFAULT_ACCOUNT_ID
+             }));
+
+             // 3. Payouts (Migrate)
+             if (typeof data.payouts === 'number') {
+                 // Very old format
+                 cloudPayouts = data.payouts > 0 ? [{ id: 'migrated', amount: data.payouts, date: new Date().toISOString(), accountId: DEFAULT_ACCOUNT_ID }] : [];
+             } else {
+                 cloudPayouts = (data.payouts || []).map((p: any) => ({
+                     ...p,
+                     accountId: p.accountId || DEFAULT_ACCOUNT_ID
+                 }));
+             }
+             
+             // 4. User Profile
+             if (data.userProfile && data.userProfile.avatar) {
+                cloudAvatar = data.userProfile.avatar;
+             }
         }
       }
 
-      const stateToSync = { trades: cloudTrades, payouts: cloudPayouts, userProfile: { avatar: cloudAvatar } };
+      const stateToSync = { 
+          trades: cloudTrades, 
+          payouts: cloudPayouts, 
+          accounts: cloudAccounts, 
+          activeAccountId: cloudActiveAccount, 
+          userProfile: { avatar: cloudAvatar } 
+      };
+      
       const cloudJson = JSON.stringify(stateToSync);
       
       if (cloudJson !== lastSyncedStateRef.current) {
         setTrades(cloudTrades);
         setPayouts(cloudPayouts);
+        setAccounts(cloudAccounts);
+        setActiveAccountId(cloudActiveAccount);
         setUserAvatar(cloudAvatar);
         lastSyncedStateRef.current = cloudJson;
         localStorage.setItem('xgiha_state', cloudJson);
@@ -709,19 +1075,38 @@ const App: React.FC = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        
+        // Local Migration Logic
         if (Array.isArray(parsed)) {
-          setTrades(parsed);
-          setPayouts([]);
+             setTrades(parsed.map((t: any) => ({ ...t, accountId: DEFAULT_ACCOUNT_ID })));
+             setPayouts([]);
+             setAccounts([{ id: DEFAULT_ACCOUNT_ID, name: 'Main Account', type: 'COMBINE', createdAt: Date.now() }]);
         } else {
-          setTrades(parsed.trades || []);
-          if (typeof parsed.payouts === 'number') {
-             setPayouts(parsed.payouts > 0 ? [{ id: 'migrated', amount: parsed.payouts, date: new Date().toISOString() }] : []);
-          } else {
-             setPayouts(parsed.payouts || []);
-          }
-          if (parsed.userProfile && parsed.userProfile.avatar) {
-             setUserAvatar(parsed.userProfile.avatar);
-          }
+             // Accounts
+             const loadedAccounts = parsed.accounts || [{ id: DEFAULT_ACCOUNT_ID, name: 'Main Account', type: 'COMBINE', createdAt: Date.now() }];
+             // Ensure type safety during load
+             setAccounts(loadedAccounts.map((acc: any) => {
+                 let safeType: AccountType = 'COMBINE';
+                 if (acc.type === 'EXPRESS') safeType = 'EXPRESS';
+                 else if (acc.type === 'COMBINE') safeType = 'COMBINE';
+                 
+                 return { ...acc, type: safeType };
+             }));
+             setActiveAccountId(parsed.activeAccountId || loadedAccounts[0].id);
+
+             // Trades
+             setTrades((parsed.trades || []).map((t: any) => ({ ...t, accountId: t.accountId || DEFAULT_ACCOUNT_ID })));
+
+             // Payouts
+             if (typeof parsed.payouts === 'number') {
+                 setPayouts(parsed.payouts > 0 ? [{ id: 'migrated', amount: parsed.payouts, date: new Date().toISOString(), accountId: DEFAULT_ACCOUNT_ID }] : []);
+             } else {
+                 setPayouts((parsed.payouts || []).map((p: any) => ({ ...p, accountId: p.accountId || DEFAULT_ACCOUNT_ID })));
+             }
+
+             if (parsed.userProfile && parsed.userProfile.avatar) {
+                setUserAvatar(parsed.userProfile.avatar);
+             }
         }
         lastSyncedStateRef.current = saved;
       } catch(e) {}
@@ -749,7 +1134,13 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isInitialLoading || !isAuthenticated) return;
     
-    const currentState = { trades, payouts, userProfile: { avatar: userAvatar } };
+    const currentState = { 
+        trades, 
+        payouts, 
+        accounts, 
+        activeAccountId, 
+        userProfile: { avatar: userAvatar } 
+    };
     const currentStateJson = JSON.stringify(currentState);
     
     if (currentStateJson === lastSyncedStateRef.current) return;
@@ -777,7 +1168,7 @@ const App: React.FC = () => {
     }, 1500);
     
     return () => clearTimeout(timeout);
-  }, [trades, payouts, userAvatar, isInitialLoading, isAuthenticated]);
+  }, [trades, payouts, accounts, activeAccountId, userAvatar, isInitialLoading, isAuthenticated]);
 
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -786,11 +1177,73 @@ const App: React.FC = () => {
   const [editingTrade, setEditingTrade] = useState<Trade | undefined>(undefined);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
+  // --- Account Handling Handlers ---
+  const handleAccountSelect = (id: string) => {
+    setActiveAccountId(id);
+    setActiveTab('dashboard'); // Reset view to dashboard on switch
+  };
+
+  const handleAccountRename = (id: string, newName: string) => {
+    setAccounts(prev => prev.map(a => a.id === id ? { ...a, name: newName } : a));
+  };
+
+  const handleAccountAdd = (name: string, type: AccountType) => {
+    if (accounts.length >= 5) return;
+    const newId = `acc-${Date.now()}`;
+    const newAccount: Account = {
+        id: newId,
+        name: name,
+        type: type,
+        createdAt: Date.now()
+    };
+    setAccounts(prev => [...prev, newAccount]);
+    setActiveAccountId(newId);
+  };
+
+  const handleAccountDeleteRequest = (id: string) => {
+      if (accounts.length <= 1) return;
+      const account = accounts.find(a => a.id === id);
+      if (account) setAccountToDelete(account);
+  };
+
+  const confirmAccountDelete = () => {
+    if (!accountToDelete) return;
+    const id = accountToDelete.id;
+
+    // 1. Remove trades associated with this account
+    setTrades(prev => prev.filter(t => t.accountId !== id));
+    // 2. Remove payouts associated with this account
+    setPayouts(prev => prev.filter(p => p.accountId !== id));
+    
+    // 3. Update accounts list
+    const newAccounts = accounts.filter(a => a.id !== id);
+    setAccounts(newAccounts);
+    
+    // 4. Switch active account if we deleted the current one
+    if (activeAccountId === id) {
+        setActiveAccountId(newAccounts[0].id);
+        setActiveTab('dashboard');
+    }
+    
+    setAccountToDelete(null);
+  };
+
+  // --- Filtered Data ---
+  // Only show data relevant to the active account
+  const currentAccountTrades = useMemo(() => {
+    return trades.filter(t => t.accountId === activeAccountId);
+  }, [trades, activeAccountId]);
+
+  const currentAccountPayouts = useMemo(() => {
+    return payouts.filter(p => p.accountId === activeAccountId);
+  }, [payouts, activeAccountId]);
+
   const globalStats = useMemo(() => {
-    const totalNetPnl = trades.reduce((sum, t) => sum + (t.pnl - (t.fee || 0)), 0);
-    const growthPct = trades.length > 0 ? (totalNetPnl / 50000) * 100 : 0;
+    const totalNetPnl = currentAccountTrades.reduce((sum, t) => sum + (t.pnl - (t.fee || 0)), 0);
+    // Simple fixed starting balance assumption or pure PnL growth
+    const growthPct = currentAccountTrades.length > 0 ? (totalNetPnl / 50000) * 100 : 0;
     return { totalPnl: totalNetPnl, growthPct };
-  }, [trades]);
+  }, [currentAccountTrades]);
 
   const handleAddTradeClick = useCallback((date: string) => { 
     setSelectedDate(date); setEditingTrade(undefined); setIsAddModalOpen(true); 
@@ -818,32 +1271,62 @@ const App: React.FC = () => {
   }, []);
 
   const handleViewDayClick = useCallback((date: string) => { 
-    setSelectedDate(date); setSelectedTrades(trades.filter(t => t.date === date)); setIsDetailModalOpen(true); 
-  }, [trades]);
+    setSelectedDate(date); setSelectedTrades(currentAccountTrades.filter(t => t.date === date)); setIsDetailModalOpen(true); 
+  }, [currentAccountTrades]);
 
   const handleViewWeekClick = useCallback((weekTrades: Trade[], weekLabel: string) => { 
     setSelectedDate(weekLabel); setSelectedTrades(weekTrades); setIsDetailModalOpen(true); 
   }, []);
   
   const handleAddOrUpdateTrade = useCallback((tradeData: Trade) => { 
+    // Ensure the trade is assigned to the active account if it's new
+    // If it's an edit, keep existing, but for safety in this app structure, force active ID if missing
+    const tradeWithAccount = {
+        ...tradeData,
+        accountId: tradeData.accountId || activeAccountId
+    };
+
     setTrades(prev => {
-      const idx = prev.findIndex(t => t.id === tradeData.id); 
-      let next = [...prev]; if (idx >= 0) next[idx] = tradeData; else next.push(tradeData);
+      const idx = prev.findIndex(t => t.id === tradeWithAccount.id); 
+      let next = [...prev]; if (idx >= 0) next[idx] = tradeWithAccount; else next.push(tradeWithAccount);
       return next;
     });
+
     setSelectedTrades(prev => {
-      const idx = prev.findIndex(t => t.id === tradeData.id);
+      // Only update selected trades if they belong to the current view context
+      // Note: If we switched accounts, selectedTrades is likely cleared/irrelevant, but good to check
+      if (tradeWithAccount.accountId !== activeAccountId) return prev;
+
+      const idx = prev.findIndex(t => t.id === tradeWithAccount.id);
       let next = [...prev];
-      if (idx >= 0) next[idx] = tradeData; else if (tradeData.date === selectedDate) next.push(tradeData);
+      if (idx >= 0) next[idx] = tradeWithAccount; 
+      else if (tradeWithAccount.date === selectedDate) next.push(tradeWithAccount);
       return next;
     });
-  }, [selectedDate]);
+  }, [selectedDate, activeAccountId]);
+
+  const handlePayoutUpdate = (updatedPayouts: PayoutRecord[]) => {
+      // updatedPayouts contains ONLY the payouts for the active account (from Progress component)
+      // We need to merge this back into the global payouts list
+      setPayouts(prev => {
+          const otherPayouts = prev.filter(p => p.accountId !== activeAccountId);
+          // Ensure new payouts have the account ID
+          const taggedUpdatedPayouts = updatedPayouts.map(p => ({ ...p, accountId: activeAccountId }));
+          return [...otherPayouts, ...taggedUpdatedPayouts];
+      });
+  };
 
   const handleExportData = useCallback(() => {
-    const blob = new Blob([JSON.stringify({ trades, payouts, userProfile: { avatar: userAvatar } }, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ 
+        trades, 
+        payouts, 
+        accounts,
+        activeAccountId,
+        userProfile: { avatar: userAvatar } 
+    }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `backup-${new Date().toISOString()}.json`; a.click();
-  }, [trades, payouts, userAvatar]);
+  }, [trades, payouts, accounts, activeAccountId, userAvatar]);
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -865,11 +1348,11 @@ const App: React.FC = () => {
             // Legacy Array format
             isValid = true;
             stats.trades = data.length;
-          } else if (data && typeof data === 'object' && Array.isArray(data.trades)) {
+          } else if (data && typeof data === 'object' && (Array.isArray(data.trades) || Array.isArray(data.accounts))) {
             // New Object format (trades + payouts)
             isValid = true;
-            stats.trades = data.trades.length;
-            stats.payouts = Array.isArray(data.payouts) ? data.payouts.length : 0;
+            stats.trades = (data.trades || []).length;
+            stats.payouts = (data.payouts || []).length;
           }
 
           if (isValid) {
@@ -898,19 +1381,36 @@ const App: React.FC = () => {
   const confirmImport = useCallback(() => {
       if (pendingImportData) {
         if (Array.isArray(pendingImportData)) {
-          setTrades(pendingImportData);
-          setPayouts([]);
+            // Import legacy array -> map to current active account
+            setTrades(pendingImportData.map((t: any) => ({ ...t, accountId: activeAccountId })));
+            // Clear payouts for this account? Or global? Assuming replace all.
+            setPayouts([]);
+            // Keep accounts as is, just replace trades data
         } else {
-          setTrades(pendingImportData.trades || []);
-          setPayouts(pendingImportData.payouts || []);
-          if (pendingImportData.userProfile && pendingImportData.userProfile.avatar) {
-             setUserAvatar(pendingImportData.userProfile.avatar);
-          }
+            // Full state import
+            if (pendingImportData.accounts) {
+                // If importing full backup with accounts
+                setAccounts(pendingImportData.accounts.map((acc: any) => ({ ...acc, type: acc.type === 'EXPRESS' ? 'EXPRESS' : 'COMBINE' })));
+                setActiveAccountId(pendingImportData.activeAccountId || pendingImportData.accounts[0]?.id || DEFAULT_ACCOUNT_ID);
+                setTrades(pendingImportData.trades || []);
+                setPayouts(pendingImportData.payouts || []);
+            } else {
+                // Importing partial data object without accounts structure -> dump into active
+                const importedTrades = (pendingImportData.trades || []).map((t: any) => ({ ...t, accountId: activeAccountId }));
+                setTrades(importedTrades);
+                
+                const importedPayouts = (pendingImportData.payouts || []).map((p: any) => ({ ...p, accountId: activeAccountId }));
+                setPayouts(importedPayouts);
+            }
+
+            if (pendingImportData.userProfile && pendingImportData.userProfile.avatar) {
+               setUserAvatar(pendingImportData.userProfile.avatar);
+            }
         }
         setShowImportModal(false);
         setPendingImportData(null);
       }
-  }, [pendingImportData]);
+  }, [pendingImportData, activeAccountId]);
 
   const handleSignIn = () => { 
     sessionStorage.setItem('xgiha_auth', 'true');
@@ -922,6 +1422,8 @@ const App: React.FC = () => {
     setIsAuthenticated(false); 
     setTrades([]); 
     setPayouts([]);
+    setAccounts([{ id: DEFAULT_ACCOUNT_ID, name: 'Main Account', type: 'COMBINE', createdAt: Date.now() }]);
+    setActiveAccountId(DEFAULT_ACCOUNT_ID);
     setUserAvatar(null);
     localStorage.removeItem('xgiha_state');
     lastSyncedStateRef.current = "";
@@ -934,6 +1436,13 @@ const App: React.FC = () => {
     <div className="h-[100dvh] w-screen relative flex items-center justify-center overflow-hidden font-sans selection:bg-xgiha-accent selection:text-black bg-[#050505]">
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
       <AnimatePresence>
+        {accountToDelete && (
+            <DeleteConfirmModal 
+                accountName={accountToDelete.name} 
+                onConfirm={confirmAccountDelete} 
+                onCancel={() => setAccountToDelete(null)} 
+            />
+        )}
         {showImportModal && (
             <ImportModal 
                 onConfirm={confirmImport} 
@@ -949,6 +1458,12 @@ const App: React.FC = () => {
                 onSave={(img) => setUserAvatar(img)} 
                 currentAvatar={userAvatar}
             />
+        )}
+        {showAddAccountModal && (
+          <AddAccountModal 
+            onClose={() => setShowAddAccountModal(false)}
+            onAdd={handleAccountAdd}
+          />
         )}
       </AnimatePresence>
 
@@ -979,13 +1494,13 @@ const App: React.FC = () => {
                 <div className="flex-1 min-h-0 flex flex-row gap-4 lg:gap-6 z-10 items-stretch h-full w-full">
                   <div className="flex flex-row h-full gap-4 lg:gap-6 w-[460px] shrink-0">
                     <div className="flex flex-col gap-4 w-[218px] shrink-0 h-full overflow-hidden">
-                      <TotalPnlCard loading={isInitialLoading} trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+                      <TotalPnlCard loading={isInitialLoading} trades={currentAccountTrades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
                       <div className="flex-1 min-h-0">
-                        <Progress loading={isInitialLoading} trades={trades} payouts={payouts} onPayoutUpdate={setPayouts} />
+                        <Progress loading={isInitialLoading} trades={currentAccountTrades} payouts={currentAccountPayouts} onPayoutUpdate={handlePayoutUpdate} />
                       </div>
                     </div>
                     <div className="hidden lg:flex flex-col gap-4 w-[218px] shrink-0 h-full">
-                      <TimeAnalysis loading={isInitialLoading} trades={trades} onViewDay={handleViewDayClick} onViewTrade={handleViewTradeStats} />
+                      <TimeAnalysis loading={isInitialLoading} trades={currentAccountTrades} onViewDay={handleViewDayClick} onViewTrade={handleViewTradeStats} />
                     </div>
                   </div>
                   <div className="relative flex flex-col items-center h-full min-w-0 flex-1 pb-24">
@@ -993,36 +1508,36 @@ const App: React.FC = () => {
                       <AnimatePresence mode="wait">
                         <MotionDiv key={activeTab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="absolute inset-0 w-full h-full flex flex-col">
                           {activeTab === 'dashboard' ? (
-                            <TradingCalendar loading={isInitialLoading} trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />
+                            <TradingCalendar loading={isInitialLoading} trades={currentAccountTrades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />
                           ) : (
-                            <JournalTable loading={isInitialLoading} trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} />
+                            <JournalTable loading={isInitialLoading} trades={currentAccountTrades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} />
                           )}
                         </MotionDiv>
                       </AnimatePresence>
                     </div>
                   </div>
                   <div className="flex flex-col h-full w-[460px] shrink-0 gap-4 lg:gap-6">
-                    <div className="flex-1 min-h-0"><GrowthChart loading={isInitialLoading} trades={trades} /></div>
-                    <div className="flex-1 min-h-0"><WeeklyChart loading={isInitialLoading} trades={trades} stats={globalStats} /></div>
+                    <div className="flex-1 min-h-0"><GrowthChart loading={isInitialLoading} trades={currentAccountTrades} /></div>
+                    <div className="flex-1 min-h-0"><WeeklyChart loading={isInitialLoading} trades={currentAccountTrades} stats={globalStats} /></div>
                   </div>
                 </div>
               ) : (
                 <div className="flex-1 min-h-0 flex flex-col z-10 w-full h-full pb-28">
                   <AnimatePresence mode="wait">
                     <MotionDiv key={activeTab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }} className="flex-1 overflow-y-auto no-scrollbar pt-2">
-                      {activeTab === 'dashboard' && <TradingCalendar loading={isInitialLoading} trades={trades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />}
-                      {activeTab === 'journal' && <JournalTable loading={isInitialLoading} trades={trades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} /> }
+                      {activeTab === 'dashboard' && <TradingCalendar loading={isInitialLoading} trades={currentAccountTrades} currentDate={currentCalendarDate} onMonthChange={setCurrentCalendarDate} onAddTradeClick={handleAddTradeClick} onViewDayClick={handleViewDayClick} onViewWeekClick={handleViewWeekClick} />}
+                      {activeTab === 'journal' && <JournalTable loading={isInitialLoading} trades={currentAccountTrades} onEdit={handleEditTrade} onDelete={handleDeleteTrade} onViewDay={handleViewDayClick} /> }
                       {activeTab === 'stats' && (
                         <div className="flex flex-col gap-4 px-1 pb-4">
-                          <TotalPnlCard loading={isInitialLoading} trades={trades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
-                          <div className="h-[420px] shrink-0"><Progress loading={isInitialLoading} trades={trades} payouts={payouts} onPayoutUpdate={setPayouts} /></div>
-                          <TimeAnalysis loading={isInitialLoading} trades={trades} onViewDay={handleViewDayClick} onViewTrade={handleViewTradeStats} />
+                          <TotalPnlCard loading={isInitialLoading} trades={currentAccountTrades} totalPnl={globalStats.totalPnl} growthPct={globalStats.growthPct} />
+                          <div className="h-[420px] shrink-0"><Progress loading={isInitialLoading} trades={currentAccountTrades} payouts={currentAccountPayouts} onPayoutUpdate={handlePayoutUpdate} /></div>
+                          <TimeAnalysis loading={isInitialLoading} trades={currentAccountTrades} onViewDay={handleViewDayClick} onViewTrade={handleViewTradeStats} />
                         </div>
                       )}
                       {activeTab === 'analytics' && (
                         <div className="flex flex-col gap-4 px-1 pb-4">
-                          <div className="h-[320px] shrink-0"><GrowthChart loading={isInitialLoading} trades={trades} /></div>
-                          <div className="h-[320px] shrink-0"><WeeklyChart loading={isInitialLoading} trades={trades} stats={globalStats} /></div>
+                          <div className="h-[320px] shrink-0"><GrowthChart loading={isInitialLoading} trades={currentAccountTrades} /></div>
+                          <div className="h-[320px] shrink-0"><WeeklyChart loading={isInitialLoading} trades={currentAccountTrades} stats={globalStats} /></div>
                         </div>
                       )}
                     </MotionDiv>
@@ -1032,29 +1547,40 @@ const App: React.FC = () => {
               <div style={{ bottom: 'calc(1.5rem + var(--sab))' }} className="fixed lg:absolute left-0 right-0 z-[100] flex justify-center items-center pointer-events-none px-4">
                 <div className="flex items-center gap-3 lg:gap-4 pointer-events-auto w-full max-w-2xl lg:max-w-none justify-center">
                   {isInitialLoading ? <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" /> : (
-                    <TooltipProvider delayDuration={100}>
-                      <Tooltip open={isUserMenuOpen} onOpenChange={setIsUserMenuOpen}>
-                        <TooltipTrigger asChild>
-                              <button className="bg-white w-12 h-12 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shadow-xl shrink-0 overflow-hidden border-2 border-white/10 relative group">
-                                {userAvatar ? (
-                                    <img src={userAvatar} alt="User" className="w-full h-full object-cover" />
-                                ) : (
-                                    <img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" />
-                                )}
-                                {/* Optional: Hover overlay indicator */}
-                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </button>
-                        </TooltipTrigger>
-                        <AnimatePresence>
-                          {isUserMenuOpen && (
-                            <TooltipContent forceMount side="top" align="center" key="user-tooltip">
-                              <QuickUserOptions onLogout={handleLogout} onImport={handleImportClick} onExport={handleExportData} onEditAvatar={() => setShowAvatarEditor(true)} />
-                            </TooltipContent>
-                          )}
-                        </AnimatePresence>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-white/5 shadow-2xl">
+                      <TooltipProvider delayDuration={100}>
+                        <Tooltip open={isUserMenuOpen} onOpenChange={setIsUserMenuOpen}>
+                          <TooltipTrigger asChild>
+                                <button className="bg-white w-10 h-10 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shrink-0 overflow-hidden border-2 border-white/10 relative group">
+                                  {userAvatar ? (
+                                      <img src={userAvatar} alt="User" className="w-full h-full object-cover" />
+                                  ) : (
+                                      <img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" />
+                                  )}
+                                </button>
+                          </TooltipTrigger>
+                          <AnimatePresence>
+                            {isUserMenuOpen && (
+                              <TooltipContent forceMount side="top" align="center" key="user-tooltip">
+                                <QuickUserOptions onLogout={handleLogout} onImport={handleImportClick} onExport={handleExportData} onEditAvatar={() => setShowAvatarEditor(true)} />
+                              </TooltipContent>
+                            )}
+                          </AnimatePresence>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      {/* Account Selector */}
+                      <AccountSelector 
+                        accounts={accounts} 
+                        activeAccountId={activeAccountId} 
+                        onSelect={handleAccountSelect} 
+                        onRename={handleAccountRename}
+                        onAdd={() => setShowAddAccountModal(true)}
+                        onDelete={handleAccountDeleteRequest}
+                      />
+                    </div>
                   )}
+
                   <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md flex-1 lg:flex-none lg:w-[240px] h-14 shadow-2xl border border-white/5 overflow-hidden">
                       {isInitialLoading ? <div className="flex-1 h-full px-6 flex items-center justify-between gap-4"><Skeleton className="h-4 flex-1 rounded-full" /><Skeleton className="h-4 flex-1 rounded-full" /><Skeleton className="h-4 flex-1 rounded-full" /></div> : (
                           <>

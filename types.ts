@@ -1,6 +1,7 @@
 
 export interface Trade {
   id: string;
+  accountId: string; // New field to link trade to an account
   date: string; // YYYY-MM-DD
   pair: string;
   type: 'Long' | 'Short';
@@ -28,6 +29,16 @@ export interface Trade {
 
 export interface PayoutRecord {
   id: string;
+  accountId: string; // New field
   amount: number;
   date: string;
+}
+
+export type AccountType = 'COMBINE' | 'EXPRESS';
+
+export interface Account {
+  id: string;
+  name: string;
+  type: AccountType;
+  createdAt: number;
 }
