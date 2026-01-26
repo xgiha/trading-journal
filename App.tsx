@@ -86,20 +86,22 @@ const getAccountStyle = (type: AccountType) => {
   }
 };
 
-// --- Add Account Modal ---
-interface AddAccountModalProps {
+// --- Account Config Modal (Add/Edit) ---
+interface AccountConfigModalProps {
   onClose: () => void;
-  onAdd: (name: string, type: AccountType) => void;
+  onSave: (name: string, type: AccountType) => void;
+  initialData?: { name: string; type: AccountType };
+  mode: 'ADD' | 'EDIT';
 }
 
-const AddAccountModal: React.FC<AddAccountModalProps> = ({ onClose, onAdd }) => {
-  const [name, setName] = useState('');
-  const [type, setType] = useState<AccountType>('COMBINE');
+const AccountConfigModal: React.FC<AccountConfigModalProps> = ({ onClose, onSave, initialData, mode }) => {
+  const [name, setName] = useState(initialData?.name || '');
+  const [type, setType] = useState<AccountType>(initialData?.type || 'COMBINE');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    onAdd(name.trim(), type);
+    onSave(name.trim(), type);
     onClose();
   };
 
@@ -117,7 +119,7 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({ onClose, onAdd }) => 
         className="relative bg-[#141414] w-full max-w-[400px] rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden flex flex-col"
       >
          <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-            <h3 className="text-white font-bold text-sm uppercase tracking-widest">New Account</h3>
+            <h3 className="text-white font-bold text-sm uppercase tracking-widest">{mode === 'ADD' ? 'New Account' : 'Edit Account'}</h3>
             <button onClick={onClose} className="text-white/40 hover:text-white transition-colors"><X size={18} /></button>
         </div>
         
@@ -172,7 +174,7 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({ onClose, onAdd }) => 
                 disabled={!name.trim()}
                 className="mt-2 w-full py-4 rounded-xl bg-white text-black hover:bg-zinc-200 active:scale-95 transition-all font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                Create Account
+                {mode === 'ADD' ? 'Create Account' : 'Save Changes'}
             </button>
         </form>
       </MotionDiv>
@@ -507,24 +509,20 @@ interface AccountSelectorProps {
   accounts: Account[];
   activeAccountId: string;
   onSelect: (id: string) => void;
-  onRename: (id: string, newName: string) => void;
+  onEdit: (account: Account) => void;
   onAdd: () => void;
   onDelete: (id: string) => void;
 }
 
-const AccountSelector: React.FC<AccountSelectorProps> = ({ accounts, activeAccountId, onSelect, onRename, onAdd, onDelete }) => {
+const AccountSelector: React.FC<AccountSelectorProps> = ({ accounts, activeAccountId, onSelect, onEdit, onAdd, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Close when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
-        setEditingId(null);
       }
     };
     if (isOpen) {
@@ -533,34 +531,13 @@ const AccountSelector: React.FC<AccountSelectorProps> = ({ accounts, activeAccou
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // Automatically focus input when editing starts
-  useEffect(() => {
-    if (editingId && inputRef.current) {
-        inputRef.current.focus();
-        // Slightly delayed select to ensure focus processing
-        setTimeout(() => inputRef.current?.select(), 10);
-    }
-  }, [editingId]);
-
   const activeAccount = accounts.find(a => a.id === activeAccountId);
   const activeStyle = activeAccount ? getAccountStyle(activeAccount.type) : getAccountStyle('COMBINE');
 
   const startEditing = (acc: Account, e: React.MouseEvent) => {
     e.stopPropagation();
-    setEditingId(acc.id);
-    setEditName(acc.name);
-  };
-
-  const saveEdit = () => {
-    if (editingId && editName.trim()) {
-      onRename(editingId, editName.trim());
-    }
-    setEditingId(null);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') saveEdit();
-    if (e.key === 'Escape') setEditingId(null);
+    onEdit(acc);
+    setIsOpen(false);
   };
 
   return (
@@ -595,12 +572,10 @@ const AccountSelector: React.FC<AccountSelectorProps> = ({ accounts, activeAccou
                       <div className="flex flex-col gap-1 max-h-[220px] overflow-y-auto custom-scrollbar">
                           {accounts.map(acc => {
                               const style = getAccountStyle(acc.type);
-                              const isEditing = editingId === acc.id;
-                              
                               return (
                               <div 
                                 key={acc.id} 
-                                onClick={() => { if(!isEditing) { onSelect(acc.id); setIsOpen(false); } }}
+                                onClick={() => { onSelect(acc.id); setIsOpen(false); }}
                                 className={`group/item flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer border ${activeAccountId === acc.id ? 'bg-white/10 border-white/10' : 'border-transparent hover:bg-white/5'}`}
                               >
                                   <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -608,42 +583,26 @@ const AccountSelector: React.FC<AccountSelectorProps> = ({ accounts, activeAccou
                                           <div className={`w-3 h-3 rounded-[2px] ${style.indicator}`} />
                                       </div>
                                       <div className="flex flex-col min-w-0 flex-1">
-                                        {isEditing ? (
-                                            <input 
-                                                ref={inputRef}
-                                                value={editName}
-                                                onChange={e => setEditName(e.target.value)}
-                                                onBlur={saveEdit}
-                                                onKeyDown={handleKeyDown}
-                                                onClick={e => e.stopPropagation()}
-                                                className="w-full bg-black/40 text-white text-xs font-bold rounded px-1.5 py-1 focus:outline-none border border-white/20"
-                                            />
-                                        ) : (
-                                            <>
-                                                <span className={`text-xs font-bold truncate ${activeAccountId === acc.id ? 'text-white' : 'text-white/60'}`}>{acc.name}</span>
-                                                <span className={`text-[8px] font-bold uppercase tracking-widest ${style.text} opacity-60`}>{style.label}</span>
-                                            </>
-                                        )}
+                                        <span className={`text-xs font-bold truncate ${activeAccountId === acc.id ? 'text-white' : 'text-white/60'}`}>{acc.name}</span>
+                                        <span className={`text-[8px] font-bold uppercase tracking-widest ${style.text} opacity-60`}>{style.label}</span>
                                       </div>
                                   </div>
                                   
                                   {/* Actions */}
-                                  {!isEditing && (
-                                      <div className="flex items-center opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                          <button 
-                                              onClick={(e) => startEditing(acc, e)}
-                                              className="p-1.5 text-white/20 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                                          >
-                                              <Pen size={12} />
-                                          </button>
-                                          <button 
-                                              onClick={(e) => { e.stopPropagation(); onDelete(acc.id); }}
-                                              className="p-1.5 text-white/20 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors ml-1"
-                                          >
-                                              <Trash2 size={12} />
-                                          </button>
-                                      </div>
-                                  )}
+                                  <div className="flex items-center opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                      <button 
+                                          onClick={(e) => startEditing(acc, e)}
+                                          className="p-1.5 text-white/20 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                      >
+                                          <Pen size={12} />
+                                      </button>
+                                      <button 
+                                          onClick={(e) => { e.stopPropagation(); onDelete(acc.id); }}
+                                          className="p-1.5 text-white/20 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors ml-1"
+                                      >
+                                          <Trash2 size={12} />
+                                      </button>
+                                  </div>
                               </div>
                           )})}
                       </div>
@@ -953,10 +912,9 @@ const App: React.FC = () => {
   // Avatar Editor State
   const [showAvatarEditor, setShowAvatarEditor] = useState(false);
 
-  // Add Account Modal State
+  // Account Modal States
   const [showAddAccountModal, setShowAddAccountModal] = useState(false);
-  
-  // Delete Account Confirmation
+  const [accountToEdit, setAccountToEdit] = useState<Account | null>(null);
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
 
   useEffect(() => {
@@ -1002,7 +960,6 @@ const App: React.FC = () => {
                     let safeType: AccountType = 'COMBINE';
                     if (acc.type === 'EXPRESS') safeType = 'EXPRESS';
                     else if (acc.type === 'COMBINE') safeType = 'COMBINE';
-                    // Implicit fallback for 'PERSONAL'/'BLUE' -> 'COMBINE'
                     
                     return {
                         ...acc,
@@ -1183,8 +1140,11 @@ const App: React.FC = () => {
     setActiveTab('dashboard'); // Reset view to dashboard on switch
   };
 
-  const handleAccountRename = (id: string, newName: string) => {
-    setAccounts(prev => prev.map(a => a.id === id ? { ...a, name: newName } : a));
+  const handleAccountUpdate = (name: string, type: AccountType) => {
+      if (accountToEdit) {
+          setAccounts(prev => prev.map(a => a.id === accountToEdit.id ? { ...a, name, type } : a));
+          setAccountToEdit(null);
+      }
   };
 
   const handleAccountAdd = (name: string, type: AccountType) => {
@@ -1460,9 +1420,18 @@ const App: React.FC = () => {
             />
         )}
         {showAddAccountModal && (
-          <AddAccountModal 
+          <AccountConfigModal
+            mode="ADD" 
             onClose={() => setShowAddAccountModal(false)}
-            onAdd={handleAccountAdd}
+            onSave={handleAccountAdd}
+          />
+        )}
+        {accountToEdit && (
+          <AccountConfigModal 
+            mode="EDIT"
+            initialData={{ name: accountToEdit.name, type: accountToEdit.type }}
+            onClose={() => setAccountToEdit(null)}
+            onSave={handleAccountUpdate}
           />
         )}
       </AnimatePresence>
@@ -1574,7 +1543,7 @@ const App: React.FC = () => {
                         accounts={accounts} 
                         activeAccountId={activeAccountId} 
                         onSelect={handleAccountSelect} 
-                        onRename={handleAccountRename}
+                        onEdit={(acc) => setAccountToEdit(acc)}
                         onAdd={() => setShowAddAccountModal(true)}
                         onDelete={handleAccountDeleteRequest}
                       />
