@@ -544,17 +544,17 @@ const AccountSelector: React.FC<AccountSelectorProps> = ({ accounts, activeAccou
     <div ref={containerRef} className="relative z-50">
         <button 
           onClick={() => setIsOpen(!isOpen)}
-          className={`group relative h-12 pl-4 pr-3 rounded-full border flex items-center gap-3 transition-all active:scale-95 w-[140px] ${activeStyle.bg} ${activeStyle.border} hover:border-white/20`}
+          className={`group relative h-10 pl-3 pr-2 rounded-full border flex items-center gap-3 transition-all active:scale-95 w-[140px] ${activeStyle.bg} ${activeStyle.border} hover:border-white/20`}
         >
-            <div className="flex flex-col items-start min-w-0 flex-1">
-                  <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Account</span>
-                  <span className={`text-xs font-bold truncate w-full ${activeStyle.text}`}>
+            <div className="flex flex-col items-start min-w-0 flex-1 gap-0.5">
+                  <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest leading-none">Account</span>
+                  <span className={`text-[11px] font-bold truncate w-full leading-none ${activeStyle.text}`}>
                       {activeAccount?.name ? (
-                          activeAccount.name.length > 7 ? activeAccount.name.slice(0, 7) + '...' : activeAccount.name
+                          activeAccount.name.length > 10 ? activeAccount.name.slice(0, 10) + '...' : activeAccount.name
                       ) : 'Main Account'}
                   </span>
             </div>
-            <ChevronDown size={14} className={`text-white/40 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={12} className={`text-white/40 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         <AnimatePresence>
@@ -665,6 +665,82 @@ const QuickUserOptions = ({ onLogout, onImport, onExport, onEditAvatar }: { onLo
         <LogOut size={14} className="opacity-70 group-hover:opacity-100" />
         <span className="text-[10px] font-bold uppercase tracking-wider">Log Out</span>
       </button>
+    </div>
+  );
+};
+
+// --- UserControls Component ---
+interface UserControlsProps {
+  userAvatar: string | null;
+  accounts: Account[];
+  activeAccountId: string;
+  onAccountSelect: (id: string) => void;
+  onAccountEdit: (account: Account) => void;
+  onAccountAdd: () => void;
+  onAccountDelete: (id: string) => void;
+  onLogout: () => void;
+  onImport: () => void;
+  onExport: () => void;
+  onEditAvatar: () => void;
+  isInitialLoading: boolean;
+}
+
+const UserControls: React.FC<UserControlsProps> = ({
+  userAvatar,
+  accounts,
+  activeAccountId,
+  onAccountSelect,
+  onAccountEdit,
+  onAccountAdd,
+  onAccountDelete,
+  onLogout,
+  onImport,
+  onExport,
+  onEditAvatar,
+  isInitialLoading
+}) => {
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  if (isInitialLoading) {
+    return <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" />;
+  }
+
+  return (
+    <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-white/5 shadow-2xl">
+      <TooltipProvider delayDuration={100}>
+        <Tooltip open={isUserMenuOpen} onOpenChange={setIsUserMenuOpen}>
+          <TooltipTrigger asChild>
+            <button className="bg-white w-10 h-10 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shrink-0 overflow-hidden border-2 border-white/10 relative group">
+              {userAvatar ? (
+                <img src={userAvatar} alt="User" className="w-full h-full object-cover" />
+              ) : (
+                <img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" />
+              )}
+            </button>
+          </TooltipTrigger>
+          <AnimatePresence>
+            {isUserMenuOpen && (
+              <TooltipContent forceMount side="top" align="center" key="user-tooltip">
+                <QuickUserOptions
+                  onLogout={onLogout}
+                  onImport={onImport}
+                  onExport={onExport}
+                  onEditAvatar={onEditAvatar}
+                />
+              </TooltipContent>
+            )}
+          </AnimatePresence>
+        </Tooltip>
+      </TooltipProvider>
+
+      <AccountSelector
+        accounts={accounts}
+        activeAccountId={activeAccountId}
+        onSelect={onAccountSelect}
+        onEdit={onAccountEdit}
+        onAdd={onAccountAdd}
+        onDelete={onAccountDelete}
+      />
     </div>
   );
 };
@@ -896,9 +972,6 @@ const App: React.FC = () => {
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   
   const [isMobile, setIsMobile] = useState(false);
-  
-  // Tooltip State
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   
   const lastSyncedStateRef = useRef<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1515,40 +1588,20 @@ const App: React.FC = () => {
               )}
               <div style={{ bottom: 'calc(1.5rem + var(--sab))' }} className="fixed lg:absolute left-0 right-0 z-[100] flex justify-center items-center pointer-events-none px-4">
                 <div className="flex items-center gap-3 lg:gap-4 pointer-events-auto w-full max-w-2xl lg:max-w-none justify-center">
-                  {isInitialLoading ? <Skeleton className="w-12 h-12 rounded-full shadow-xl shrink-0" /> : (
-                    <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-white/5 shadow-2xl">
-                      <TooltipProvider delayDuration={100}>
-                        <Tooltip open={isUserMenuOpen} onOpenChange={setIsUserMenuOpen}>
-                          <TooltipTrigger asChild>
-                                <button className="bg-white w-10 h-10 rounded-full flex items-center justify-center active:scale-[0.95] transition-all duration-200 shrink-0 overflow-hidden border-2 border-white/10 relative group">
-                                  {userAvatar ? (
-                                      <img src={userAvatar} alt="User" className="w-full h-full object-cover" />
-                                  ) : (
-                                      <img src="https://i.imgur.com/kCkmBR9.png" alt="User" className="w-full h-full object-cover" />
-                                  )}
-                                </button>
-                          </TooltipTrigger>
-                          <AnimatePresence>
-                            {isUserMenuOpen && (
-                              <TooltipContent forceMount side="top" align="center" key="user-tooltip">
-                                <QuickUserOptions onLogout={handleLogout} onImport={handleImportClick} onExport={handleExportData} onEditAvatar={() => setShowAvatarEditor(true)} />
-                              </TooltipContent>
-                            )}
-                          </AnimatePresence>
-                        </Tooltip>
-                      </TooltipProvider>
-                      
-                      {/* Account Selector */}
-                      <AccountSelector 
-                        accounts={accounts} 
-                        activeAccountId={activeAccountId} 
-                        onSelect={handleAccountSelect} 
-                        onEdit={(acc) => setAccountToEdit(acc)}
-                        onAdd={() => setShowAddAccountModal(true)}
-                        onDelete={handleAccountDeleteRequest}
-                      />
-                    </div>
-                  )}
+                  <UserControls
+                    userAvatar={userAvatar}
+                    accounts={accounts}
+                    activeAccountId={activeAccountId}
+                    onAccountSelect={handleAccountSelect}
+                    onAccountEdit={(acc) => setAccountToEdit(acc)}
+                    onAccountAdd={() => setShowAddAccountModal(true)}
+                    onAccountDelete={handleAccountDeleteRequest}
+                    onLogout={handleLogout}
+                    onImport={handleImportClick}
+                    onExport={handleExportData}
+                    onEditAvatar={() => setShowAvatarEditor(true)}
+                    isInitialLoading={isInitialLoading}
+                  />
 
                   <div className="relative p-1 rounded-full flex items-center bg-white/5 backdrop-blur-md flex-1 lg:flex-none lg:w-[240px] h-14 shadow-2xl border border-white/5 overflow-hidden">
                       {isInitialLoading ? <div className="flex-1 h-full px-6 flex items-center justify-between gap-4"><Skeleton className="h-4 flex-1 rounded-full" /><Skeleton className="h-4 flex-1 rounded-full" /><Skeleton className="h-4 flex-1 rounded-full" /></div> : (
